@@ -1,3 +1,7 @@
+{{ if eq .platform "windows" -}}
+# Windows fallback tools only; WinGet owns the remaining native CLI.
+env = ["windows"]
+{{ else -}}
 {{- $envs := list -}}
 {{- if .features.ai -}}{{- $envs = append $envs "ai" -}}{{- end -}}
 {{- if dig "features" "managed_ai" false . -}}{{- $envs = append $envs "ai-managed" -}}{{- end -}}
@@ -6,3 +10,4 @@
 {{- if and (has .platform (list "arch" "opensuse-tumbleweed")) .features.editor_web -}}{{- $envs = append $envs "editor-web" -}}{{- end -}}
 # Machine selection. Presence of config.<environment>.toml alone does not select it.
 env = [{{ range $index, $value := $envs }}{{ if $index }}, {{ end }}{{ $value | quote }}{{ end }}]
+{{ end -}}

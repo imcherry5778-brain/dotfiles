@@ -34,6 +34,8 @@ function Get-DestinationState {
 
 # Parse all native PowerShell files without loading profiles or executing them.
 foreach ($file in Get-ChildItem -LiteralPath $repoRoot -Recurse -Filter '*.ps1') {
+  # modify_ templates are Go source; their rendered PowerShell targets are parsed separately.
+  if ($file.Name.StartsWith('modify_')) { continue }
   $tokens = $null
   $parseErrors = $null
   $null = [Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref] $tokens, [ref] $parseErrors)

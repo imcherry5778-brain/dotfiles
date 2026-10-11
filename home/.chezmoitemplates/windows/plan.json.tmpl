@@ -1,0 +1,13 @@
+{{- $tools := (include "dot_config/mise/config.toml" | fromToml).tools -}}
+{{- $tools = merge $tools (include "dot_config/mise/config.ai.toml" | fromToml).tools (include "dot_config/mise/config.ai-managed.toml" | fromToml).tools -}}
+{{- $node := (includeTemplate "tools/editor-node.toml.tmpl" . | fromToml).tools.node -}}
+{{- $_ := set $tools "node" $node -}}
+{{- $packages := list -}}
+{{- range $key := keys .windows.winget | sortAlpha -}}
+{{- $version := index $tools $key -}}
+{{- if kindIs "map" $version -}}{{- $version = $version.version -}}{{- end -}}
+{{- $version = index $.windows.versions $key | default $version -}}
+{{- $command := index $.windows.commands $key | default $key -}}
+{{- $packages = append $packages (dict "tool" $key "id" (index $.windows.winget $key) "version" $version "command" $command) -}}
+{{- end -}}
+{{- dict "winget" $packages "bootstrap" .windows.bootstrap "buildDependencies" .windows.buildDependencies "kiro" (index $tools "http:kiro-cli").version | toPrettyJson -}}

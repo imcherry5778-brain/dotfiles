@@ -57,6 +57,9 @@ managed_ai = {{ dig "features" "managed_ai" false . }}
 desktop = {{ dig "features" "desktop" false . }}
 delta = {{ dig "features" "delta" false . }}
 editor_web = {{ $editorWeb }}
+{{ if eq $platform "windows" -}}
+windows_native = {{ dig "features" "windows_native" false . }}
+{{ end -}}
 
 [data.machine]
 conda_prefix = {{ $prefix | quote }}

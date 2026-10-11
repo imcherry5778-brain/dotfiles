@@ -1,0 +1,18 @@
+{
+  "platform": "windows",
+  "deployment": {
+    "enabled": true,
+    "externals": false
+  },
+  "features": {
+    "ai": true,
+    "managed_ai": true,
+    "desktop": true,
+    "personal_fedora": false,
+    "conda": false,
+    "bitwarden_agent": false,
+    "delta": true,
+    "editor_web": true,
+    "windows_native": true
+  }
+}

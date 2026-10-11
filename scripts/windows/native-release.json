@@ -1,0 +1,8 @@
+{
+  "kiro": {
+    "version": "2.29.1",
+    "url": "https://prod.download.cli.kiro.dev/stable/2.29.1/kiro-cli-x86_64-pc-windows-msvc.msi",
+    "sha256": "6edc352455ca94b64c3aa27c3ddcb68601a50c33d59cc9f73ce627a48b920828",
+    "source": "https://cli.kiro.dev/install.ps1"
+  }
+}

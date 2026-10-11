@@ -1,7 +1,35 @@
 # Reviewed Fedora/Ubuntu sources. Explicit opt-in is required even for preview.
-{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) }}
+{{ if or (not .deployment.enabled) (and (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) (not (and (eq .platform "windows") (dig "features" "windows_native" false .)))) }}
 **
+{{ else if eq .platform "windows" }}
+# Native Windows has its own paths and providers; never deploy Unix shell files.
+README.md
+**/README.md
+.bashrc
+.zshrc
+.tmux.conf
+.tmux.conf.local
+.local
+.local/**
+.config/shell/**
+.config/shell-completion/**
+.config/carapace/**
+.config/ghostty/**
+.config/nvim/**
+.config/gh/**
+.config/mise/config.toml
+.config/mise/config.ai.toml
+.config/mise/config.ai-managed.toml
+.config/mise/config.personal-fedora.toml
+.config/mise/config.editor-ubuntu.toml
+.config/mise/config.editor-web.toml
 {{ else }}
+AppData
+AppData/**
+Documents
+Documents/**
+.config/powershell/**
+.config/mise/config.windows.toml
 {{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed"))) (not .features.ai)) }}
 {{ fail "managed_ai requires the reviewed Ubuntu/Arch/openSUSE AI profile; preserve existing Fedora providers." }}
 {{ end }}

@@ -1,0 +1,69 @@
+{
+  "windows": {
+    "bootstrap": [
+      {
+        "id": "Microsoft.PowerShell",
+        "command": "pwsh",
+        "version": "7.6.6.0"
+      },
+      {
+        "id": "Git.Git",
+        "command": "git",
+        "version": "2.55.0"
+      },
+      {
+        "id": "jdx.mise",
+        "command": "mise",
+        "version": "2026.9.18"
+      },
+      {
+        "id": "twpayne.chezmoi",
+        "command": "chezmoi",
+        "version": "2.73.0"
+      }
+    ],
+    "winget": {
+      "ripgrep": "BurntSushi.ripgrep.MSVC",
+      "fd": "sharkdp.fd",
+      "bat": "sharkdp.bat",
+      "jq": "jqlang.jq",
+      "carapace": "rsteube.Carapace",
+      "delta": "dandavison.delta",
+      "fzf": "junegunn.fzf",
+      "zoxide": "ajeetdsouza.zoxide",
+      "gh": "GitHub.cli",
+      "lazygit": "JesseDuffield.lazygit",
+      "neovim": "Neovim.Neovim",
+      "yazi": "sxyazi.yazi",
+      "uv": "astral-sh.uv",
+      "agy": "Google.AntigravityCLI",
+      "claude": "Anthropic.ClaudeCode",
+      "codex": "OpenAI.Codex",
+      "opencode": "SST.opencode",
+      "node": "OpenJS.NodeJS"
+    },
+    "versions": {
+      "lazygit": "0.65.1",
+      "claude": "2.1.292",
+      "codex": "0.161.0",
+      "opencode": "1.18.33",
+      "node": "26.8.1"
+    },
+    "commands": {
+      "ripgrep": "rg",
+      "neovim": "nvim"
+    },
+    "buildDependencies": [
+      {
+        "id": "zig.zig",
+        "command": "zig",
+        "version": "0.15.2"
+      }
+    ],
+    "grok": {
+      "url": "https://storage.googleapis.com/grok-build-public-artifacts/cli/grok-1.0.50-windows-x86_64.exe",
+      "sha256": "591675b998575204e41c59765b7dcb7496aa6b21bfccb3e98d2cd6fed9f7925a",
+      "version": "1.0.50"
+    }
+  }
+}

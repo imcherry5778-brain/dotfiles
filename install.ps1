@@ -1,13 +1,19 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-  [ValidateSet('Plan', 'Check', 'DesktopPlan', 'DesktopApply')]
-  [string] $Mode = 'Plan'
+  [ValidateSet('Plan', 'Check', 'Bootstrap', 'Diff', 'Apply', 'Verify', 'DesktopPlan', 'DesktopApply')]
+  [string] $Mode = 'Plan',
+  [string] $ProfilePath = ''
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
+
+if ($IsWindows -and $Mode -ne 'Check') {
+  & (Join-Path $repoRoot 'scripts/windows/install.ps1') -Mode $Mode -ProfilePath $ProfilePath
+  exit $LASTEXITCODE
+}
 
 if ($Mode -in @('DesktopPlan', 'DesktopApply')) {
   $python = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1

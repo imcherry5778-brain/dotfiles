@@ -68,3 +68,7 @@ AI/native 앱 확장은 `python3 tests/verify-installers.py`로 오프라인 계
 Arch: `verify-desktop.py --chezmoi /path/to/chezmoi --platform arch`로 Ubuntu와 동일한 보존 검증을 재사용한다. Arch full 프로필은 hosted runner의 새 Arch 컨테이너에서 22개 도구, 공식 Ghostty 패키지와 Orca AppImage/번들 CLI를 설치하고 재실행한다. GUI 검증은 실제 Arch 세션에서 별도 수행한다.
 
 openSUSE: `verify-desktop.py --chezmoi /path/to/chezmoi --platform opensuse-tumbleweed`로 원본 SUSE Bash/profile 보존과 같은 공통 source 계약을 검사한다. 별도 full 설치 job은 Tumbleweed 최소 컨테이너의 GTK3/CUPS 라이브러리와 tmux의 Perl/awk를 명시적으로 준비하고 22개 CLI·Ghostty·Orca 실행·native Bash·Zsh/tmux·반복 설치를 검증한다. Zypper solver의 추가 허용과 제거/upgrade/downgrade/vendor 변경 거부는 `verify-installers.py`에서 검사한다. 코드 `c84169a`의 [설치 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063232)는 다섯 job을 통과했고 [기반 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063296)도 통과했다. 실제 KDE·클립보드·편집기 플러그인 검증은 [개인 기기 기록](../docs/opensuse-application.md)에서 구분한다.
+
+## Native Windows 설정 검증
+
+Windows에서 `./tests/verify-windows.ps1`을 실행한다. WinGet 설치 자체와 분리된 격리 대상 검사이며, 공백이 있는 checkout/home, Windows 파일명, AppData 대상, 기존 PowerShell 프로필과 5.1 설정·AI 훅 보존, provider 단일 소유권, 반복 apply의 바이트 안정성과 렌더링 PowerShell 구문을 검사한다. Foundation checks의 Windows hosted job에서도 실행한다. 실제 설치 계약은 [Windows 문서](../docs/windows.md)를 참고한다.
