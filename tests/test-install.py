@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import pwd
 import shlex
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -143,6 +144,8 @@ shopt -p histappend checkwinsize
 
 def verify_native_bash(before, originals):
     after = bash_state()
+    require(sum(line.startswith('complete ') for line in after.splitlines()) >= 100,
+            'Installer did not prepare native Bash completions.')
     for line in before.splitlines():
         require(line in after.splitlines(), f'{TARGET} Bash behavior lost: {line}')
     for name in originals.keys() - {'.bashrc'}:
@@ -169,10 +172,8 @@ def main():
     require(TARGET in {'fedora', 'ubuntu', 'arch', 'opensuse-tumbleweed'}, 'Unexpected container distribution.')
     # Distribution useradd may copy OS shell defaults from /etc/skel; those are legitimate inputs.
     require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.config/mise').exists(), 'Cold installation requires no prior dotfiles selection.')
-    # Only the repository Python exists; OS shell/compiler dependencies were not baked into the image.
-    spec = importlib.util.spec_from_file_location('installer_packages', ROOT / 'scripts/unix/install.py')
-    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    module.prepare_packages(module.Host.detect(), desktop=TARGET != 'fedora' or FULL)
+    # Python is only the acceptance-test runtime; no OS prerequisite installer ran.
+    require(shutil.which('zsh') is None, 'Cold image must not preinstall the managed shell prerequisite.')
     verify_guards()
     original_shell = pwd.getpwuid(os.getuid()).pw_shell
     native_original = None
@@ -183,7 +184,8 @@ def main():
         native_original['.bashrc'] = (USER_HOME / '.bashrc').read_bytes()
         native = bash_state()
         native_count = sum(line.startswith('complete ') for line in native.splitlines())
-        require(native_count >= 100, 'Native completion baseline is absent; preservation test would be empty.')
+        # Minimal images may lack bash-completion. Preserve all existing behavior
+        # and assert the installer adds the native completion package afterward.
     run(['git', '-c', 'init.templateDir=', 'init', '--quiet', '--initial-branch=main', ROOT])
     # Ordinary, non-secret pre-existing settings must survive the actual installer.
     identity = '[user]\n name = CI Existing User\n email = ci@example.invalid\n[commit]\n gpgsign = false\n[acceptance]\n keep = existing\n'
@@ -196,11 +198,21 @@ def main():
             directory.mkdir(parents=True, exist_ok=True)
             directory.chmod(0o700)
     gh_config.write_text('editor:\nbrowser:\naliases:\n  retained: repo view\n# retained comment\n')
-    command = ['sh', ROOT / 'install.sh', '--apply', '--profile', PROFILE]
+    if FULL:
+        spec = importlib.util.spec_from_file_location('installer_binary', ROOT / 'scripts/unix/install.py')
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        chezmoi = module.pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
+        command = [chezmoi, '--source', ROOT, 'init', '--apply']
+    else:
+        command = ['sh', ROOT / 'install.sh', '--apply', '--profile', PROFILE]
     run(command, capture=False)
     base = [USER_HOME / '.local/bin/chezmoi', '--no-tty', '--no-pager']
     data = json.loads(run(base + ['data', '--format=json']))
     require(Path(data['chezmoi']['workingTree']) == ROOT, 'Persisted config does not point to the real checkout.')
+    require(data['deployment'] == json.loads(PROFILE.read_text())['deployment'], 'Native initialization chose the wrong deployment.')
+    expected_features = json.loads(PROFILE.read_text())['features']
+    require(all(data['features'].get(key) == value for key, value in expected_features.items()),
+            'Native initialization chose the wrong feature selection.')
     mise = USER_HOME / '.local/bin/mise'
     tools = tomllib.loads((USER_HOME / '.config/mise/config.toml').read_text())['tools']
     require(len(tools) == 13, 'Expected the common 13-tool inventory, not a personal environment.')
