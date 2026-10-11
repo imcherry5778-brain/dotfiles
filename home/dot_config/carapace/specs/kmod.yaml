@@ -1,0 +1,4 @@
+name: kmod
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([kmod])"]

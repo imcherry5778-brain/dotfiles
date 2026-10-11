@@ -1,0 +1,4 @@
+name: gapplication
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gapplication])"]

@@ -1,0 +1,4 @@
+name: sc-hsm-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([sc-hsm-tool])"]

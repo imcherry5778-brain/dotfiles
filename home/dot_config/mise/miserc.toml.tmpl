@@ -1,0 +1,2 @@
+# Machine selection. Presence of config.<environment>.toml alone does not select it.
+env = [{{ if .features.ai }}"ai"{{ if .features.personal_fedora }}, {{ end }}{{ end }}{{ if .features.personal_fedora }}"personal-fedora"{{ end }}]

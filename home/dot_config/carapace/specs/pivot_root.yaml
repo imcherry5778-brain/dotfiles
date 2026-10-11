@@ -1,0 +1,4 @@
+name: pivot_root
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pivot_root])"]

@@ -1,0 +1,4 @@
+name: grpck
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([grpck])"]

@@ -1,0 +1,4 @@
+name: vgcfgbackup
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgcfgbackup])"]

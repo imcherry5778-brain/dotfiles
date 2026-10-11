@@ -1,0 +1,4 @@
+name: traceroute6
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([traceroute6])"]

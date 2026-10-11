@@ -1,0 +1,24 @@
+# EXAMPLE ONLY: not an active chezmoi config and not automatically imported.
+# These choices reproduce the inspected personal Fedora profile.
+[data]
+platform = "fedora"
+initialized = true
+
+[data.deployment]
+enabled = false
+externals = false
+
+[data.features]
+ai = true
+personal_fedora = true
+conda = true
+bitwarden_agent = true
+editor_web = true
+delta = false
+
+[data.machine]
+# Initialization derives standard home-relative paths when not already initialized.
+# Set real absolute paths in the local machine config; never copy credentials here.
+conda_prefix = "/path/to/your/home/miniforge3"
+ssh_agent_socket = "/path/to/your/home/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
+mise_data_dir = ""

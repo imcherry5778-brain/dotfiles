@@ -1,0 +1,15 @@
+# Reviewed CLI baseline. Declarations only: no installation hooks.
+[tools]
+ripgrep = "15.2.0"
+fd = "10.4.2"
+bat = "0.26.1"
+jq = "1.8.1"
+carapace = "1.8.0"
+delta = "0.20.1"
+fzf = "0.74.4"
+zoxide = "0.10.0"
+gh = "2.102.0"
+lazygit = "0.66.0"
+neovim = "0.12.5"
+yazi = "26.9.1"
+uv = "0.12.23"

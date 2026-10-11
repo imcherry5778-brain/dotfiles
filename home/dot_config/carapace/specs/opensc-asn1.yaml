@@ -1,0 +1,4 @@
+name: opensc-asn1
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([opensc-asn1])"]

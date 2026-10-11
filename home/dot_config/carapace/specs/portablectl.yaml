@@ -1,0 +1,4 @@
+name: portablectl
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([portablectl])"]

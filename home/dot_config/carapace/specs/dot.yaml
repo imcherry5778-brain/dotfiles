@@ -1,0 +1,4 @@
+name: dot
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([dot])"]

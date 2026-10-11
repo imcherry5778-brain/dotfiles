@@ -1,3 +1,27 @@
-# Foundation phase: no user configuration has been approved for deployment.
-# Replace this boundary only in a reviewed migration with actual target files.
+# Fedora draft only. Explicit data opt-in is required even for a preview.
+{{ if or (not .deployment.enabled) (ne .platform "fedora") }}
 **
+{{ else }}
+README.md
+**/README.md
+.config/ghostty
+.config/ghostty/**
+.config/powershell
+.config/powershell/**
+{{ if not .features.personal_fedora }}
+.config/mise/config.personal-fedora.toml
+.config/shell-completion/**
+.config/carapace/**
+.local/bin/refresh-completions
+.local/share/shell-completion/**
+{{ end }}
+{{ if not .features.ai }}
+.claude/**
+.codex/**
+.config/opencode/**
+.config/mise/config.ai.toml
+{{ end }}
+{{ if not .features.editor_web }}
+.config/nvim/lua/plugins/web_and_python.lua
+{{ end }}
+{{ end }}

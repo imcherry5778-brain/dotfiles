@@ -1,0 +1,4 @@
+name: objcopy
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([objcopy])"]

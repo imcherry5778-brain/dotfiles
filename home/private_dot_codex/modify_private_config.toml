@@ -1,0 +1,4 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := dict -}}
+{{- if trim .chezmoi.stdin -}}{{- $current = fromToml .chezmoi.stdin -}}{{- end -}}
+{{ $current | setValueAtPath "model" "gpt-6.1-sol" | setValueAtPath "model_reasoning_effort" "high" | setValueAtPath "service_tier" "priority" | toToml }}

@@ -1,0 +1,4 @@
+name: lusermod
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lusermod])"]

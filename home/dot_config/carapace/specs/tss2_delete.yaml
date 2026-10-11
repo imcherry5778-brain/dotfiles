@@ -1,0 +1,4 @@
+name: tss2_delete
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tss2_delete])"]

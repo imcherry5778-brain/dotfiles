@@ -1,0 +1,4 @@
+name: quotaoff
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([quotaoff])"]

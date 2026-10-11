@@ -1,0 +1,4 @@
+name: hwclock
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([hwclock])"]

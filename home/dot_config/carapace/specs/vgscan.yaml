@@ -1,0 +1,4 @@
+name: vgscan
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgscan])"]

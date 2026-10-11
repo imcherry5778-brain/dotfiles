@@ -1,0 +1,2 @@
+#compdef oras
+_sc_native oras _oras "$@"

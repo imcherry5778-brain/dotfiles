@@ -1,0 +1,4 @@
+name: tuned-adm
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tuned-adm])"]

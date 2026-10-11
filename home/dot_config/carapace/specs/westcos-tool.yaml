@@ -1,0 +1,4 @@
+name: westcos-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([westcos-tool])"]

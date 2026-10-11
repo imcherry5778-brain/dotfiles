@@ -1,0 +1,4 @@
+name: tpm2_nvdefine
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_nvdefine])"]

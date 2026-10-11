@@ -1,0 +1,4 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := dict -}}
+{{- if trim .chezmoi.stdin -}}{{- $current = fromJson .chezmoi.stdin -}}{{- end -}}
+{{ $current | setValueAtPath "theme" "dark" | setValueAtPath "tui" "fullscreen" | toPrettyJson }}

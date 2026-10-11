@@ -1,0 +1,4 @@
+name: pvmove
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pvmove])"]

@@ -1,0 +1,4 @@
+name: openpgp-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([openpgp-tool])"]

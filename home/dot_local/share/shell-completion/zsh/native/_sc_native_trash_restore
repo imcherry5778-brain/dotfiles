@@ -1,0 +1,2 @@
+#compdef trash-restore
+_sc_native trash-restore _shtab_trash_restore "$@"

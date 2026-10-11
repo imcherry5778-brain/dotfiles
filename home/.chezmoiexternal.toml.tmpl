@@ -1,0 +1,25 @@
+# Upstream material is opt-in. Preview never downloads it by default.
+# Non-exact archives preserve unmanaged files, custom plugins and existing Git metadata.
+{{ if and .deployment.enabled .deployment.externals (eq .platform "fedora") -}}
+{{ $targets := dict ".oh-my-zsh" "oh_my_zsh" ".tmux" "oh_my_tmux" ".tmux/plugins/tpm" "tpm" ".tmux/plugins/tmux-copycat" "tmux_copycat" ".tmux/plugins/tmux-resurrect" "tmux_resurrect" ".oh-my-zsh/custom/plugins/zsh-history-substring-search" "history_search" ".oh-my-zsh/custom/plugins/fzf-tab" "fzf_tab" ".oh-my-zsh/custom/plugins/zsh-autosuggestions" "autosuggestions" ".oh-my-zsh/custom/plugins/zsh-syntax-highlighting" "syntax_highlighting" -}}
+{{ if .features.ai -}}
+{{ $_ := set $targets ".oh-my-zsh/custom/plugins/zsh-claudecode-completion" "claude_completion" -}}
+{{ end -}}
+{{ range $target, $key := $targets -}}
+{{ $upstream := index $.upstreams $key -}}
+[{{ $target | quote }}]
+type = "archive"
+url = "https://github.com/{{ $upstream.repository }}/archive/{{ $upstream.revision }}.tar.gz"
+stripComponents = 1
+exact = false
+
+{{ end -}}
+{{ if .features.personal_fedora -}}
+{{ range .completion.community_files -}}
+[".local/share/shell-completion/zsh/community/{{ . }}"]
+type = "file"
+url = "https://raw.githubusercontent.com/{{ $.upstreams.zsh_completions.repository }}/{{ $.upstreams.zsh_completions.revision }}/src/{{ . }}"
+
+{{ end -}}
+{{ end -}}
+{{ end -}}

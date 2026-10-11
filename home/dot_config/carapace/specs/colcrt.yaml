@@ -1,0 +1,4 @@
+name: colcrt
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([colcrt])"]

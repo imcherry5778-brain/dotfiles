@@ -1,0 +1,4 @@
+name: tpm2_policylocality
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_policylocality])"]

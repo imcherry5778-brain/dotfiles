@@ -32,3 +32,13 @@ jobs:
           "CHEZMOI_BIN=$binary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Verify native scripts and isolated initialization
         run: ./tests/verify.ps1
+      - name: Prepare Fedora source-test shell on the disposable runner
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zsh
+      - name: Verify proposed Fedora configuration in an isolated destination
+        if: runner.os == 'Linux'
+        run: python3 ./tests/verify-fedora.py --chezmoi $env:CHEZMOI_BIN

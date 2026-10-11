@@ -1,0 +1,4 @@
+name: google-chrome-stable
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([google-chrome-stable])"]

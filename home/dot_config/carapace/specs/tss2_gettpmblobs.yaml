@@ -1,0 +1,4 @@
+name: tss2_gettpmblobs
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tss2_gettpmblobs])"]

@@ -1,0 +1,4 @@
+name: exch
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([exch])"]

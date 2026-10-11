@@ -1,0 +1,4 @@
+name: rpmdev-diff
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-diff])"]

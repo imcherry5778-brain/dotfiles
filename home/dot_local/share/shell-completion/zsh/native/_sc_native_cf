@@ -1,0 +1,2 @@
+#compdef cf cloudflare
+_sc_native cf _cf "$@"

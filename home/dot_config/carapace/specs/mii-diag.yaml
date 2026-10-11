@@ -1,0 +1,4 @@
+name: mii-diag
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([mii-diag])"]

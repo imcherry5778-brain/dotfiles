@@ -1,0 +1,4 @@
+name: dumpe2fs
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([dumpe2fs])"]

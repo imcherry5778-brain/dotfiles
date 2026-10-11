@@ -1,0 +1,4 @@
+name: desktop-file-validate
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([desktop-file-validate])"]

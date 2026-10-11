@@ -1,0 +1,2 @@
+#compdef argocd
+_sc_native argocd _argocd "$@"

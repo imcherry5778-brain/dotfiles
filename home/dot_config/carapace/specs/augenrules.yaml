@@ -1,0 +1,4 @@
+name: augenrules
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([augenrules])"]

@@ -1,0 +1,2 @@
+#compdef ai-cli
+_sc_native ai-cli _shtab_ai_cli "$@"

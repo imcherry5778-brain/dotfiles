@@ -1,0 +1,4 @@
+name: lvremove
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvremove])"]

@@ -1,0 +1,4 @@
+name: jps
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([jps])"]

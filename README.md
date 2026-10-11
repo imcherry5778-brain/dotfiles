@@ -2,7 +2,7 @@
 
 `imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를, mise는 CLI 설치와 버전을 관리한다.
 
-**현재 단계: 저장소 기반 구성. 실제 사용자 설정 배포와 도구 설치는 아직 구현하지 않았다.** 기존 Fedora 설정은 가져오거나 적용하지 않았다.
+**현재 단계: Fedora 설정 초안 구성. 실제 홈 적용·도구 설치는 하지 않았다.** 실제 Fedora에서 선정한 설정과 버전을 source에 구성했다. [유지·변경·제외 판단](docs/fedora-review.md)을 먼저 확인한다.
 
 ## 위치와 구조
 
@@ -14,7 +14,7 @@ dotfiles/
 ├── mise.toml                 # 저장소 운영 작업
 ├── home/                     # chezmoi 소스: 기기 데이터·선택할 설정
 │   ├── .chezmoitemplates/    # 재사용 조각
-│   └── dot_config/           # 앱별 소스 위치 예약, 현재 문서만
+│   └── dot_config/           # 검토한 앱별 설정 원본
 ├── scripts/unix/             # POSIX 구현
 ├── scripts/windows/          # PowerShell 구현
 ├── docs/                     # 설계·설치·관리·지원 범위
@@ -22,7 +22,7 @@ dotfiles/
 └── .github/workflows/        # Linux·Windows·macOS 기반 검증
 ```
 
-`home/.chezmoiignore`는 현재 모든 대상 배포를 제외한다. 앱 설정이 실제 검토되어 들어오는 단계에서 이 경계를 변경한다. 문서용 README와 빈 설정을 사용자 홈으로 배포하지 않는다.
+`deployment.enabled=false`가 기본값이라 모든 배포 대상이 제외된다. Fedora preview만 임시 홈에서 명시적으로 활성화해 검증한다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
 
 ## 지금 실행할 수 있는 것
 
@@ -46,6 +46,7 @@ mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run pla
 
 ## 상세 문서
 
+- [Fedora 유지·변경·제외 판단](docs/fedora-review.md)
 - [설계와 폴더 규칙](docs/architecture.md)
 - [최초 설치와 현재 진입점](docs/install.md)
 - [설정과 기기 데이터](docs/configuration.md)

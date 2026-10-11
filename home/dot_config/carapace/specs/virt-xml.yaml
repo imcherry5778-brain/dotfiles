@@ -1,0 +1,4 @@
+name: virt-xml
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([virt-xml])"]

@@ -1,0 +1,4 @@
+name: pkgconf
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pkgconf])"]

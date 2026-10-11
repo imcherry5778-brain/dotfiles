@@ -1,0 +1,4 @@
+name: e2freefrag
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([e2freefrag])"]

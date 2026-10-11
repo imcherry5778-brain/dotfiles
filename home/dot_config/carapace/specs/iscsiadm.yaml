@@ -1,0 +1,4 @@
+name: iscsiadm
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([iscsiadm])"]

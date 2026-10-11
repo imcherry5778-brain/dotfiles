@@ -1,0 +1,4 @@
+name: virt-install
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([virt-install])"]

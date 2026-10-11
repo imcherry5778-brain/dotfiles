@@ -1,0 +1,4 @@
+name: ooimpress
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([ooimpress])"]

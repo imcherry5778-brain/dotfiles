@@ -1,0 +1,4 @@
+name: automake
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([automake])"]

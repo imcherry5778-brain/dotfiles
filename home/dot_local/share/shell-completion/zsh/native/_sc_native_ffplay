@@ -1,0 +1,2 @@
+#compdef ffplay
+_sc_native ffplay _sc_flags_ffplay "$@"

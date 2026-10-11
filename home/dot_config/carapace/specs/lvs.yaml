@@ -1,0 +1,4 @@
+name: lvs
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvs])"]

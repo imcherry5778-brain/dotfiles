@@ -1,0 +1,4 @@
+name: getsebool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([getsebool])"]

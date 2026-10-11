@@ -1,0 +1,4 @@
+name: vgck
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgck])"]

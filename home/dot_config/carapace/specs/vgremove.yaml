@@ -1,0 +1,4 @@
+name: vgremove
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgremove])"]

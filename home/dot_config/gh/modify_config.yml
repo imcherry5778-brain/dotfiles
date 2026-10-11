@@ -1,0 +1,4 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := dict -}}
+{{- if trim .chezmoi.stdin -}}{{- $current = fromYaml .chezmoi.stdin -}}{{- end -}}
+{{ $current | setValueAtPath "git_protocol" "https" | setValueAtPath "aliases.co" "pr checkout" | toYaml }}

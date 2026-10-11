@@ -1,0 +1,4 @@
+name: mokutil
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([mokutil])"]

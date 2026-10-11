@@ -1,0 +1,4 @@
+name: gnome-software
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gnome-software])"]

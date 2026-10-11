@@ -1,0 +1,400 @@
+{
+  "codex": {
+    "kind": "generator",
+    "main": "_codex",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "gh": {
+    "kind": "generator",
+    "main": "_gh",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "-s",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "-s",
+        "bash"
+      ]
+    }
+  },
+  "uv": {
+    "kind": "generator",
+    "main": "_uv",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "generate-shell-completion",
+        "zsh"
+      ],
+      "bash": [
+        "generate-shell-completion",
+        "bash"
+      ]
+    }
+  },
+  "uvx": {
+    "kind": "generator",
+    "main": "_uvx",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--generate-shell-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--generate-shell-completion",
+        "bash"
+      ]
+    }
+  },
+  "k9s": {
+    "kind": "generator",
+    "main": "_k9s",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "lazygit": {
+    "kind": "generator",
+    "main": "_lazygit",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "k6": {
+    "kind": "generator",
+    "main": "_k6",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "argocd": {
+    "kind": "generator",
+    "main": "_argocd",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "cosign": {
+    "kind": "generator",
+    "main": "_cosign",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "oras": {
+    "kind": "generator",
+    "main": "_oras",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "zsh"
+      ],
+      "bash": [
+        "completion",
+        "bash"
+      ]
+    }
+  },
+  "rustup": {
+    "kind": "generator",
+    "main": "_rustup",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "completions",
+        "zsh"
+      ],
+      "bash": [
+        "completions",
+        "bash"
+      ]
+    }
+  },
+  "cf": {
+    "kind": "generator",
+    "main": "_cf",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "complete",
+        "zsh"
+      ],
+      "bash": [
+        "complete",
+        "bash"
+      ]
+    }
+  },
+  "bw": {
+    "kind": "generator",
+    "main": "_bw",
+    "shells": [
+      "zsh"
+    ],
+    "argv": {
+      "zsh": [
+        "completion",
+        "--shell",
+        "zsh"
+      ]
+    }
+  },
+  "trash": {
+    "kind": "generator",
+    "main": "_shtab_trash",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--print-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--print-completion",
+        "bash"
+      ]
+    }
+  },
+  "trash-put": {
+    "kind": "generator",
+    "main": "_shtab_trash_put",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--print-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--print-completion",
+        "bash"
+      ]
+    }
+  },
+  "trash-list": {
+    "kind": "generator",
+    "main": "_shtab_trash_list",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--print-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--print-completion",
+        "bash"
+      ]
+    }
+  },
+  "trash-empty": {
+    "kind": "generator",
+    "main": "_shtab_trash_empty",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--print-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--print-completion",
+        "bash"
+      ]
+    }
+  },
+  "trash-restore": {
+    "kind": "generator",
+    "main": "_shtab_trash_restore",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "argv": {
+      "zsh": [
+        "--print-completion",
+        "zsh"
+      ],
+      "bash": [
+        "--print-completion",
+        "bash"
+      ]
+    }
+  },
+  "ai-cli": {
+    "kind": "parser",
+    "main": "_shtab_ai_cli",
+    "shells": [
+      "zsh",
+      "bash"
+    ]
+  },
+  "yazi": {
+    "kind": "asset",
+    "main": "_yazi",
+    "shells": [
+      "zsh",
+      "bash"
+    ]
+  },
+  "ya": {
+    "kind": "asset",
+    "main": "_ya",
+    "shells": [
+      "zsh",
+      "bash"
+    ]
+  },
+  "cargo": {
+    "kind": "asset",
+    "main": "_cargo",
+    "shells": [
+      "zsh",
+      "bash"
+    ]
+  },
+  "ffplay": {
+    "kind": "help-options",
+    "main": "_sc_flags_ffplay",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "help_argv": [
+      "-h"
+    ]
+  },
+  "ffprobe": {
+    "kind": "help-options",
+    "main": "_sc_flags_ffprobe",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "help_argv": [
+      "-h"
+    ]
+  },
+  "magick": {
+    "kind": "help-options",
+    "main": "_sc_flags_magick",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "help_argv": [
+      "-help"
+    ]
+  },
+  "compare": {
+    "kind": "help-options",
+    "main": "_sc_flags_compare",
+    "shells": [
+      "zsh",
+      "bash"
+    ],
+    "help_argv": [
+      "-help"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $text := .chezmoi.stdin -}}
+{{- /* Repair only gh helpers with a stale version-dependent Unix install path. */ -}}
+{{- $miseData := dig "machine" "mise_data_dir" "" . | default (joinPath .chezmoi.homeDir ".local/share/mise") -}}
+{{- $helper := printf "!%s auth git-credential" (joinPath $miseData "shims/gh" | shellQuote) | quote -}}
+{{- $replacement := printf "${1}%s" (replace "$" "$$" $helper) -}}
+{{- $text = replaceAllRegex `(?m)^(\s*helper\s*=\s*)!(/[^\r\n]*?/gh) auth git-credential\s*$` $replacement $text -}}
+{{- $text = replaceAllRegex `(?m)^(\s*helper\s*=\s*)"!'/[^\r\n]*?/shims/gh' auth git-credential"\s*$` $replacement $text -}}
+{{- if not (contains "path = ~/.config/git/config" $text) -}}
+{{- $text = printf "%s\n[include]\n\tpath = ~/.config/git/config\n" (trimSuffix "\n" $text) -}}
+{{- end -}}
+{{- printf "%s\n" (trimSuffix "\n" $text) -}}

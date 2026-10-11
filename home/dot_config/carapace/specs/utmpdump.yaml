@@ -1,0 +1,4 @@
+name: utmpdump
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([utmpdump])"]

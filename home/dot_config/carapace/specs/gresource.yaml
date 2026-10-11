@@ -1,0 +1,4 @@
+name: gresource
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gresource])"]

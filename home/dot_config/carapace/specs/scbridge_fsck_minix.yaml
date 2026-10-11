@@ -1,0 +1,4 @@
+name: scbridge_fsck_minix
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fsck.minix])"]

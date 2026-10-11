@@ -1,0 +1,2 @@
+#compdef codex
+_sc_native codex _codex "$@"

@@ -1,0 +1,4 @@
+name: pvdisplay
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pvdisplay])"]

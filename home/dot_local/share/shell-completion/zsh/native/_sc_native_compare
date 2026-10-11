@@ -1,0 +1,2 @@
+#compdef compare
+_sc_native compare _sc_flags_compare "$@"

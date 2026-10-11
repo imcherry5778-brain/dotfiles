@@ -1,0 +1,4 @@
+name: rtcwake
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rtcwake])"]

@@ -1,0 +1,4 @@
+name: dnie-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([dnie-tool])"]

@@ -1,0 +1,4 @@
+name: appstreamcli
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([appstreamcli])"]

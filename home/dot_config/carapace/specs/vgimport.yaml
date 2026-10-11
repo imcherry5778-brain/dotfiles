@@ -1,0 +1,4 @@
+name: vgimport
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgimport])"]

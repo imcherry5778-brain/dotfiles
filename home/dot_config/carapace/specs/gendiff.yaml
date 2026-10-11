@@ -1,0 +1,4 @@
+name: gendiff
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gendiff])"]

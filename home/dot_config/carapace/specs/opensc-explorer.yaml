@@ -1,0 +1,4 @@
+name: opensc-explorer
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([opensc-explorer])"]

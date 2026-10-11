@@ -1,0 +1,4 @@
+name: oowriter
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([oowriter])"]

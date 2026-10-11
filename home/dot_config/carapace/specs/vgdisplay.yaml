@@ -1,0 +1,4 @@
+name: vgdisplay
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgdisplay])"]

@@ -1,0 +1,2 @@
+#compdef rustup
+_sc_native rustup _rustup "$@"

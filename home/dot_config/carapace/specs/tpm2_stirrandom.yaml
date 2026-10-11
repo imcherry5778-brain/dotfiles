@@ -1,0 +1,4 @@
+name: tpm2_stirrandom
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_stirrandom])"]

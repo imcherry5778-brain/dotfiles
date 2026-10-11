@@ -1,0 +1,4 @@
+name: systemd-cryptenroll
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([systemd-cryptenroll])"]

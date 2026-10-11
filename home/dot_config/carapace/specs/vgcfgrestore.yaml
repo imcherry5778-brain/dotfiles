@@ -1,0 +1,4 @@
+name: vgcfgrestore
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgcfgrestore])"]

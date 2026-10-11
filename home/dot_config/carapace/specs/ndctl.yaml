@@ -1,0 +1,4 @@
+name: ndctl
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([ndctl])"]

@@ -1,0 +1,4 @@
+name: eject
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([eject])"]

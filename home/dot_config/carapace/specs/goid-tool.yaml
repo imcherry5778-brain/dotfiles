@@ -1,0 +1,4 @@
+name: goid-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([goid-tool])"]

@@ -1,0 +1,4 @@
+name: vpddecode
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vpddecode])"]

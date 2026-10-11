@@ -1,7 +1,5 @@
-# chezmoi 소스 루트
+# chezmoi source
 
-이 디렉터리만 사용자 홈에 대응한다. `.chezmoiroot`는 저장소 루트에 있고 내용은 `home`이다. 초기화 템플릿·데이터·ignore는 이곳에 둔다.
+사용자 설정 원본·기기 데이터·템플릿과 고정 업스트림 선언을 둔다. docs/scripts/tests는 source 밖이다. 현재 실제 Fedora에서 선정한 설정 초안이 있고, 기본 deployment.enabled=false라 모든 대상이 제외된다. 명시적으로 켜더라도 현재 Fedora만 preview를 지원한다.
 
-현재 `.chezmoiignore`가 모든 배포 대상을 제외하므로 대상 파일 목록은 비어 있어야 한다. 원본 위치와 기기 데이터를 격리 환경에서 검증할 수 있으나 실제 홈 설정과 연결하지 않는다.
-
-후속 단계에서 검토한 파일만 `dot_zshrc.tmpl`, `dot_gitconfig.tmpl`, 앱별 `dot_config/` 등에 추가하고 해당 배포 경계를 함께 갱신한다. `.gitkeep`, 문서용 README, 설치 결과를 사용자 설정으로 가져오지 않는다.
+실제 홈에 연결하거나 적용하지 않았다. 임시 config/cache/state/destination을 지정한 검증에서만 설정을 생성했다. [Fedora 판단](../docs/fedora-review.md)을 참고한다. 이 README는 배포하지 않는다.

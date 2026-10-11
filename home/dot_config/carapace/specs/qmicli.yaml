@@ -1,0 +1,4 @@
+name: qmicli
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([qmicli])"]

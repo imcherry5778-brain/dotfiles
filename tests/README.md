@@ -1,6 +1,6 @@
-# 기반 검증
+# 설정 source 검증
 
-현재 검증은 구조와 chezmoi 초기화의 경계를 다룬다. 실제 앱 설치·인증·GUI는 검사하지 않는다.
+기반 검증과 Fedora 설정 source의 격리 검증을 구분한다. 실제 앱 설치·인증·GUI는 검사하지 않는다.
 
 `verify.ps1`은 PowerShell 7과 Git, 지정한 chezmoi 실행 파일을 사용한다. PowerShell은 Windows의 기본 구현이며 이 검증 스크립트에서는 Linux/macOS CI에서도 같은 테스트를 실행하기 위해 사용한다. PowerShell을 Linux/macOS 사용자 기본 CLI 목록에 추가한다는 의미는 아니다.
 
@@ -22,3 +22,21 @@
 - 임시 홈에서만 두 번 apply해 기존 파일·디렉터리가 그대로인지 확인.
 
 원본 checkout, 실제 chezmoi config/cache/state, 사용자 홈을 초기화나 apply 대상에 사용하지 않는다. 테스트의 config·state·cache·source 사본·대상은 전부 임시 디렉터리에 둔다. fixture는 템플릿 자료를 모의할 뿐 해당 OS에서 실행한 검증을 대체하지 않는다.
+
+## Fedora source
+
+Python 3.11+, Zsh, Bash, Git과 지정한 chezmoi를 사용한다.
+
+```sh
+python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi
+```
+
+임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias 보존, AI hooks·MCP·미관리 키 보존, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. 다른 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
+
+기존 mise가 있으면 `--mise /path/to/mise`로 격리한 config 디렉터리에서 global environment 3개와 34개 도구 선택을 실제 mise로 확인할 수 있다. 설치 명령은 실행하지 않는다.
+
+`--neovim /path/to/nvim`은 사용자 init와 플러그인을 로드하지 않고 렌더링한 Lua 파일의 구문만 컴파일한다. config/data/state/cache는 임시 경로를 사용한다.
+
+Linux에서 기존 OMZ와 bubblewrap이 있으면 `--oh-my-zsh /path/to/existing/oh-my-zsh`를 추가할 수 있다. 기존 OMZ·선별된 completion을 임시로 복사하고 host root는 읽기 전용, 네트워크는 차단, 실제 HOME 경로는 임시 홈으로 mount한다. HOME 환경변수를 다른 값으로 지정하지 않는다. CLI는 모형으로 실행하므로 이 테스트는 초기화 소유권·플러그인 순서·누락 시 fallback을 확인하며 실제 CLI 자체를 검증하지 않는다.
+
+CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행한다. Linux 러너에 설치하는 Zsh는 일회성 테스트 의존성이며 사용자 Fedora 설치가 아니다. optional mise/OMZ runtime 검사는 현재 Fedora의 격리 환경에서 별도로 실행했다.

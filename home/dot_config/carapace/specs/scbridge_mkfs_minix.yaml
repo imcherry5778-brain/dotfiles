@@ -1,0 +1,4 @@
+name: scbridge_mkfs_minix
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([mkfs.minix])"]

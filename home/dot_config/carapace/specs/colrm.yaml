@@ -1,0 +1,4 @@
+name: colrm
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([colrm])"]

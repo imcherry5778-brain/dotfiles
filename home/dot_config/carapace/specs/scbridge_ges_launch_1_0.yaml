@@ -1,0 +1,4 @@
+name: scbridge_ges_launch_1_0
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([ges-launch-1.0])"]

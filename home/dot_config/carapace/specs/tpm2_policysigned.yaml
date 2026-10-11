@@ -1,0 +1,4 @@
+name: tpm2_policysigned
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_policysigned])"]

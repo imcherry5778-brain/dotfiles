@@ -1,0 +1,4 @@
+name: vgreduce
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgreduce])"]

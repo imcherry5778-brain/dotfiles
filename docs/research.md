@@ -26,4 +26,14 @@
 
 선택한 구조는 home을 배포 루트로 분리하고 앱별 원본을 공유하며 운영 코드는 일반 프로젝트 디렉터리에 두는 방식이다. 기존 사용자 코드나 인증 정책을 이 사례에서 가져오지 않았다.
 
-검증용 chezmoi는 공식 v2.73.0을 지정한다. tests/chezmoi-release.json의 체크섬은 그 릴리스의 공식 checksums.txt에서 확인한 SHA-256이다. CI 다운로드는 러너 임시 경로에만 저장한다. 루트 mise 설정은 현재 Fedora 도구에서 확인한 2026.10.3을 최소로 요구하며 CLI 설치 버전을 새로 선언하지 않는다.
+검증용 chezmoi는 공식 v2.73.0을 지정한다. tests/chezmoi-release.json의 체크섬은 그 릴리스의 공식 checksums.txt에서 확인한 SHA-256이다. CI 다운로드는 러너 임시 경로에만 저장한다. 루트 mise 설정은 현재 Fedora 도구에서 확인한 2026.10.3을 최소로 요구하며 저장소 작업만 소유한다. 전역 CLI 버전은 Fedora 검토 단계에서 home/dot_config/mise에 별도로 선언했다.
+
+## Fedora source 구성에 추가 확인한 근거
+
+- [부분 파일 관리](https://www.chezmoi.io/user-guide/manage-different-types-of-file/#manage-part-but-not-all-of-a-file): modify-template은 .tmpl 확장자가 없어야 하며 입력 문서를 선택적으로 갱신한다. 실제 반복 적용과 미관리 키 보존을 검사했다.
+- [고정 외부 소스](https://www.chezmoi.io/reference/special-files/chezmoiexternal-format/): revision URL과 non-exact 정책으로 미관리 파일을 제거하지 않는다. 외부 실행/다운로드는 기본 비활성이다.
+- [mise 환경 선택](https://mise.jdx.dev/configuration/environments.html): global miserc.toml 선택을 설치된 mise 2026.10.3으로 격리 검사했다.
+- [Claude 사용자 설정](https://code.claude.com/docs/en/settings): 사용자 선호와 프로젝트·관리형 설정 및 상태 파일을 구분한다.
+- [Codex 기본 설정](https://learn.chatgpt.com/docs/config-file/config-basic), [설정 참조](https://learn.chatgpt.com/docs/config-file/config-reference): 사용자 config와 프로젝트/관리형 config를 구분하며 현재 선호만 관리한다.
+- [fzf-tab](https://github.com/Aloxaf/fzf-tab): 공식 v1.3.0 파일 tree와 실제 설치본을 비교해 동일 revision을 확인했다.
+- [delta 공식 릴리스](https://github.com/dandavison/delta/releases/tag/0.20.1): 이번 신규 후보 버전이며 설치하지 않았다.

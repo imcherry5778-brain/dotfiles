@@ -1,0 +1,4 @@
+name: tpm2_send
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_send])"]

@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-10-11",
+  "common_cli": {
+    "ripgrep": "15.2.0",
+    "fd": "10.4.2",
+    "bat": "0.26.1",
+    "jq": "1.8.1",
+    "carapace": "1.8.0",
+    "delta": "0.20.1",
+    "fzf": "0.74.4",
+    "zoxide": "0.10.0",
+    "gh": "2.102.0",
+    "lazygit": "0.66.0",
+    "neovim": "0.12.5",
+    "yazi": "26.9.1",
+    "uv": "0.12.23"
+  },
+  "existing_ai": {
+    "opencode": "1.18.35"
+  },
+  "personal_fedora": {
+    "ansible-core": "2.16.19",
+    "aws-cli": "2.37.12",
+    "azure": "2.91.0",
+    "bitwarden": "2026.9.1",
+    "cloudflare-cf": "1.0.0-beta.12",
+    "go": "1.26.8",
+    "helm": "4.3.0",
+    "java": "corretto-21.0.12.12.1",
+    "k6": "2.3.0",
+    "k9s": "0.51.0",
+    "kubectl": "1.37.1",
+    "mysql-client": "9.7.1",
+    "node": "26.11.1",
+    "opentofu": "1.13.1",
+    "packer": "1.16.1",
+    "pipx": "1.17.12",
+    "python": "3.14.8",
+    "rust": "1.99.0",
+    "terraform": "1.16.5",
+    "vault": "2.1.2"
+  },
+  "completion": {
+    "bash_bridge_specs": 404,
+    "native_adapters": 26,
+    "community_files": 50,
+    "user_modified_community_headers": [
+      "_cmake",
+      "_golang",
+      "_sox_ng"
+    ],
+    "shtab_dependency": "1.7.2"
+  },
+  "source_nvim_revision": "803bc181d7c0d6d5eeba9274d9be49b287294d99"
+}

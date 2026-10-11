@@ -1,0 +1,2 @@
+#compdef bw
+_sc_native bw _bw "$@"

@@ -1,0 +1,4 @@
+name: sfdisk
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([sfdisk])"]

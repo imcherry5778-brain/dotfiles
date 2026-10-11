@@ -1,0 +1,4 @@
+name: authselect
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([authselect])"]

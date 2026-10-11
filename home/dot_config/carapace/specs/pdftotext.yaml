@@ -1,0 +1,4 @@
+name: pdftotext
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pdftotext])"]

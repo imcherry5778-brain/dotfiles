@@ -1,0 +1,2 @@
+#compdef trash
+_sc_native trash _shtab_trash "$@"

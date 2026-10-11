@@ -1,0 +1,4 @@
+name: rpmdev-newspec
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-newspec])"]

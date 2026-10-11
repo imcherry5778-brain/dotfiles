@@ -1,0 +1,4 @@
+name: rpm2cpio
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpm2cpio])"]

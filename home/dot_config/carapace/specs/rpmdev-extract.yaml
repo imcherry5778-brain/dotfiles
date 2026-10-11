@@ -1,0 +1,4 @@
+name: rpmdev-extract
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-extract])"]

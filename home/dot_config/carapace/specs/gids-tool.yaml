@@ -1,0 +1,4 @@
+name: gids-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gids-tool])"]

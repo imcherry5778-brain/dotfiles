@@ -1,0 +1,4 @@
+name: irqtop
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([irqtop])"]

@@ -1,0 +1,2 @@
+#compdef trash-list
+_sc_native trash-list _shtab_trash_list "$@"

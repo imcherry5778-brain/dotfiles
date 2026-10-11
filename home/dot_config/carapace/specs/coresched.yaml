@@ -1,0 +1,4 @@
+name: coresched
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([coresched])"]

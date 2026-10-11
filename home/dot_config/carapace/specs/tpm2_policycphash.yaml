@@ -1,0 +1,4 @@
+name: tpm2_policycphash
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_policycphash])"]

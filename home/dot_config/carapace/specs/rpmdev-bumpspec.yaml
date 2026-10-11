@@ -1,0 +1,4 @@
+name: rpmdev-bumpspec
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-bumpspec])"]

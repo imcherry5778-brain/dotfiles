@@ -1,0 +1,4 @@
+name: x264
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([x264])"]

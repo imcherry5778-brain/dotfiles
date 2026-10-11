@@ -1,0 +1,4 @@
+name: edquota
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([edquota])"]

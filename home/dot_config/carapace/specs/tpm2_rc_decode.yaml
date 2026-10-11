@@ -1,0 +1,4 @@
+name: tpm2_rc_decode
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_rc_decode])"]

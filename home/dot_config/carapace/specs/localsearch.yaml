@@ -1,0 +1,4 @@
+name: localsearch
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([localsearch])"]

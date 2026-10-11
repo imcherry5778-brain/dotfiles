@@ -1,0 +1,4 @@
+name: tpm2_pcrread
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_pcrread])"]

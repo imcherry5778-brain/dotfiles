@@ -1,0 +1,4 @@
+name: tpm2_evictcontrol
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_evictcontrol])"]

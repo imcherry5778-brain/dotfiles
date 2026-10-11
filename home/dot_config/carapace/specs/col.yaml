@@ -1,0 +1,4 @@
+name: col
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([col])"]

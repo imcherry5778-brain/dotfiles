@@ -1,0 +1,4 @@
+name: lvextend
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvextend])"]

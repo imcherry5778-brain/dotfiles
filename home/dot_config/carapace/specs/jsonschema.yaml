@@ -1,0 +1,4 @@
+name: jsonschema
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([jsonschema])"]

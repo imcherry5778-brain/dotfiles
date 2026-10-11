@@ -1,0 +1,4 @@
+name: tpm2_import
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_import])"]

@@ -1,0 +1,4 @@
+name: eidenv
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([eidenv])"]

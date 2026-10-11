@@ -1,0 +1,4 @@
+name: tpm2_nvextend
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_nvextend])"]

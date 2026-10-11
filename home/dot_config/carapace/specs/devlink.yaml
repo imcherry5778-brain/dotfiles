@@ -1,0 +1,4 @@
+name: devlink
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([devlink])"]

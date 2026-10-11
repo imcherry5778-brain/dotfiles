@@ -1,0 +1,4 @@
+name: findfs
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([findfs])"]

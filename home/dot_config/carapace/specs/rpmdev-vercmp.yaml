@@ -1,0 +1,4 @@
+name: rpmdev-vercmp
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-vercmp])"]

@@ -1,0 +1,4 @@
+name: ether-wake
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([ether-wake])"]

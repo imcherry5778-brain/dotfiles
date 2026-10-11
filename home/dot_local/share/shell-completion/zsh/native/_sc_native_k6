@@ -1,0 +1,2 @@
+#compdef k6
+_sc_native k6 _k6 "$@"

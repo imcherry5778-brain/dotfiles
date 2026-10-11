@@ -1,0 +1,4 @@
+name: semanage
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([semanage])"]

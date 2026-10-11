@@ -1,0 +1,4 @@
+name: gnome-control-center
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gnome-control-center])"]

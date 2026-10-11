@@ -1,0 +1,4 @@
+name: autoscan
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([autoscan])"]

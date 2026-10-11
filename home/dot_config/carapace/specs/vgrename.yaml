@@ -1,0 +1,4 @@
+name: vgrename
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgrename])"]

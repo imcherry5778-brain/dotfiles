@@ -1,0 +1,4 @@
+name: gtk4-builder-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gtk4-builder-tool])"]

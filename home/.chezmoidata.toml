@@ -6,4 +6,17 @@ name = "dotfiles"
 [features]
 ai = true
 conda = false
-preserve_existing_tools = false
+personal_fedora = false
+bitwarden_agent = false
+delta = false
+editor_web = false
+
+# Neither configuration deployment nor upstream fetching is enabled by default.
+[deployment]
+enabled = false
+externals = false
+
+[machine]
+conda_prefix = ""
+ssh_agent_socket = ""
+mise_data_dir = ""

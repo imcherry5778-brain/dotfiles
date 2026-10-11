@@ -1,0 +1,4 @@
+name: dtrust-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([dtrust-tool])"]

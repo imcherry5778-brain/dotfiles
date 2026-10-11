@@ -1,0 +1,4 @@
+name: openconnect
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([openconnect])"]

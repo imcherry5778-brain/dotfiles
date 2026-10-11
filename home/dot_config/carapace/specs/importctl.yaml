@@ -1,0 +1,4 @@
+name: importctl
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([importctl])"]

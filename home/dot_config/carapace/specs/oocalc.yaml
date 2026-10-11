@@ -1,0 +1,4 @@
+name: oocalc
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([oocalc])"]

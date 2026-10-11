@@ -1,0 +1,4 @@
+name: egk-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([egk-tool])"]

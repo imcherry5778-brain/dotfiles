@@ -1,0 +1,4 @@
+name: fprintd-list
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fprintd-list])"]

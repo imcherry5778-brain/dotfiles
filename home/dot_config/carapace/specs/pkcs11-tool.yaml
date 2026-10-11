@@ -1,0 +1,4 @@
+name: pkcs11-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pkcs11-tool])"]

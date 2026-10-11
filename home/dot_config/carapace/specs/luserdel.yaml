@@ -1,0 +1,4 @@
+name: luserdel
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([luserdel])"]

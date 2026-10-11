@@ -1,0 +1,4 @@
+name: vgchange
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgchange])"]

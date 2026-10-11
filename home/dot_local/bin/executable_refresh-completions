@@ -1,0 +1,217 @@
+#!/usr/bin/python3
+"""Generate version-specific completions; never invoke application operations."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import uuid
+
+USER_HOME = Path.home()
+DATA = USER_HOME / '.local/share/shell-completion'
+CONFIG = USER_HOME / '.config/shell-completion'
+
+def run(argv, timeout=25, env=None):
+    p = subprocess.run(argv, text=True, capture_output=True, timeout=timeout, env=env)
+    if p.returncode:
+        raise RuntimeError(f'{Path(argv[0]).name}: completion generation failed ({p.returncode})')
+    return p.stdout
+
+def executable(name):
+    if name == 'cargo':
+        return Path(run(['rustup', 'which', 'cargo'], 5).strip())
+    mise = shutil.which('mise')
+    if mise:
+        try:
+            result = run([mise, 'which', name], 5).strip()
+            if Path(result).is_file():
+                return Path(result) if name in {'rustup', 'compare'} else Path(result).resolve()
+        except (RuntimeError, subprocess.TimeoutExpired):
+            pass
+    path = shutil.which(name)
+    if not path:
+        raise RuntimeError(f'{name}: executable unavailable')
+    # Rustup proxies must retain their invocation name.
+    return Path(path) if name in {'rustup', 'compare'} else Path(path).resolve()
+
+def identity(path):
+    s = path.stat()
+    return [str(path), s.st_mtime_ns, s.st_size]
+
+def generate(name, route, shell, exe):
+    kind = route['kind']
+    env = os.environ.copy()
+    env['PYTHONPATH'] = str(DATA / 'generator-venv/site-packages')
+    if kind == 'help-options':
+        p = subprocess.run([str(exe), *route['help_argv']], text=True,
+                           capture_output=True, timeout=25, env=env)
+        # ImageMagick compare prints valid help and exits with status 2.
+        if p.returncode not in ({0, 2} if name == 'compare' else {0}):
+            raise RuntimeError(f'{name}: help generation failed ({p.returncode})')
+        help_text = re.split(r'\n[^\n]*AVOptions:', p.stdout, maxsplit=1)[0]
+        options = {}
+        for line in help_text.splitlines():
+            parts = re.split(r'\s{2,}', line.strip(), maxsplit=1)
+            head = parts[0].split(maxsplit=1)
+            if not head or not re.fullmatch(r'--?[A-Za-z0-9?][A-Za-z0-9?_-]*', head[0]):
+                continue
+            options.setdefault(head[0], (head[1] if len(head) > 1 else '',
+                                         parts[1] if len(parts) > 1 else ''))
+        if not options:
+            raise RuntimeError(f'{name}: no options found in installed help')
+        if shell == 'bash':
+            words = shlex.quote(' '.join(options))
+            return route['main'] + '() {\n  mapfile -t COMPREPLY < <(compgen -W ' + words + ' -- "${COMP_WORDS[COMP_CWORD]}")\n}\ncomplete -o default -F ' + route['main'] + ' ' + name + '\n'
+        specs = []
+        for flag, (hint, description) in options.items():
+            description = re.sub(r'[\[\]\\:]', ' ', description)
+            spec = flag + '[' + description + ']'
+            if hint:
+                hint = re.sub(r'[\[\]\\:]', ' ', hint)
+                if name == 'ffprobe' and flag in {'-of', '-output_format', '-print_format'}:
+                    spec += ':format:(default compact csv flat ini json xml)'
+                else:
+                    action = '_files' if re.search(r'file|filename|input_file', hint, re.I) else ''
+                    for field in hint.split()[:2]:
+                        spec += ':' + field + ':' + action
+            specs.append(shlex.quote(spec))
+        return '_arguments -C \\\n  ' + ' \\\n  '.join(specs) + " \\\n  '*:file:_files'\n"
+    if kind == 'asset':
+        filename = route['main'] if shell == 'zsh' else name + '.bash'
+        if name == 'cargo':
+            path = exe.parent.parent / 'share/zsh/site-functions/_cargo'
+            if shell == 'bash':
+                path = exe.parent.parent / 'etc/bash_completion.d/cargo'
+        else:
+            path = exe.parent / 'completions' / filename
+        return path.read_text()
+    if kind == 'parser':
+        script = '''import argparse,sys,shtab
+from ai_cli.cli import parser
+from ai_cli import core
+p=parser()
+products=list(core.IDS)+list(core.ALIASES)+["all"]
+for action in p._actions:
+ if isinstance(action,argparse._SubParsersAction):
+  for child in action.choices.values():
+   for argument in child._actions:
+    if argument.dest=="products":argument.choices=products
+print(shtab.complete(p,shell=sys.argv[1]))
+'''
+        env['PYTHONPATH'] += os.pathsep + str(exe.parent)
+        text = run([str(DATA/'generator-venv/bin/python'), '-c', script, shell], env=env)
+        if shell == 'zsh':
+            # Complete the last component of comma-separated product lists.
+            helper = '\n_sc_ai_products() {\n  local head="${PREFIX%,*}"\n  if [[ $PREFIX == *,* ]]; then compset -P "${head},"; fi\n  compadd -- ' + ' '.join(products_from_parser(exe)) + '\n}\n'
+            text = re.sub(r'("\(\*\)::제품 ID[^\n]+?:)\([^\n]+\)(")', r'\1_sc_ai_products\2', text)
+            text = helper + text
+        return fix_shtab(text,route['main']) if shell == 'zsh' else text
+    argv = route['argv'][shell]
+    text = run([str(exe), *argv], env=env)
+    if shell == 'zsh' and name in {'bw', 'lazygit'}:
+        text += '\n' + route['main'] + ' "$@"\n'
+    if shell == 'zsh' and name == 'lazygit':
+        text=text.replace('case "$prev" in','''case "$prev" in
+        -p|--path|-w|--work-tree|-g|--git-dir|-ucd|--use-config-dir)
+            _directories; return ;;
+        -f|--filter) _files; return ;;
+        -ucf|--use-config-file) _files; return ;;
+        -sm|--screen-mode) _values 'screen mode' normal half full; return ;;
+''',1)
+    if shell == 'zsh' and name == 'bw':
+        value_flags = {'session','search','url','folderid','organizationid','collectionid',
+                       'itemid','encoding','format','output','method','hostname','port',
+                       'clientid','clientsecret'}
+        for flag in value_flags:
+            text = re.sub(r"('--" + flag + r"\[[^\n]*?\])(')", r'\1:value:\2', text)
+    if shell == 'zsh' and name.startswith('trash'):
+        text = fix_shtab(text,route['main'])
+    return text
+
+def fix_shtab(text, main):
+    # shtab mutates its global root option array on completion; keep this local.
+    text=text.replace(main+'() {',main+'() {\n  local -a '+main+'_options=("${'+main+'_options[@]}")',1)
+    def unique(match):
+        return match.group(1)+'\n'.join(dict.fromkeys(match.group(2).splitlines()))+match.group(3)
+    return re.sub(r'(^_shtab_\w+_options=\(\n)(.*?)(\n\))',unique,text,flags=re.M|re.S)
+
+def products_from_parser(exe):
+    script = 'from ai_cli import core;print(" ".join(list(core.IDS)+list(core.ALIASES)+["all"]))'
+    env = os.environ.copy()
+    env['PYTHONPATH'] = str(exe.parent)
+    return run(['/usr/bin/python3', '-c', script], env=env).strip().split()
+
+def refresh(name, route, force=False):
+    cache = DATA/'cache'/name
+    cache.mkdir(parents=True, exist_ok=True)
+    try:
+        exe = executable(name)
+        fingerprints = [identity(exe), identity(Path(__file__).resolve())]
+        if name in {'cf','bw','codex'}:
+            try: fingerprints.append(identity(executable('node')))
+            except RuntimeError: pass
+        if route['kind'] == 'parser':
+            for file in (exe.parent/'ai_cli').glob('*.py'):fingerprints.append(identity(file))
+        digest = hashlib.sha256(json.dumps([fingerprints,route],sort_keys=True).encode()).hexdigest()[:20]
+        if force:
+            import time
+            digest += '-'+str(time.time_ns())
+        final = cache/digest
+        if final.exists() and not force:
+            return final
+        with tempfile.TemporaryDirectory(dir=cache, prefix='.build-') as temp:
+            temp = Path(temp)
+            for shell in route.get('shells',['zsh','bash']):
+                text = generate(name,route,shell,exe)
+                if not text.strip():raise RuntimeError(f'{name}: empty completion')
+                path = temp/(route['main'] if shell=='zsh' else 'completion.bash')
+                path.write_text(text)
+                run(['/usr/bin/zsh' if shell=='zsh' else '/usr/bin/bash','-n',str(path)],5)
+                if shell=='zsh':
+                    functions = re.findall(r'^(?:function\s+)?([A-Za-z_][A-Za-z_0-9-]*)\s*(?:\(\))?\s*\{',text,re.M)
+                    (temp/'functions').write_text(' '.join(functions))
+            (temp/'identity.json').write_text(json.dumps({'command':name,'fingerprints':fingerprints,'route':route},indent=2))
+            try:os.rename(temp,final)
+            except OSError:
+                if not final.is_dir():raise
+        link = cache/'current'
+        tmp = cache/('.current-'+uuid.uuid4().hex)
+        try:
+            tmp.symlink_to(final.name)
+            os.replace(tmp,link)
+        finally:
+            tmp.unlink(missing_ok=True)
+        (cache/'last-error.json').unlink(missing_ok=True)
+        return final
+    except Exception as error:
+        (cache/'last-error.json').write_text(json.dumps({'command':name,'error':str(error)}))
+        current = cache/'current'
+        if current.exists():
+            print(f'{name}: generation failed; keeping previous completion',file=sys.stderr)
+            return current.resolve()
+        raise
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('commands',nargs='*')
+    p.add_argument('--resolve',metavar='COMMAND')
+    p.add_argument('--force',action='store_true')
+    args=p.parse_args()
+    routes=json.loads((CONFIG/'native-routes.json').read_text())
+    names=[args.resolve] if args.resolve else (args.commands or list(routes))
+    failures=[]
+    for name in names:
+        try:
+            path=refresh(name,routes[name],args.force)
+            print(str(path) if args.resolve else f'{name}: ready')
+        except Exception as error:
+            failures.append(name);print(f'{name}: {error}',file=sys.stderr)
+    return bool(failures)
+
+if __name__=='__main__':sys.exit(main())

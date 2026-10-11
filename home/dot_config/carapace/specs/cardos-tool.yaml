@@ -1,0 +1,4 @@
+name: cardos-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([cardos-tool])"]

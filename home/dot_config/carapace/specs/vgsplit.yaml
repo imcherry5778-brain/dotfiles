@@ -1,0 +1,4 @@
+name: vgsplit
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgsplit])"]

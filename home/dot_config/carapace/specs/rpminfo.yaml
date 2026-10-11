@@ -1,0 +1,4 @@
+name: rpminfo
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpminfo])"]

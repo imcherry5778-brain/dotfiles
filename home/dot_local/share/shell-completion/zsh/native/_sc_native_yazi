@@ -1,0 +1,2 @@
+#compdef yazi
+_sc_native yazi _yazi "$@"

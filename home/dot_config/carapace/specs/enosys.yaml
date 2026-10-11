@@ -1,0 +1,4 @@
+name: enosys
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([enosys])"]

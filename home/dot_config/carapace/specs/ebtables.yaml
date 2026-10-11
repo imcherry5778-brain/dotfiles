@@ -1,0 +1,4 @@
+name: ebtables
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([ebtables])"]

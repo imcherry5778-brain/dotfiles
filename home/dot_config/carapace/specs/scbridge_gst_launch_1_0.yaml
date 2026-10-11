@@ -1,0 +1,4 @@
+name: scbridge_gst_launch_1_0
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gst-launch-1.0])"]

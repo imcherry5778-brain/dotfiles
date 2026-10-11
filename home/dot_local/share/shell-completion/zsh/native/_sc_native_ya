@@ -1,0 +1,2 @@
+#compdef ya
+_sc_native ya _ya "$@"

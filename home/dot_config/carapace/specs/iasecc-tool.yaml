@@ -1,0 +1,4 @@
+name: iasecc-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([iasecc-tool])"]

@@ -1,0 +1,4 @@
+name: conjure
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([conjure])"]

@@ -1,0 +1,4 @@
+name: vgextend
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([vgextend])"]

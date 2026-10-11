@@ -1,0 +1,4 @@
+name: fpaste
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fpaste])"]

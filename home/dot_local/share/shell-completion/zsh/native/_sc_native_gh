@@ -1,0 +1,2 @@
+#compdef gh
+_sc_native gh _gh "$@"

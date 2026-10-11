@@ -1,0 +1,4 @@
+name: pngfix
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pngfix])"]

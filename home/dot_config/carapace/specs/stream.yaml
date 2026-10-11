@@ -1,0 +1,4 @@
+name: stream
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([stream])"]

@@ -1,0 +1,4 @@
+name: autoupdate
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([autoupdate])"]

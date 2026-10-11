@@ -1,0 +1,4 @@
+name: fsck
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fsck])"]

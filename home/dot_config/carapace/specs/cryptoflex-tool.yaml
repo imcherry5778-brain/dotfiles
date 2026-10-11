@@ -1,0 +1,4 @@
+name: cryptoflex-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([cryptoflex-tool])"]

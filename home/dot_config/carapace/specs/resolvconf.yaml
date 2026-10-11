@@ -1,0 +1,4 @@
+name: resolvconf
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([resolvconf])"]

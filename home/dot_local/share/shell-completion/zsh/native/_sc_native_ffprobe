@@ -1,0 +1,2 @@
+#compdef ffprobe
+_sc_native ffprobe _sc_flags_ffprobe "$@"

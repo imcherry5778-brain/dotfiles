@@ -1,0 +1,4 @@
+name: lvreduce
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvreduce])"]

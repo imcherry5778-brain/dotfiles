@@ -1,0 +1,4 @@
+name: tpm2_certifyX509certutil
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tpm2_certifyX509certutil])"]

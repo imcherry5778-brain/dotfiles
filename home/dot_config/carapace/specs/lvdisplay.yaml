@@ -1,0 +1,4 @@
+name: lvdisplay
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvdisplay])"]

@@ -1,0 +1,4 @@
+name: epiphany
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([epiphany])"]

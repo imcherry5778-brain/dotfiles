@@ -1,0 +1,4 @@
+name: znew
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([znew])"]

@@ -1,0 +1,4 @@
+name: fsfreeze
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fsfreeze])"]

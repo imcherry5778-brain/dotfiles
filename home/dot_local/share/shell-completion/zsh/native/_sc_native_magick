@@ -1,0 +1,2 @@
+#compdef magick
+_sc_native magick _sc_flags_magick "$@"

@@ -1,0 +1,4 @@
+name: smbget
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([smbget])"]

@@ -1,0 +1,4 @@
+name: fprintd-delete
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([fprintd-delete])"]

@@ -1,0 +1,4 @@
+name: wall
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([wall])"]

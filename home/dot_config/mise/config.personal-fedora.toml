@@ -1,0 +1,22 @@
+# Existing Fedora tools, preserved only for the personal Fedora profile.
+[tools]
+ansible-core = "2.16.19"
+aws-cli = { version = "2.37.12", symlink_bins = "true" }
+azure = "2.91.0"
+bitwarden = "2026.9.1"
+cloudflare-cf = "1.0.0-beta.12"
+go = "1.26.8"
+helm = "4.3.0"
+java = "corretto-21.0.12.12.1"
+k6 = "2.3.0"
+k9s = "0.51.0"
+kubectl = "1.37.1"
+mysql-client = "9.7.1"
+node = "26.11.1"
+opentofu = "1.13.1"
+packer = "1.16.1"
+pipx = "1.17.12"
+python = "3.14.8"
+rust = "1.99.0"
+terraform = "1.16.5"
+vault = "2.1.2"

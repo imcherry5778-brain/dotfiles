@@ -1,0 +1,4 @@
+name: resizepart
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([resizepart])"]

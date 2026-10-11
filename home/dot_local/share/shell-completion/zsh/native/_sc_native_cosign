@@ -1,0 +1,2 @@
+#compdef cosign
+_sc_native cosign _cosign "$@"

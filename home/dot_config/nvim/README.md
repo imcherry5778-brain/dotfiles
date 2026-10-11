@@ -1,3 +1,5 @@
-# Neovim 사용자 설정 소스 위치
+# Neovim source
 
-기존 LazyVim 사용자 파일과 lazy-lock.json을 검토한 뒤 가져올 위치다. 기존 별도 Git 저장소와 미커밋 변경을 먼저 보존한다. 플러그인 설치 디렉터리·캐시·.git은 복사하지 않는다. Windows 대상은 실제 Neovim 설정 경로를 사용한다.
+현재 Fedora의 실제 수정된 LazyVim 설정과 잠금·라이선스를 가져왔다. .git과 플러그인 캐시는 제외했고 비활성 example.lua는 관리하지 않는다. editor_web 선택은 TypeScript/Python/Prettier extras와 HTML/CSS/Emmet 선언을 함께 제어한다.
+
+기존 Fedora의 별도 Neovim Git checkout과 미커밋 파일을 제거하거나 변경하지 않았다. Windows의 실제 stdpath와 기기 적용은 후속 검증 대상이다. 이 README는 배포하지 않는다.

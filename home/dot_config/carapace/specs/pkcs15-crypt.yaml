@@ -1,0 +1,4 @@
+name: pkcs15-crypt
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([pkcs15-crypt])"]

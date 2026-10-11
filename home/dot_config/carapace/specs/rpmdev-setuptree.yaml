@@ -1,0 +1,4 @@
+name: rpmdev-setuptree
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-setuptree])"]

@@ -1,0 +1,4 @@
+name: piv-tool
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([piv-tool])"]

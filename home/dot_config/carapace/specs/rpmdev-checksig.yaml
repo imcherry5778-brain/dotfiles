@@ -1,0 +1,4 @@
+name: rpmdev-checksig
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-checksig])"]

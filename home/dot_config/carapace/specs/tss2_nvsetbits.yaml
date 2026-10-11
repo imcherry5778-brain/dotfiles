@@ -1,0 +1,4 @@
+name: tss2_nvsetbits
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tss2_nvsetbits])"]

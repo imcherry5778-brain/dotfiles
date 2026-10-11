@@ -1,0 +1,2 @@
+#compdef uvx
+_sc_native uvx _uvx "$@"

@@ -1,0 +1,4 @@
+name: lvscan
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvscan])"]

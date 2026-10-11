@@ -1,0 +1,4 @@
+name: rpmdev-sha384
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpmdev-sha384])"]

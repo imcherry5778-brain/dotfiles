@@ -1,0 +1,4 @@
+name: systemd-vpick
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([systemd-vpick])"]

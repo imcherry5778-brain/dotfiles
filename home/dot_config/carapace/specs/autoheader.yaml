@@ -1,0 +1,4 @@
+name: autoheader
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([autoheader])"]

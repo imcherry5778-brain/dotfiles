@@ -1,0 +1,3 @@
+# Only the existing mise-owned AI tool is declared in this phase.
+[tools]
+opencode = "1.18.35"

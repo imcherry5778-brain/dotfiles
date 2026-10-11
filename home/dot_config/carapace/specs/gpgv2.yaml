@@ -1,0 +1,4 @@
+name: gpgv2
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([gpgv2])"]

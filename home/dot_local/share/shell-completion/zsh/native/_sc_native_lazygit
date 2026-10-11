@@ -1,0 +1,2 @@
+#compdef lazygit
+_sc_native lazygit _lazygit "$@"

@@ -1,0 +1,4 @@
+name: tsig-keygen
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([tsig-keygen])"]

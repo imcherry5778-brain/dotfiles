@@ -1,0 +1,4 @@
+name: smbcquotas
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([smbcquotas])"]

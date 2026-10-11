@@ -1,0 +1,2 @@
+#compdef uv
+_sc_native uv _uv "$@"

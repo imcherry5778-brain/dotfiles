@@ -1,0 +1,84 @@
+# Personal interactive shell. Installation and configuration application are explicit operations.
+typeset -U path PATH
+path=("$HOME/.local/bin" "${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims" $path)
+
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+# Revisions are reviewed in dotfiles, rather than updated during shell startup.
+zstyle ':omz:update' mode disabled
+HISTSIZE=50000
+SAVEHIST=50000
+
+plugins=(git)
+# mise activation precedes consumers of the mise-managed CLI binaries.
+(( $+commands[mise] )) && plugins+=(mise)
+(( $+commands[fzf] )) && plugins+=(fzf)
+plugins+=(globalias)
+(( $+commands[zoxide] )) && plugins+=(zoxide)
+{{ if .features.personal_fedora -}}
+(( $+commands[kubectl] )) && plugins+=(kubectl)
+{{ end -}}
+plugins+=(copybuffer)
+{{ if .features.personal_fedora -}}
+(( $+commands[aws] )) && plugins+=(aws)
+(( $+commands[helm] )) && plugins+=(helm)
+{{ end -}}
+{{ if .features.ai -}}
+[[ -r "$ZSH/custom/plugins/zsh-claudecode-completion/zsh-claudecode-completion.plugin.zsh" ]] && plugins+=(zsh-claudecode-completion)
+{{ end -}}
+# fzf-tab follows completion setup and precedes autosuggestions/highlighting.
+for plugin in zsh-history-substring-search fzf-tab zsh-autosuggestions zsh-syntax-highlighting; do
+  [[ -r "$ZSH/custom/plugins/$plugin/$plugin.plugin.zsh" ]] && plugins+=("$plugin")
+done
+unset plugin
+
+{{ if .features.personal_fedora -}}
+[[ -r "$HOME/.config/shell-completion/zsh-path.zsh" ]] && source "$HOME/.config/shell-completion/zsh-path.zsh"
+{{ end -}}
+if [[ -r "$ZSH/oh-my-zsh.sh" ]]; then
+  source "$ZSH/oh-my-zsh.sh"
+else
+  # Usable shell while prerequisites are unavailable. Do not install them here.
+  autoload -Uz compinit
+  compinit
+fi
+
+alias vi='nvim'
+alias vim='nvim'
+alias y='yazi'
+alias ssh='TERM=xterm-256color ssh'
+GLOBALIAS_FILTER_VALUES=(vi vim ls la ll which grep ssh agy)
+export EDITOR=nvim
+export VISUAL=nvim
+if (( $+commands[nvim] )); then
+  if (( $+commands[mise] )); then
+    SUDO_EDITOR=$(mise which nvim 2>/dev/null) || SUDO_EDITOR="${commands[nvim]}"
+  else
+    SUDO_EDITOR="${commands[nvim]}"
+  fi
+  export SUDO_EDITOR
+fi
+{{ if .features.bitwarden_agent -}}
+export SSH_AUTH_SOCK={{ .machine.ssh_agent_socket | shellQuote }}
+{{ end -}}
+
+if (( $+widgets[history-substring-search-up] )); then
+  bindkey '^[OA' history-substring-search-up
+  bindkey '^[OB' history-substring-search-down
+fi
+{{ if .features.ai -}}
+# Preserve Antigravity's existing workaround for tmux image attachments.
+agy() { TMUX= command agy "$@"; }
+{{ end -}}
+[[ -t 0 ]] && export GPG_TTY=$(tty)
+stash-to-history() { [[ -n $BUFFER ]] && print -rs -- "$BUFFER"; }
+zle -N stash-to-history
+bindkey '^X^H' stash-to-history
+
+{{ if .features.conda -}}
+{{ template "shell/conda.zsh.tmpl" . }}
+{{ end -}}
+{{ if .features.personal_fedora -}}
+# Provider bindings must remain after conda/mamba initialization.
+[[ -r "$HOME/.config/shell-completion/zsh-init.zsh" ]] && source "$HOME/.config/shell-completion/zsh-init.zsh"
+{{ end -}}

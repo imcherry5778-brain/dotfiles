@@ -1,0 +1,4 @@
+name: cancel
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([cancel])"]

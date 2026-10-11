@@ -1,0 +1,4 @@
+name: rpcdebug
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([rpcdebug])"]

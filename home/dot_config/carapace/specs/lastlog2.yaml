@@ -1,0 +1,4 @@
+name: lastlog2
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lastlog2])"]

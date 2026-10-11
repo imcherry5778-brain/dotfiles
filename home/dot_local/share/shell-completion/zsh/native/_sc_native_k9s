@@ -1,0 +1,2 @@
+#compdef k9s
+_sc_native k9s _k9s "$@"

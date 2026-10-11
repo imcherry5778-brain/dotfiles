@@ -1,0 +1,4 @@
+name: virt-clone
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([virt-clone])"]

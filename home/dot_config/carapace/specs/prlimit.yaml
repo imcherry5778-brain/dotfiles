@@ -1,0 +1,4 @@
+name: prlimit
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([prlimit])"]

@@ -1,0 +1,4 @@
+name: lvchange
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([lvchange])"]

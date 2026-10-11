@@ -1,0 +1,4 @@
+name: mpg123
+parsing: disabled
+completion:
+  positionalany: ["$carapace.bridge.Bash([mpg123])"]

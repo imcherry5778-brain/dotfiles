@@ -1,0 +1,17 @@
+# Shared behavior only. Identity, signing key and authentication stay in .gitconfig.
+[init]
+    defaultBranch = main
+[core]
+    editor = nvim
+    excludesFile = ~/.config/git/ignore
+{{ if .features.delta -}}
+# Enable only after the delta executable and pager behavior have been verified.
+[core]
+    pager = delta
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true
+[merge]
+    conflictStyle = zdiff3
+{{ end -}}

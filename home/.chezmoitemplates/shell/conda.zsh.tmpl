@@ -1,0 +1,26 @@
+# Existing Fedora Miniforge integration; dotfiles owns this block after migration.
+# Do not run conda init or mamba shell init against the managed .zshrc.
+_dotfiles_conda_prefix={{ .machine.conda_prefix | shellQuote }}
+if [[ -x "$_dotfiles_conda_prefix/bin/conda" ]]; then
+  __conda_setup="$("$_dotfiles_conda_prefix/bin/conda" shell.zsh hook 2>/dev/null)"
+  if [[ $? -eq 0 ]]; then
+    eval "$__conda_setup"
+  elif [[ -r "$_dotfiles_conda_prefix/etc/profile.d/conda.sh" ]]; then
+    source "$_dotfiles_conda_prefix/etc/profile.d/conda.sh"
+  else
+    path=("$_dotfiles_conda_prefix/bin" $path)
+  fi
+  unset __conda_setup
+fi
+if [[ -x "$_dotfiles_conda_prefix/bin/mamba" ]]; then
+  export MAMBA_EXE="$_dotfiles_conda_prefix/bin/mamba"
+  export MAMBA_ROOT_PREFIX="$_dotfiles_conda_prefix"
+  __mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2>/dev/null)"
+  if [[ $? -eq 0 ]]; then
+    eval "$__mamba_setup"
+  else
+    alias mamba="$MAMBA_EXE"
+  fi
+  unset __mamba_setup
+fi
+unset _dotfiles_conda_prefix

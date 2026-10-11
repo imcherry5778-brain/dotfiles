@@ -114,7 +114,8 @@ try {
     throw 'Effective source state root does not identify the home subdirectory.'
   }
   if (-not $actualData.repository -or $actualData.repository.owner -ne 'imcherry5778-brain') { throw 'Shared data was not loaded from home.' }
-  if (-not $actualData.features.ai -or $actualData.features.conda) { throw 'Shared feature defaults are wrong.' }
+  if (-not $actualData.features.ai -or $actualData.deployment.enabled -or $actualData.deployment.externals) { throw 'Safe machine defaults are wrong.' }
+  if ($actualData.features.personal_fedora -or $actualData.features.conda -or $actualData.features.editor_web) { throw 'Personal Fedora features were selected implicitly.' }
 
   $managed = Invoke-Chezmoi -Arguments ($configured + @('managed'))
   if ($managed.Trim()) { throw "Unexpected foundation deployment targets: $managed" }
