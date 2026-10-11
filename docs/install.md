@@ -25,7 +25,7 @@ git clone https://github.com/imcherry5778-brain/dotfiles.git $destination
 
 Git·mise·chezmoi·사용할 셸의 현재 설치를 확인하고 필요한 최소 도구만 확보한다. 그다음 sourceDir를 현재 checkout으로 연결하고 기기 데이터를 초기화한다. sourceDir는 /home 등의 문자열을 하드코딩하지 않고 현재 위치를 사용한다.
 
-`chezmoi init`은 config·source·상태를 만들 수 있고 `chezmoi init --apply`는 대상 파일도 변경한다. 실제 호스트에서 초기화·적용하는 것은 후속 이전 단계이며 이번 구조 검증에서 실행하지 않는다.
+`chezmoi init`은 config·source·상태를 만들 수 있고 `chezmoi init --apply`는 대상 파일도 변경한다. 개인 Fedora에서는 별도 사용자 승인과 최신 diff·백업 검토 후 초기화·적용을 완료했다. 아래 common baseline profile은 개인 기기 선택을 대신하지 않는다.
 
 리뷰한 설정 diff와 배포를 분리하고 기존 파일을 보존한다. 프로그램 설치·업그레이드·버전 삭제를 셸 시작이나 chezmoi 자동 훅에 연결하지 않는다. 인증은 각 OS에서 별도로 준비한다.
 
@@ -54,4 +54,4 @@ GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora
 
 2026-10-11, 코드 commit `c566f13`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704512)가 통과했다. Fedora 44 일반 사용자에서 13개 CLI를 새로 설치하고 모든 실행 파일의 실제 경로·버전을 확인했다. Zsh/tmux runtime와 Neovim Lua 구문 검사 후 같은 진입점을 재실행했고, external 파일을 포함한 managed 경로 1,902개의 내용·링크·권한이 동일하며 chezmoi diff가 비어 있음을 확인했다.
 
-같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다.
+같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 당시 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다. 이후 개인 홈 적용 기록은 [Fedora 실제 적용 결과](fedora-application.md)에서 구분한다.

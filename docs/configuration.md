@@ -10,7 +10,7 @@ config sourceDir는 Git checkout 루트인 .chezmoi.workingTree에서 유도한�
 
 기존 Fedora 선택의 비밀정보 없는 예는 [기기 데이터 예시](fedora-machine.example.toml)에 있다. 실제 적용 전 단계에서 선택한다. prefix/socket은 정상적인 홈 하위 기본 경로를 유도하고 다른 위치를 쓰면 기기 데이터로 지정한다. 초기화 템플릿은 기존 선택을 반복 초기화에서 보존한다.
 
-`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. enabled=true라도 Fedora 외에는 제외한다. Fedora에서는 README·빈 Ghostty/PowerShell 예약 경로·선택하지 않은 기능을 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 현재 실제 홈에 이 값을 설정하지 않았다.
+`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. enabled=true라도 Fedora 외에는 제외한다. Fedora에서는 README·빈 Ghostty/PowerShell 예약 경로·선택하지 않은 기능을 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 개인 Fedora는 enabled=true, externals=false로 적용했다. 기존 OMZ/tmux 플러그인과 로컬 패치를 유지하며 archive를 덮어쓰지 않았다.
 
 ## 실제 source
 
@@ -34,7 +34,7 @@ Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안
 - gh는 관리 값이 이미 같으면 입력 원문을 바이트 그대로 반환한다. 변경이 필요하면 일반 block YAML의 `git_protocol`과 `aliases.co` 줄만 갱신한다. 빈 scalar, 주석, 다른 alias/미관리 값은 그대로 둔다. 전체 파싱 결과를 기대 문서와 비교하며, 안전하게 수정할 수 없는 flow/quoted-key 형태는 덮어쓰지 않고 오류로 중단한다. 이미 값이 같은 flow YAML은 그대로 사용할 수 있다.
 - AI 세 파일도 선호 값이 같으면 원문을 그대로 반환한다. 값 변경이 필요한 경우에만 파싱한 문서를 재출력하므로 그때는 주석과 포맷이 바뀔 수 있다.
 - `dot_local/private_share`는 `.local/share`의 기존 700을 유지한다. completion 파일의 최종 경로와 내용은 바뀌지 않는다.
-- `dot_config/private_gh/modify_private_config.yml`은 디렉터리 700 / 파일 600을 선언한다. 현재 Fedora gh 디렉터리 751은 적용 시 700으로 제한된다. chezmoi의 source 속성으로 개별 디렉터리 751을 표현할 수 없으므로, 별도 chmod 스크립트를 추가하지 않고 사용자 전용 권한을 선택했다. 그룹/다른 사용자 접근이 필요한 공유 gh 설정에는 이 선택을 그대로 적용하지 않는다.
-- `.claude`·`.codex` 디렉터리도 사용자 전용 700이며 Claude settings 파일은 600이다. 권한 변경은 source의 제안이고 현재 홈은 수정하지 않았다.
+- `dot_config/private_gh/modify_private_config.yml`은 디렉터리 700 / 파일 600을 선언한다. 개인 Fedora gh 디렉터리는 적용 시 751에서 700으로 제한했다. chezmoi의 source 속성으로 개별 디렉터리 751을 표현할 수 없으므로, 별도 chmod 스크립트를 추가하지 않고 사용자 전용 권한을 선택했다. 그룹/다른 사용자 접근이 필요한 공유 gh 설정에는 이 선택을 그대로 적용하지 않는다.
+- `.claude`·`.codex` 디렉터리도 사용자 전용 700이며 Claude settings 파일은 600이다. 이 권한 변경도 개인 Fedora에 적용했고 원래 권한은 비공개 복구본에 기록했다.
 
 `dot_local/bin/symlink_carapace.tmpl`는 기존 ~/.local/bin/carapace 진입점을 유지하면서 mise shim으로 연결한다. 수동 실행 파일은 Fedora 이전 시 비공개 복구본에 보존한다. Zsh의 mise activation을 거치지 않은 Bash/기존 스크립트도 같은 고정 버전으로 연결되며 install inventory는 mise 한 곳에만 둔다.
