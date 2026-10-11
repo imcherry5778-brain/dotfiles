@@ -31,7 +31,7 @@ Python 3.11+, Zsh, Bash, Git과 지정한 chezmoi를 사용한다.
 python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi --gh /path/to/gh
 ```
 
-임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias·빈 scalar·주석 보존, AI hooks·MCP·미관리 키·no-op 원문 보존, 파일/디렉터리 권한의 재적용 안정성, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. Fedora/Ubuntu 외 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
+임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias·빈 scalar·주석 보존, AI hooks·MCP·미관리 키·no-op 원문 보존, 파일/디렉터리 권한의 재적용 안정성, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. Fedora/Ubuntu/Arch 외 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
 
 기존 mise가 있으면 `--mise /path/to/mise`로 격리한 config 디렉터리에서 global environment 3개와 34개 도구 선택을 실제 mise로 확인할 수 있다. 설치 명령은 실행하지 않는다.
 
@@ -46,7 +46,7 @@ CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행�
 현재 Fedora의 실제 경로를 유지한 읽기 전용 mount preview는 로컬 검토 기록이며 저장소 fixture 검사와 구분한다. mise selector의 기기 실제 경로 동작, 실제 completion 본문, tmux GUI/clipboard 같은 범위는 fixture 성공만으로 보장하지 않는다.
 
 
-## GitHub-hosted Fedora/Ubuntu 설치 검증
+## GitHub-hosted Fedora/Ubuntu/Arch 설치 검증
 
 `.github/workflows/install.yml`의 Installation checks는 ubuntu-24.04 hosted runner에서 각 job의 `tests/containers/fedora.Dockerfile`·`ubuntu.Dockerfile`을 빌드한다. Self-hosted runner, 호스트 홈 mount, privileged 컨테이너, 설치 cache 재사용은 사용하지 않는다. 기존 Foundation checks는 세 OS에서 계속 실행한다.
 
