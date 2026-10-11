@@ -4,7 +4,7 @@
 agy = "1.3.3"
 claude = "2.1.296"
 codex = "0.162.1"
-"npm:@earendil-works/pi-coding-agent" = { version = "1.1.0", install_env = { npm_config_ignore_scripts = "true" } }
+"npm:@earendil-works/pi-coding-agent" = { version = "1.1.0", allow_builds = false }
 grok = "1.0.50"
 "pipx:aider-chat" = { version = "0.86.2", uvx = true, uvx_args = "--python 3.12" }
 

@@ -7,3 +7,5 @@ Fedora에서 실제 공유할 선호만 source로 구성했다. Claude는 dark/f
 Pi의 changelog 버전은 실행 상태로 제외했다. 나머지 agy/Aider/Kiro/Grok에는 이번에 관리할 사용자 선호 파일을 새로 만들지 않았다. 로그인·토큰·계정·세션·자동 memory·Orca Electron 상태·worktree 등록은 제외한다. 개인 지침과 모든 skills/plugins를 통째로 수집하지 않는다.
 
 OpenCode의 shared 설치 선언은 그대로 두고 Ubuntu의 명시적 managed_ai 선택에서 추가 7개를 mise로 설치한다. Fedora 기존 공급업체/uv 설치는 그대로 유지한다. Ghostty·Orca는 별도 native 패키지 단계가 담당한다. [공급자·구조·실행 계약](installation-automation.md)을 따른다. Orca 상태·인증·repo/worktree 등록은 복제하지 않는다.
+
+pi npm 설정은 `allow_builds = false`로 설치 스크립트 차단을 명시한다. mise 2026.10.3 기본 npm 설치기는 내장 aube이므로 외부 npm 프로세스용 `install_env.npm_config_ignore_scripts`는 무시된다. [공식 npm backend 문서](https://mise.jdx.dev/dev-tools/backends/npm.html#build-scripts-and-supply-chain-checks)와 고정 버전 원본을 확인해 잘못된 옵션을 제거했다. pi 버전·공급자·실제 실행 동작은 유지하며 기존 Ubuntu 개인 설정은 이번 Arch 작업에서 적용하지 않는다.
