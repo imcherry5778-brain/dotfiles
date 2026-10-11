@@ -1,0 +1,9 @@
+{{ if and .deployment.enabled .automation.enabled (eq .platform "windows") -}}
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
+$context = @'
+{{ includeTemplate "install/context.json.tmpl" . }}
+'@
+& {{ joinPath .chezmoi.workingTree "scripts/windows/stage-entry.ps1" | replace "'" "''" | printf "'%s'" }} -Stage Before -ContextJson $context
+if ($LASTEXITCODE -ne 0) { throw 'dotfiles installation stage failed.' }
+{{ end -}}

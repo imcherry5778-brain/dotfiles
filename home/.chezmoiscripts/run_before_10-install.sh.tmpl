@@ -1,0 +1,7 @@
+{{ if and .deployment.enabled .automation.enabled (ne .platform "windows") -}}
+#!/bin/sh
+set -eu
+exec sh {{ joinPath .chezmoi.workingTree "scripts/unix/stage.sh" | shellQuote }} before <<'DOTFILES_CONTEXT'
+{{ includeTemplate "install/context.json.tmpl" . }}
+DOTFILES_CONTEXT
+{{ end -}}

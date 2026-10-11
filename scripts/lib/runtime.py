@@ -9,12 +9,14 @@ import subprocess
 import urllib.request
 
 
-def run(arguments, *, capture=False, cwd=None, timeout=900):
+def run(arguments, *, capture=False, cwd=None, timeout=900, env=None, noninteractive=False):
     """Use argument arrays: paths containing spaces never pass through a shell."""
     result = subprocess.run(
         [str(argument) for argument in arguments], check=True, text=True,
         stdout=subprocess.PIPE if capture else None,
-        cwd=cwd or Path.home(), timeout=timeout,
+        stdin=subprocess.DEVNULL if noninteractive else None,
+        stderr=subprocess.PIPE if noninteractive else None,
+        cwd=cwd or Path.home(), timeout=timeout, env=env,
     )
     return result.stdout
 

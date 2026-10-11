@@ -22,3 +22,6 @@ externals = false
 conda_prefix = ""
 ssh_agent_socket = ""
 mise_data_dir = ""
+
+[automation]
+enabled = false

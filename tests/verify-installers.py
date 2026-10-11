@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 import tomllib
@@ -17,8 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from lib.desktop import desktop_plan, install_ghostty, install_orca, install_opensuse_packages
 from lib.runtime import Host, download_verified
-from lib.backup import backup_targets
+from lib.backup import backup_targets, preserve_installer_loaders
 from lib.packages import prepare_packages
+from lib.tools import reconcile_mise_tools
 from lib.macos import install_cask, install_native_cli, inspect_ghostty_configuration
 from lib.appimage import install_orca_appimage, desktop_quote
 
@@ -28,6 +30,131 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Unix initial config permissions; Windows records ACLs.')
+    def test_initial_config_backup_is_private_and_records_original_mode(self):
+        with tempfile.TemporaryDirectory(prefix='initial config with spaces ') as temporary:
+            home = Path(temporary); config = home / 'chezmoi.toml'
+            config.write_text('[data]\nretained = true\n'); config.chmod(0o640)
+            environment = dict(os.environ, HOME=str(home))
+            subprocess.run(['sh', ROOT / 'scripts/unix/backup-init.sh', config],
+                           check=True, env=environment)
+            backups = list((home / '.local/state/dotfiles/init-backups').glob('init-*'))
+            self.assertEqual(len(backups), 1)
+            backup = backups[0]
+            self.assertEqual((backup / 'chezmoi.toml').read_bytes(), config.read_bytes())
+            self.assertEqual((backup / 'chezmoi.toml').stat().st_mode & 0o777, 0o600)
+            self.assertEqual((backup / 'mode.txt').read_text().strip(), '640')
+            self.assertEqual(backup.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(config.stat().st_mode & 0o777, 0o640)
+
+    def test_missing_binary_repairs_only_selected_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
+            (config / 'miserc.toml').write_text('env = []\n')
+            (config / 'config.toml').write_text('[tools]\nfd = "10.4.2"\n')
+            def command(arguments, **options):
+                if arguments[1] == 'ls':
+                    return json.dumps({'fd': [{'version': '10.4.2', 'installed': True}, {'version':'10.3.0','installed':True}]})
+                if arguments[1] == 'which':
+                    return str(home / '.local/share/mise/installs/fd/10.4.2/missing-fd')
+                return ''
+            with patch('lib.tools.Path.home', return_value=home), patch('lib.tools.run', side_effect=command) as execute:
+                reconcile_mise_tools('mise')
+            commands = [call.args[0] for call in execute.call_args_list]
+            self.assertIn(['mise','uninstall','--yes','fd@10.4.2'], commands)
+            self.assertNotIn(['mise','uninstall','--yes','fd@10.3.0'], commands)
+            self.assertEqual(commands[-1], ['mise','install','--yes'])
+
+    @unittest.skipIf(os.name == 'nt', 'Windows uses native ACL loader protection.')
+    def test_vendor_failure_restores_managed_loader_but_keeps_vendor_data(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); loader = home / '.zshrc'
+            loader.write_text('existing user hooks\n'); loader.chmod(0o600)
+            with self.assertRaisesRegex(RuntimeError, 'publisher failure'):
+                with preserve_installer_loaders(home, {'.zshrc'}):
+                    loader.write_text('vendor changed loader\n'); loader.chmod(0o644)
+                    (home / 'vendor-auth-fixture').write_text('retained fixture')
+                    raise RuntimeError('publisher failure')
+            self.assertEqual(loader.read_text(), 'existing user hooks\n')
+            self.assertEqual(loader.stat().st_mode & 0o777, 0o600)
+            self.assertEqual((home / 'vendor-auth-fixture').read_text(), 'retained fixture')
+
+    def test_ai_provider_conflicts_preserve_native_and_accept_mise_shims(self):
+        home = Path(tempfile.gettempdir()).resolve() / 'reviewed-home'
+        with patch.object(installer.shutil, 'which', return_value='/usr/bin/native-ai'):
+            with self.assertRaisesRegex(ValueError, 'no automatic migration'):
+                installer.assert_ai_providers(home)
+        with patch.object(installer.shutil, 'which', return_value=str(home / '.local/share/mise/shims/claude')):
+            installer.assert_ai_providers(home)
+
+    def test_reader_rejects_recursive_apply(self):
+        reader = installer.ReviewReader({'chezmoi':'chezmoi','config':'config'}, 'separate-state')
+        for operation in ['apply', 'init', 'update', 'state']:
+            with self.assertRaisesRegex(ValueError, 'read-only'):
+                reader.query(operation)
+
+    def test_full_profiles_reject_numeric_booleans(self):
+        for name in ['fedora-full', 'macos-full']:
+            with tempfile.TemporaryDirectory() as scratch:
+                profile = json.loads((ROOT / f'tests/profiles/{name}.json').read_text())
+                profile['features']['delta'] = 0
+                path = Path(scratch) / 'profile.json'; path.write_text(json.dumps(profile))
+                with self.assertRaisesRegex(ValueError, 'Booleans'):
+                    installer.validate_profile(path)
+
+    def test_existing_personal_fedora_is_supported_without_normalizing_owners(self):
+        expected = installer.validate_profile(ROOT / 'tests/profiles/fedora-personal.json')
+        old = json.loads(json.dumps(expected))
+        old['features'].pop('managed_ai'); old['features'].pop('desktop')
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'personal.json'; path.write_text(json.dumps(old))
+            self.assertEqual(installer.validate_profile(path), old)
+            self.assertTrue(installer.matches_profile(old, expected))
+            old['deployment']['externals'] = True; path.write_text(json.dumps(old))
+            with self.assertRaisesRegex(ValueError, 'externals=false'):
+                installer.validate_profile(path)
+
+    def test_personal_aliases_never_reinstall_healthy_owners(self):
+        from lib.tools import COMMANDS
+        for tool, command in {'ansible-core':'ansible', 'aws-cli':'aws', 'azure':'az',
+                              'bitwarden':'bw', 'mysql-client':'mysql', 'rust':'rustc'}.items():
+            self.assertEqual(COMMANDS[tool], command)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
+            (config / 'miserc.toml').write_text('env = []\n')
+            (config / 'config.toml').write_text('[tools]\n"ansible-core" = "2.16.19"\n')
+            executable = home / '.local/share/mise/installs/ansible-core/2.16.19/bin/ansible'
+            executable.parent.mkdir(parents=True); executable.touch()
+            def command(arguments, **options):
+                if arguments[1] == 'ls':
+                    return json.dumps({'ansible-core':[{'version':'2.16.19','installed':True}]})
+                if arguments[1] == 'which':
+                    self.assertEqual(arguments[-1], 'ansible')
+                    return str(executable)
+                return ''
+            with patch('lib.tools.Path.home', return_value=home), patch('lib.tools.run', side_effect=command) as execute:
+                reconcile_mise_tools('mise')
+            self.assertFalse(any('uninstall' in call.args[0] for call in execute.call_args_list))
+
+    def test_version_probes_isolate_state_and_never_contact_kubernetes(self):
+        from lib.tools import version_output
+        for command, variable in {'ansible':'ANSIBLE_LOCAL_TEMP', 'az':'AZURE_CONFIG_DIR',
+                                   'bw':'BITWARDENCLI_APPDATA_DIR', 'kubectl':'KUBECONFIG'}.items():
+            with patch('lib.tools.run', return_value='version') as execute:
+                self.assertEqual(version_output('mise',command), 'version')
+                call = execute.call_args
+                self.assertTrue(Path(call.kwargs['env'][variable]).is_absolute())
+                if command == 'az':
+                    self.assertEqual(call.kwargs['env']['AZURE_CORE_COLLECT_TELEMETRY'], 'false')
+                if command == 'kubectl':
+                    self.assertIn('--client=true', call.args[0])
+
+    def test_fedora_full_is_portable_and_not_personal(self):
+        profile = installer.validate_profile(ROOT / 'tests/profiles/fedora-full.json')
+        self.assertTrue(profile['features']['managed_ai'])
+        self.assertTrue(profile['features']['desktop'])
+        self.assertFalse(profile['features']['personal_fedora'])
+
     def test_installer_python_is_not_a_windows_or_plan_dependency(self):
         root = tomllib.loads((ROOT / 'mise.toml').read_text())
         runtime = tomllib.loads((ROOT / 'scripts/unix/mise.toml').read_text())

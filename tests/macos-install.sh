@@ -6,7 +6,7 @@ repo=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
 [ ! -f "$HOME/.config/chezmoi/chezmoi.toml" ] || exit 1
 printf '\n[acceptance]\n keep = existing\n' >> "$HOME/.gitconfig"
 printf '\n# Existing login customization\nexport RETAINED_MAC_LOGIN=yes\n' >> "$HOME/.zprofile"
-sh "$repo/install.sh" --apply --profile "$repo/tests/profiles/macos-full.json"
+sh "$repo/install.sh" --apply
 zsh -lic '
 set -e
 [[ $RETAINED_MAC_LOGIN == yes ]]
@@ -17,7 +17,11 @@ set -e
 [[ $(git config --get acceptance.keep) == existing ]]
 nvim --headless -u NONE -i NONE "+lua assert(vim.fn.has(\"mac\") == 1)" +qa
 '
-sh "$repo/install.sh" --apply --profile "$repo/tests/profiles/macos-full.json"
-chezmoi --no-tty --no-pager verify
-[ -z "$(chezmoi --no-tty --no-pager diff)" ]
+chezmoi --no-tty --no-pager apply
+fd_binary=$(mise which fd)
+rm -- "$fd_binary"
+chezmoi --no-tty --no-pager apply
+[ -f "$fd_binary" ]
+chezmoi --no-tty --no-pager verify --exclude=scripts
+[ -z "$(chezmoi --no-tty --no-pager diff --exclude=scripts)" ]
 printf '%s\n' 'Mac ARM64: installation, CLI execution, login/completion and repeat apply passed. Personal GUI/authentication excluded.'

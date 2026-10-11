@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import pwd
 import shlex
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -93,8 +94,8 @@ done
 [[ $(printf '%s\n' $path | sort | uniq -d) == '' ]]
 print 'ZSH_RUNTIME_OK'
 """
-    code = code.replace('EXPECTED_PLUGINS', '11' if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else '10')
-    if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
+    code = code.replace('EXPECTED_PLUGINS', '11' if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else '10')
+    if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
         code += r'''
 (( $+functions[_sc_carapace_base] ))
 [[ $(command -v node) == $HOME/.local/share/mise/installs/* ]]
@@ -143,6 +144,8 @@ shopt -p histappend checkwinsize
 
 def verify_native_bash(before, originals):
     after = bash_state()
+    require(sum(line.startswith('complete ') for line in after.splitlines()) >= 100,
+            'Installer did not prepare native Bash completions.')
     for line in before.splitlines():
         require(line in after.splitlines(), f'{TARGET} Bash behavior lost: {line}')
     for name in originals.keys() - {'.bashrc'}:
@@ -169,10 +172,8 @@ def main():
     require(TARGET in {'fedora', 'ubuntu', 'arch', 'opensuse-tumbleweed'}, 'Unexpected container distribution.')
     # Distribution useradd may copy OS shell defaults from /etc/skel; those are legitimate inputs.
     require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.config/mise').exists(), 'Cold installation requires no prior dotfiles selection.')
-    # Only the repository Python exists; OS shell/compiler dependencies were not baked into the image.
-    spec = importlib.util.spec_from_file_location('installer_packages', ROOT / 'scripts/unix/install.py')
-    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    module.prepare_packages(module.Host.detect(), desktop=TARGET != 'fedora')
+    # Python is only the acceptance-test runtime; no OS prerequisite installer ran.
+    require(shutil.which('zsh') is None, 'Cold image must not preinstall the managed shell prerequisite.')
     verify_guards()
     original_shell = pwd.getpwuid(os.getuid()).pw_shell
     native_original = None
@@ -183,7 +184,8 @@ def main():
         native_original['.bashrc'] = (USER_HOME / '.bashrc').read_bytes()
         native = bash_state()
         native_count = sum(line.startswith('complete ') for line in native.splitlines())
-        require(native_count >= 100, 'Native completion baseline is absent; preservation test would be empty.')
+        # Minimal images may lack bash-completion. Preserve all existing behavior
+        # and assert the installer adds the native completion package afterward.
     run(['git', '-c', 'init.templateDir=', 'init', '--quiet', '--initial-branch=main', ROOT])
     # Ordinary, non-secret pre-existing settings must survive the actual installer.
     identity = '[user]\n name = CI Existing User\n email = ci@example.invalid\n[commit]\n gpgsign = false\n[acceptance]\n keep = existing\n'
@@ -196,24 +198,35 @@ def main():
             directory.mkdir(parents=True, exist_ok=True)
             directory.chmod(0o700)
     gh_config.write_text('editor:\nbrowser:\naliases:\n  retained: repo view\n# retained comment\n')
-    command = ['sh', ROOT / 'install.sh', '--apply', '--profile', PROFILE]
+    if FULL:
+        spec = importlib.util.spec_from_file_location('installer_binary', ROOT / 'scripts/unix/install.py')
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        chezmoi = module.pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
+        command = [chezmoi, '--source', ROOT, 'init', '--apply']
+    else:
+        command = ['sh', ROOT / 'install.sh', '--apply', '--profile', PROFILE]
     run(command, capture=False)
     base = [USER_HOME / '.local/bin/chezmoi', '--no-tty', '--no-pager']
     data = json.loads(run(base + ['data', '--format=json']))
     require(Path(data['chezmoi']['workingTree']) == ROOT, 'Persisted config does not point to the real checkout.')
+    require(data['deployment'] == json.loads(PROFILE.read_text())['deployment'], 'Native initialization chose the wrong deployment.')
+    expected_features = json.loads(PROFILE.read_text())['features']
+    require(all(data['features'].get(key) == value for key, value in expected_features.items()),
+            'Native initialization chose the wrong feature selection.')
     mise = USER_HOME / '.local/bin/mise'
     tools = tomllib.loads((USER_HOME / '.config/mise/config.toml').read_text())['tools']
     require(len(tools) == 13, 'Expected the common 13-tool inventory, not a personal environment.')
     editor_env = 'editor-ubuntu' if TARGET == 'ubuntu' else 'editor-web'
     expected_env = ['ai', 'ai-managed', editor_env] if FULL else ['ai', editor_env] if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else []
     require(tomllib.loads((USER_HOME / '.config/mise/miserc.toml').read_text())['env'] == expected_env, 'Wrong mise environments selected.')
-    if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
+    if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
         for name in [environment for environment in expected_env if environment != 'personal-fedora']:
             extras = tomllib.loads((USER_HOME / f'.config/mise/config.{name}.toml').read_text())['tools']
             require(not set(extras) & set(tools), 'Duplicate tool owners.')
             tools.update(extras)
         require(len(tools) == (22 if FULL else 15), 'Wrong desktop tool inventory.')
-        verify_native_bash(native, native_original)
+        if native_original:
+            verify_native_bash(native, native_original)
     installed = json.loads(run([mise, 'ls', '--current', '--json']))
     require(set(installed) == set(tools), 'Installed tool selection differs from the single config inventory.')
     commands = {'ripgrep': 'rg', 'neovim': 'nvim', 'npm:@earendil-works/pi-coding-agent': 'pi',
@@ -230,7 +243,9 @@ def main():
         versions[tool] = version
     if FULL:
         run(['ghostty', '--version'], timeout=30)
-        if TARGET == 'ubuntu':
+        if TARGET == 'fedora':
+            run(['rpm', '-q', 'orca-ide'])
+        elif TARGET == 'ubuntu':
             require(run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'orca-ide']).strip() == 'installed', 'Orca native package missing.')
         else:
             output = run([USER_HOME / '.local/bin/orca-ide', '--version'], timeout=30)
@@ -247,10 +262,16 @@ def main():
         run([mise, 'exec', '--', 'nvim', '--headless', '-u', 'NONE', '-i', 'NONE',
              '-c', 'lua if not loadfile(' + json.dumps(str(lua)) + ') then vim.cmd("cquit 1") end', '-c', 'qa'], env=runtime_env, timeout=30)
     require(snapshot(base) == before_runtime, 'Reading/starting shells altered managed configuration.')
-    run(command, capture=False)
+    run(base + ['apply'], capture=False)
     require(snapshot(base) == before_runtime, 'Second installation changed managed file contents, links or modes.')
-    run(base + ['verify'])
-    require(not run(base + ['diff']).strip(), 'Second installation still has a configuration diff.')
+    # A damaged installed version is repaired, not merely a missing version directory.
+    fd = Path(run([mise, 'which', 'fd']).strip())
+    fd.unlink()
+    run(base + ['apply'], capture=False)
+    require(fd.is_file(), 'apply did not restore a deleted selected CLI binary.')
+    require(snapshot(base) == before_runtime, 'Repair altered managed configuration.')
+    run(base + ['verify', '--exclude=scripts'])
+    require(not run(base + ['diff', '--exclude=scripts']).strip(), 'Second installation still has a configuration diff.')
     for key, expected in [('user.name', 'CI Existing User'), ('user.email', 'ci@example.invalid'), ('commit.gpgsign', 'false'), ('acceptance.keep', 'existing')]:
         require(run(['git', 'config', '--get', key]).strip() == expected, f'Existing Git setting lost: {key}')
     require('retained: repo view' in gh_config.read_text() and '# retained comment' in gh_config.read_text(), 'Unmanaged gh settings lost.')

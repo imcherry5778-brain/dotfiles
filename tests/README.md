@@ -50,7 +50,7 @@ CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행�
 
 `.github/workflows/install.yml`의 Installation checks는 ubuntu-24.04 hosted runner에서 각 job의 `tests/containers/<platform>.Dockerfile`을 빌드한다. Self-hosted runner, 호스트 홈 mount, privileged 컨테이너, 설치 cache 재사용은 사용하지 않는다. 기존 Foundation checks는 세 OS에서 계속 실행한다.
 
-`tests/test-install.py`는 해당 일회성 컨테이너의 dotfiles-test 일반 사용자만 허용한다. 다른 환경에서는 설치 전에 중단한다. CI는 install.sh의 실제 --apply 진입점을 두 번 사용한다.
+`tests/test-install.py`는 해당 일회성 컨테이너의 dotfiles-test 일반 사용자만 허용한다. 다른 환경에서는 설치 전에 중단한다. 전체 프로필은 chezmoi init --apply를 직접 실행하고, 공통/CLI-only 프로필은 install.sh의 호환 진입점을 사용한다. 필수 OS 패키지는 설치 전에 테스트가 준비하지 않는다. 재실행과 삭제된 CLI 복구는 chezmoi apply로 검사한다.
 
 - 고정 mise/chezmoi 다운로드와 체크섬 검사, 중복 없는 mise inventory의 Fedora 13개·Ubuntu 15개 CLI 실제 설치.
 - 실제 mise 선택과 설치 경로·버전 확인. 시스템에 이미 있는 바이너리로 대체되면 실패.
@@ -59,7 +59,7 @@ CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행�
 - Neovim 실행 파일과 적용된 Lua 구문 확인. Neovim 플러그인 설치/GUI 검증으로 해석하지 않음.
 - Git identity·서명 정책·미관리 gh 설정 보존, 두 번째 설치 후 모든 managed 내용·링크·권한 동일, diff 비어 있음.
 
-기본 profile은 `tests/profiles/fedora-common.json`·`ubuntu-desktop.json`, 전체 profile은 Ubuntu·Arch·openSUSE의 `*-full.json`이다. template fixture 디렉터리와 분리한다. 개인 Fedora 34개 도구, 인증·GUI와 Windows/macOS의 실제 설치는 이 검사 범위가 아니다. full profile은 AI CLI 8개를 포함한 22개 CLI와 Ghostty·Orca 설치도 검사한다. Actions job의 read-only GITHUB_TOKEN은 다운로드에만 쓰고 앱 runtime 검사 환경에서는 제거한다.
+기본 profile은 `tests/profiles/fedora-common.json`·`ubuntu-desktop.json`, 전체 profile은 Fedora·Ubuntu·Arch·openSUSE의 `*-full.json`이다. template fixture 디렉터리와 분리한다. 개인 Fedora 34개 도구, 인증·GUI와 Windows/macOS의 실제 설치는 별도 hosted job에서 검사한다. full profile은 AI CLI 8개를 포함한 22개 CLI와 Ghostty·Orca 설치도 검사한다. Actions job의 read-only GITHUB_TOKEN은 다운로드에만 쓰고 앱 runtime 검사 환경에서는 제거한다.
 
 Ubuntu source 검사: python3 tests/verify-desktop.py --chezmoi /path/to/chezmoi. 실제 홈 대신 공백 경로의 임시 대상으로 초기화 config를 영속화하고, 원본 Bash·profile/logout 보존·단일 추가 라인·권한·반복 적용·15개 도구 단일 소유권·Fedora 기능 거부를 검사한다. 외부 10개 archive 선언은 렌더링만 한다. 설치 CI는 실제 archive를 내려받고 Ubuntu native completion·history·alias 및 사용자 정의가 보존되는지, .config/.local/.local/share 700과 로그인 셸이 유지되는지도 확인한다.
 
@@ -89,3 +89,11 @@ profile. Orca's interactive GUI and authentication remain outside this CI profil
 actual hosted Mac home. Both scripts refuse non-hosted environments. Neither is a
 remote deployment workflow or a self-hosted runner. Personal Mac GUI/clipboard checks
 are recorded separately in docs/macos-application.md.
+
+## chezmoi 중심 개편 검증
+
+`verify-automation.py --chezmoi /path/to/chezmoi`는 실제 init --apply와 apply를 격리 대상으로 실행한다. provider runner만 테스트 관찰기로 대체하고 production 전후 템플릿을 그대로 사용해 실행 순서, 반복 실행, diff/dry-run의 비실행, 부모 DB 잠금 중 별도 읽기 state 조회, 초기화 프로필 충돌 거부를 확인한다. hosted 설치 테스트는 production provider를 실제 실행하고 fd 실행 파일을 삭제한 뒤 일반 apply로 복구되는지 확인한다. Fedora full은 22개 CLI와 Ghostty·Orca를 포함하며 개인 Fedora 프로필과 분리한다. 설정 diff는 `--exclude=scripts`로 비교한다.
+
+## 기존 개인 Fedora 이행
+
+Fedora personal migration job은 기존 기기 선택·OMZ/tmux와 native provider fixtures를 준비한 뒤 automation만 활성화한다. 34개 실제 mise 도구의 설치·실행, 정상 fd 유지, 반복 적용, 삭제된 Ansible 실행 파일 복구, native fixture 경로/내용과 사용자 plugin 보존을 확인한다. Native fixture는 실제 AI/Conda/GUI 설치나 인증 검증이 아니다. `verify-installers.py`는 명령 별칭과 private version-probe 상태, personal externals=false 경계를 검사한다.

@@ -8,6 +8,16 @@ $scratch = Join-Path ([IO.Path]::GetTempPath()) ('provider contracts with spaces
 New-Item -ItemType Directory -Path $scratch | Out-Null
 $originalProcessPath = $env:Path
 try {
+    $fixtureHome = Join-Path $scratch 'fixture home'
+    $review = Join-Path $scratch 'review'
+    $null = New-Item -ItemType Directory -Path $fixtureHome,$review
+    '[acceptance]' | Set-Content (Join-Path $fixtureHome '.gitconfig')
+    'reviewed fixture diff' | Set-Content (Join-Path $review 'config.diff')
+    $snapshot = @(New-ConfigurationBackup -Managed @('.gitconfig') -Review $review -UserHome $fixtureHome)
+    if ($snapshot.Count -ne 1 -or -not (Test-Path -LiteralPath $snapshot[0] -PathType Container)) { throw 'Backup logging contaminated its returned path.' }
+    $manifest = Get-Content (Join-Path $snapshot[0] 'manifest.json') -Raw | ConvertFrom-Json
+    $savedFile = $manifest.files | Where-Object path -eq '.gitconfig'
+    if (-not $savedFile.acl -or $savedFile.acl -ne (Get-Acl (Join-Path $fixtureHome '.gitconfig')).Sddl) { throw 'Backup omitted the original file ACL.' }
     function Invoke-WebRequest { param($Uri,$OutFile); [IO.File]::WriteAllText($OutFile,'downloaded fixture') }
     $asset = [pscustomobject]@{url='https://publisher.invalid/install.ps1';sha256=('0'*64)}
     $file = Join-Path $scratch 'bad installer.ps1'

@@ -40,11 +40,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Future native PowerShell 7 profiles remain blocked.' }
 } finally { $env:PSExecutionPolicyPreference = $processPolicy }
 if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'Restricted') { throw 'Windows PowerShell 5.1 policy was changed.' }
-$before = & chezmoi --no-tty --no-pager diff | Out-String
+$before = & chezmoi --no-tty --no-pager diff --exclude=scripts | Out-String
 if ($LASTEXITCODE -ne 0 -or $before.Trim()) { throw 'Unexpected diff after first installation.' }
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
-if ($LASTEXITCODE -ne 0) { throw 'Second native install failed.' }
-$after = & chezmoi --no-tty --no-pager diff | Out-String
+& chezmoi --no-tty --no-pager apply
+if ($LASTEXITCODE -ne 0) { throw 'Second native apply failed.' }
+$fdBinary = (& mise which fd | Select-Object -First 1).Trim()
+Remove-Item -LiteralPath $fdBinary
+& chezmoi --no-tty --no-pager apply
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $fdBinary)) { throw 'Native missing-command repair failed.' }
+$after = & chezmoi --no-tty --no-pager diff --exclude=scripts | Out-String
 if ($LASTEXITCODE -ne 0 -or $after.Trim()) { throw 'Repeat apply is not stable.' }
 if ((& git config --get acceptance.keep) -ne 'existing') { throw 'Existing Git setting was lost.' }
 & pwsh -NoProfile -File (Join-Path $repo 'install.ps1') -Mode Verify -ProfilePath $profile

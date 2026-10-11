@@ -1,0 +1,5 @@
+{{- $context := dict "profile" (dict "platform" .platform "features" .features "deployment" .deployment) "automation" .automation.enabled "source" .chezmoi.workingTree "destination" .chezmoi.destDir "config" .chezmoi.configFile "chezmoi" .chezmoi.executable -}}
+{{- if eq .platform "windows" -}}
+{{- $_ := set $context "plan" (includeTemplate "windows/plan.json.tmpl" . | fromJson) -}}
+{{- end -}}
+{{- $context | toPrettyJson -}}

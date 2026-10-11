@@ -79,7 +79,7 @@ try {
     $data = Get-Content -LiteralPath $fixture.FullName -Raw | ConvertFrom-Json
     $arguments = $base + @('--override-data-file', $fixture.FullName, 'execute-template', '--init', '--file', (Join-Path $source 'home/.chezmoi.toml.tmpl'))
     $rendered = Invoke-Chezmoi -Arguments $arguments
-    if ($rendered -notmatch ('(?m)^platform = "' + [regex]::Escape($data.platform) + '"$')) {
+    if ($rendered -notmatch ('(?m)^\s*platform = "' + [regex]::Escape($data.platform) + '"$')) {
       throw "Wrong platform rendering: $($fixture.Name)"
     }
     if ($rendered -notmatch '(?m)^sourceDir = ".+"$') { throw 'Missing sourceDir in initialization template.' }

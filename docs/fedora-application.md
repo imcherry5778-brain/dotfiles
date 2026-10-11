@@ -26,12 +26,12 @@ chezmoi apply 후 verify가 통과하고 diff가 비었다. 총 34개 도구가 
 ```sh
 cd "$HOME/projects/imcherry5778-brain/dotfiles"
 git pull --ff-only
-chezmoi diff
-# 변경을 검토하고 필요한 대상별 백업을 준비한 뒤:
+chezmoi diff --exclude=scripts
+# 변경을 검토한 뒤 (활성화된 자동화가 대상별 백업을 준비한다):
 chezmoi apply
-chezmoi verify
+chezmoi verify --exclude=scripts
 ```
 
-도구 버전을 바꾼 경우 mise 설정을 먼저 적용하고 실제 홈에서 필요한 mise install을 진행한 다음 나머지 설정을 적용한다. 셸 시작과 Actions는 개인 PC를 자동 갱신하지 않는다. 기존 개인 환경에 tests/profiles/fedora-common.json을 적용하면 안 된다. 새 terminal은 새 셸 설정을 읽는다. 이미 열린 셸/앱은 강제 종료하지 않았다. tmux의 기존 세션은 유지하고 필요하면 해당 세션에서 설정을 다시 읽는다.
+2026-10-12에 [개인 Fedora 자동화 이행](fedora-automation.md)을 완료했다. 현재는 일반 chezmoi apply가 선택된 mise 버전의 누락 복구와 실행 검증을 수행하므로 mise install을 따로 실행할 필요가 없다. Native AI·Conda·앱의 기존 공급자는 유지한다. 셸 시작과 Actions는 개인 PC를 자동 갱신하지 않는다. 기존 개인 환경에 tests/profiles/fedora-common.json을 적용하면 안 된다. 새 terminal은 새 셸 설정을 읽는다. 이미 열린 셸/앱은 강제 종료하지 않았다. tmux의 기존 세션은 유지하고 필요하면 해당 세션에서 설정을 다시 읽는다.
 
 복구 범위와 명령은 [복구 계약](restore.md)을 따른다. 다른 OS의 init/fixture 통과는 그 기기에 실사용 설정을 적용했다는 의미가 아니다.

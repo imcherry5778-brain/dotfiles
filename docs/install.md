@@ -1,55 +1,66 @@
-# 최초 설치 계약
+# chezmoi 중심 설치 계약
 
-기본 실행은 계획 출력이며 설치하지 않는다. `--apply`/`-Mode Apply`에서만 실제 홈을 변경한다. 지원 범위는 Fedora 44, Ubuntu 26.04, Arch, openSUSE Tumbleweed의 x86_64, Windows 11 x64, Apple Silicon macOS다. FreeBSD는 제외한다.
+지원: Fedora 44·Ubuntu 26.04·Arch·openSUSE Tumbleweed x86_64, Windows 11 x64, Apple Silicon Mac. FreeBSD 제외.
 
-## Checkout
+## 최초 설치
 
-이 저장소는 private다. Git 설치와 저장소 접근 권한을 먼저 준비한다. 인증은 기기별 설정을 사용하며 저장소에 토큰을 넣지 않는다. 기존 checkout을 새 clone으로 덮어쓰지 않는다.
+Git clone은 홈 아래 `projects/imcherry5778-brain/dotfiles`에 한다. private 저장소 읽기 인증과 Git은 clone 전에 준비한다. 관리자 암호·Apple Command Line Tools·앱 권한·서비스 인증은 직접 처리한다.
+
+chezmoi가 준비되어 있으면 저장소 루트에서:
 
 ```sh
-git clone https://github.com/imcherry5778-brain/dotfiles.git "$HOME/projects/imcherry5778-brain/dotfiles"
-cd "$HOME/projects/imcherry5778-brain/dotfiles"
-sh install.sh --plan
+chezmoi init --apply --source "$PWD"
 ```
 
-Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 아래 Bypass는 검토한 checkout의 최초 진입을 위한 프로세스 한정 옵션이다. Apply는 필요한 경우 PowerShell 7의 사용자 정책 파일을 백업한 뒤 CurrentUser RemoteSigned를 설정하며 Group Policy를 우회하지 않는다. Windows PowerShell 5.1의 정책은 별도로 유지한다. Diff/Verify는 PowerShell 7이 없을 때 설치하지 않고 준비가 필요하다고 알린다. 기본 PowerShell 5.1에서 시작할 수 있다. WinGet이 없다면 Microsoft App Installer를 설치/갱신한 뒤 실행한다. 관리자 암호·UAC·앱 권한은 사용자가 처리한다.
+PowerShell에서는 `chezmoi init --apply --source (Get-Location).Path`를 사용한다.
+chezmoi가 없으면 같은 초기화로 이어지는 bootstrap:
 
-## 하나의 명시적 설치 명령
+```sh
+sh install.sh --apply
+```
 
-| 환경 | 명령 |
-|---|---|
-| 새 Fedora 공통 구성 | `sh install.sh --apply --profile tests/profiles/fedora-common.json` |
-| Ubuntu 전체 | `sh install.sh --apply --profile tests/profiles/ubuntu-full.json` |
-| Arch 전체 | `sh install.sh --apply --profile tests/profiles/arch-full.json` |
-| openSUSE 전체 | `sh install.sh --apply --profile tests/profiles/opensuse-tumbleweed-full.json` |
-| Mac 전체 | `sh install.sh --apply --profile tests/profiles/macos-full.json` |
-| Windows 전체 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Apply -ProfilePath tests/profiles/windows-full.json` |
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Apply
+```
 
-Fedora common은 공통 13개 CLI만 선택한다. 기존 개인 Fedora의 AI/Conda/개인 도구 선택을 대체하는 프로필이 아니다. Ubuntu/Arch/openSUSE의 desktop 프로필은 15개 CLI, full은 22개 CLI와 앱을 선택한다. Mac은 19개 mise 도구와 native AI 5개를 검증한다. Windows CLI-only 프로필은 hosted CI에서 GUI 설치를 제외하기 위해 사용한다. Windows Ghostty는 공식 native 배포가 없어 Windows Terminal을 유지한다.
+Unix bootstrap은 기존 모듈로 mise·고정 설치기 Python·chezmoi를 준비한다. Mac은 Homebrew를 유지한다. Windows 진입점은 PowerShell 5.1에서 7을 준비하고 WinGet bootstrap을 재사용한다. 기존 설치 출처를 자동 이전하거나 전체 업그레이드하지 않는다.
 
-## 실행 순서와 소유권
+`init`만 실행하면 비활성 검토 설정을 만든다. fresh `init --apply`는 해당 OS `tests/profiles/*-full.json`의 portable full 선택을 저장하고 `automation.enabled=true`로 기록한다. 이미 배포가 활성화된 기기는 프로필과 자동화 선택을 보존한다. `init`으로 만든 비활성 검토 설정은 이후 명시적인 `init --apply`에서 full 설치로 전환할 수 있다. 기존 개인 Fedora를 새 full 프로필로 바꾸려 하면 실패한다. 이미 설치된 개인 Fedora는 externals=false와 기존 기능을 유지한 이행 경로를 지원한다. [Fedora 자동화 이행](fedora-automation.md)을 참고한다. 명시적 CLI-only/공통 프로필을 사용하려면 호환 진입점의 `--profile FILE` / `-ProfilePath FILE`을 사용한다. OS 자동 감지와 source-root 계산은 chezmoi 초기화가 담당한다.
 
-1. 실제 일반 사용자 홈·OS/architecture·프로필·기존 선택·기본 config 경로를 확인한다. HOME/XDG를 임의로 바꿔 적용하지 않는다.
-2. 필수 도구를 준비한다. Linux/Mac 설치기 Python 3.12.15는 `scripts/unix/mise.toml`로 설치해 `mise exec`로 실행한다. 시스템 Python을 교체하지 않는다. Windows 5.1 진입점은 필요한 PowerShell 7을 WinGet으로 준비한 뒤 같은 인자로 이어 실행한다.
-3. OS 필수 패키지를 설치한다. Ubuntu/Fedora는 standalone mise bootstrap packages로 누락분만 추가한다. Arch는 기존 sync DB를 쓰고 단독 `-Sy`를 호출하지 않는다. DB가 없으면 전체 `pacman -Syu` 준비를 안내하고 중단한다. openSUSE는 기존 solver를 검사해 추가만 허용한다. Mac은 Homebrew를 직접 사용한다.
-4. 현재 설정을 다시 읽고 fresh diff를 출력한다. 변경 대상만 개인 백업한다. Unix 백업은 `~/.local/state/dotfiles/backups/<timestamp>-<platform>`이며 파일 권한·symlink·원래 없던 경로를 기록한다. Windows는 같은 위치에 대상 파일과 사용자 PATH/정책 값을 기록한다.
-5. 선택한 CLI와 앱을 설치한다. chezmoi는 설정, mise는 CLI 버전, 각 OS provider는 필수 패키지/GUI를 소유한다. 기존 native 앱/provider를 자동 이전하거나 업그레이드하지 않는다. Mac의 bootstrap mise가 최소 버전 미만이면 기존 Homebrew owner로 해당 도구만 갱신한다.
-6. 설정을 적용하고 `chezmoi verify`·diff·CLI 실행을 확인한다. 같은 명령 재실행은 누락분을 보완한다. 전체 업그레이드·prune·다른 provider 삭제는 하지 않는다.
+## 적용 순서
 
-Mac의 최초 Homebrew 설치에는 Apple Command Line Tools와 관리자 입력이 필요하다. 이미 있는 Ghostty/D2Coding/agy/Claude/Codex와 mise Node·pnpm·tmux 버전을 보존한다. Bitwarden socket은 유효한 전달 agent socket이 없는 경우에만 사용한다. 자세한 Mac 경로/보존 규칙은 [Mac 적용 기록](macos-application.md)에 있다.
+1. 초기화 템플릿에서 기존 기기 선택과 요청의 충돌을 거부한다. chezmoi의 미관리 설정 키는 병합 보존한다. 실제 홈에서 기존 config를 재초기화하면 덮어쓰기 전에 config만 개인 백업한다.
+2. `run_before`는 실제 홈·OS·선택을 검증하고 diff·변경 대상·권한·심볼릭 링크를 기존 백업 모듈로 보관한다. 필수 OS 패키지를 준비한다.
+3. chezmoi가 설정과 고정 외부 소스를 적용한다.
+4. 일반 `run_after`가 mise의 선택된 도구를 설치하고, 삭제된 실행 파일 때문에 손상된 선택 버전만 복구한다. 선언이 바뀌지 않아도 매 apply에서 누락을 검사한다. AI 공식 설치와 GUI 앱은 기존 모듈을 재사용한다.
+5. 실제 CLI 실행과 설정 일치를 검증한다. GUI·서비스 인증은 별도다.
 
-네트워크·체크섬·선택 충돌은 실패로 보고한다. 설치 전체의 자동 rollback은 제공하지 않는다. 백업의 `manifest.json`, `before.diff`, `RESTORE.md`로 설정 복원 범위를 확인한다. 새 앱/바이너리는 설정 백업과 구분하며 provider에서 별도로 제거한다. 서비스 인증·SSH 개인키·Conda·기본 셸 전환·GUI 권한은 자동 복제하지 않는다.
+전후 스크립트는 `.chezmoiscripts/`에 있으며 홈에 파일로 배포하지 않는다. 일반 `run_`을 사용하므로 `run_once`/`run_onchange`의 성공 이력 때문에 누락 복구가 건너뛰어지지 않는다.
 
-## Hosted CI와 실제 기기
+## 재귀 실행과 공식 설치기의 설정 수정
 
-Foundation은 격리 렌더링·구문·기존 설정 보존·다운로드 실패 계약을 검사한다. Installation은 네 Linux의 최소 컨테이너와 Windows/Mac hosted 환경의 실제 홈에서 최초 설치와 재실행, 공백 checkout, CLI 실행, 셸/기존 설정 보존을 검사한다. Linux 컨테이너의 root 단계에는 clone/network/admin 필수 패키지만 둔다. Mac은 ARM64, Windows는 5.1 시작 경로를 사용한다.
+설치 단계는 부모 chezmoi에 `init`/`apply`/`update`를 다시 호출하지 않는다. 백업 대상과 diff·최종 verify만 동일한 config/source/destination을 사용하는 읽기 전용 chezmoi 명령으로 조회한다. 각 조회 묶음은 별도의 임시 state DB를 사용해 부모 apply의 DB 잠금을 재진입하지 않는다. 부모의 state/cache 설정이나 잠금 기능을 바꾸지 않는다. 실제 부모 apply가 잠금을 보유한 상태에서 이 동작을 격리 테스트로 확인한다.
 
-CI의 성공은 개인 GUI·클립보드·서비스 인증의 성공을 뜻하지 않는다. 실제 Mac의 Ghostty·Orca·자동완성·편집기·Orca CLI 탐지는 별도 검증한다. 기존 다섯 OS에는 이번 설치기를 재실행하지 않는다.
+공식 설치는 설정 적용 후 실행한다. 설치기가 수정할 수 있는 chezmoi 관리 셸 loader는 직전 내용·권한/Windows ACL을 보관했다가 실패 시에도 복원한다. vendor PATH·인증·미관리 설정은 유지한다. Linux portable full의 AI는 기존 native provider가 발견되면 묵시적으로 mise로 이전하지 않는다. Mac·Windows는 기존 native provider를 재사용한다.
 
-## 확인한 실행 결과
+## 검토와 백업
 
-2026-10-11, 코드 commit `c566f13`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704512)가 통과했다. Fedora 44 일반 사용자에서 13개 CLI를 새로 설치하고 모든 실행 파일의 실제 경로·버전을 확인했다. Zsh/tmux runtime와 Neovim Lua 구문 검사 후 같은 진입점을 재실행했고, external 파일을 포함한 managed 경로 1,902개의 내용·링크·권한이 동일하며 chezmoi diff가 비어 있음을 확인했다.
+```sh
+chezmoi diff
+chezmoi apply --dry-run --verbose
+chezmoi apply
+chezmoi verify --exclude=scripts
+chezmoi diff --exclude=scripts
+```
 
-같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 당시 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다. 이후 개인 홈 적용 기록은 [Fedora 실제 적용 결과](fedora-application.md)에서 구분한다.
+일반 diff에는 앞으로 실행할 설치 스크립트도 표시된다. 따라서 빈 설정 diff 판단에는 `--exclude=scripts`를 사용한다. diff/dry-run은 설치 단계를 실행하지 않는다. 기존 설치 명령의 기본 Plan/Check도 변경하지 않는다.
 
-2026-10-11, Ubuntu 지원 코드 commit `55f5402`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38140944752)는 Ubuntu 26.04의 15개 도구와 Fedora 44의 13개 도구를 각각 새로 설치해 두 번 적용했다. 두 환경 모두 실행 경로/버전·Zsh/tmux·기존 설정 보존·반복 적용·빈 diff를 통과했다. 관리 경로는 external을 포함하여 Ubuntu 1,944개·Fedora 1,903개다. 당시 Ubuntu 사용자 홈은 미적용이었으며 이후 실제 적용 결과는 [Ubuntu 적용 기록](ubuntu-application.md)에 있다.
+개인 설정 백업: `~/.local/state/dotfiles/backups/`. manifest와 RESTORE.md로 변경 파일만 복구한다. Unix는 파일 mode·심볼릭 링크·변경 디렉터리 mode를 기록한다. Windows는 파일 ACL·User PATH·실행 정책을 기록한다. 초기화 전 chezmoi config는 `~/.local/state/dotfiles/init-backups/`의 가장 최근 해당 기록에서 복구한다. Unix의 `mode.txt`와 Windows의 `acl.txt`는 초기화 전 config의 원래 권한을 기록한다. 디렉터리 전체나 모든 홈/인증을 수집하지 않는다. 설치된 바이너리의 제거는 설정 복구와 별개다.
+
+## Fedora full과 개인 환경
+
+`fedora-full.json`은 공통 13개·AI 8개·Node, 총 22개와 Ghostty COPR·공식 Orca RPM을 선택한다. 개인 Fedora의 conda·클러스터 도구·Bitwarden·기존 AI provider를 포함하지 않는다. 기존 `fedora-common.json` 및 개인 Fedora 렌더링/소유권의 회귀 검사를 유지한다.
+
+## CI
+
+GitHub-hosted만 사용한다. Foundation은 세 OS의 문법·격리 렌더링·기존 프로필 회귀·다운로드/출처 충돌·백업·loader 실패 복원·실제 chezmoi orchestration/dry-run을 검사한다. Installation은 Fedora common/full/personal migration, Ubuntu baseline/full, Arch full, openSUSE full, Windows native CLI, Mac ARM64 full을 실제 일회성 환경에 설치한다. 개인 Fedora job은 34개 실제 CLI와 Ansible 실행 파일 삭제 후 복구를 검증하며, native 보존 fixture를 실제 GUI 실행으로 해석하지 않는다. 반복 `chezmoi apply`와 선택된 fd 바이너리 삭제 후 복구를 검사한다. 기존 개인 OS에는 적용하지 않는다. Windows Orca는 대화형 공식 설치기이므로 CLI-only hosted 검사에서 제외하고 GUI/auth 결과를 과장하지 않는다.

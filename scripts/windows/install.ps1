@@ -4,7 +4,9 @@ param(
     [ValidateSet('Plan','Bootstrap','Diff','Apply','Verify','DesktopPlan','DesktopApply')]
     [string] $Mode = 'Plan',
     [string] $ProfilePath = '',
-    [switch] $LibraryOnly
+    [switch] $LibraryOnly,
+    [ValidateSet('Before','After')][string] $Stage,
+    [string] $ContextPath
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -85,9 +87,7 @@ function Get-Selection {
     $expected = Get-Content -LiteralPath (Join-Path $repo 'tests/profiles/windows-full.json') -Raw | ConvertFrom-Json
     if ($selection.features.desktop -isnot [bool]) { throw 'desktop must be a Boolean.' }
     $expected.features.desktop = $selection.features.desktop
-    if (($selection | ConvertTo-Json -Depth 10 -Compress) -ne ($expected | ConvertTo-Json -Depth 10 -Compress)) {
-        throw 'Only the reviewed Windows full or CLI profile is supported.'
-    }
+    Assert-ExistingSelection $selection $expected
     return $selection
 }
 function Assert-ExistingSelection {
@@ -98,6 +98,7 @@ function Assert-ExistingSelection {
         $wanted = $Requested.$section.PSObject.Properties
         if (@($actual).Count -ne @($wanted).Count) { throw "Existing $section selection differs; no replacement performed." }
         foreach ($property in $wanted) {
+            if ($section -eq 'features' -and $Existing.features.($property.Name) -isnot [bool]) { throw 'Feature flags must be Booleans.' }
             if ($property.Name -notin $actual.Name -or $Existing.$section.($property.Name) -ne $property.Value) {
                 throw "Existing $section selection differs; no replacement performed."
             }
@@ -162,61 +163,18 @@ function Install-NativeDesktop {
         Register-OrcaCli $installed
     } finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
 }
-if ($LibraryOnly) { return }
-if (-not $IsWindows -or [Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'Reviewed Windows 11 x64 environment required.' }
-if ($HOME -ne $env:USERPROFILE) { throw 'Run with the actual Windows user home.' }
-foreach ($name in @('XDG_CONFIG_HOME','XDG_DATA_HOME','MISE_CONFIG_DIR','MISE_DATA_DIR','MISE_GLOBAL_CONFIG_FILE','GH_CONFIG_DIR')) {
-    if ([Environment]::GetEnvironmentVariable($name)) { throw "$name redirects the native environment; review it first." }
+function Read-Review {
+    param($Context, [string] $State, [string[]] $Arguments)
+    # Separate disposable state for read-only queries while parent apply owns its lock.
+    if ($Arguments[0] -notin @('managed','diff','status','verify')) { throw 'Only read-only review commands are allowed.' }
+    $output = & $Context.chezmoi --source $repo --config $Context.config --destination $HOME --persistent-state $State --no-tty --no-pager @Arguments
+    if ($LASTEXITCODE -ne 0) { throw "Read-only review failed: $($Arguments[0])" }
+    return ($output -join "`n")
 }
-if ($env:MISE_ENV -and $env:MISE_ENV -ne 'windows') { throw 'MISE_ENV selects an unreviewed Windows environment.' }
-if ($Mode -eq 'Plan') {
-    Write-Output 'Windows: WinGet bootstrap, mise CLI, official AI installers; deployment remains opt-in.'
-    Write-Output 'Bootstrap -> Diff -> Apply -> Verify. Existing providers and authentication are preserved.'
-    return
-}
-if ($Mode -eq 'DesktopPlan') {
-    @{ghostty='unsupported: native Windows build is unavailable';orca='checksum-pinned official Windows installer'} | ConvertTo-Json
-    return
-}
-if ($Mode -eq 'DesktopApply') { Install-NativeDesktop; return }
-if ($Mode -in @('Bootstrap','Apply')) {
-    foreach ($package in $catalog.bootstrap) { Install-WinGetPackage $package }
-    if ($Mode -eq 'Bootstrap') { return }
-}
-if (-not $ProfilePath) { $ProfilePath = Join-Path $repo 'tests/profiles/windows-full.json' }
-$selection = Get-MachineData (Get-Selection $ProfilePath)
-foreach ($command in @('git','chezmoi','mise','winget')) {
-    if (-not (Get-Command $command -CommandType Application -ErrorAction SilentlyContinue)) { throw "Missing $command. Run Bootstrap before configuration review." }
-}
-$review = New-PrivateDirectory (Join-Path $HOME '.local/state/dotfiles/review/windows')
-$override = Join-Path $review 'selection.json'
-$selection | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $override -Encoding utf8NoBOM
-$previewConfig = Join-Path $review 'preview.toml'
-$config = Join-Path $HOME '.config/chezmoi/chezmoi.toml'
-$base = @('--source',$repo,'--config',$previewConfig,'--no-tty','--no-pager')
-$rendered = Get-ChezmoiOutput ($base + @('--override-data-file',$override,'execute-template','--init','--file',(Join-Path $repo 'home/.chezmoi.toml.tmpl')))
-$rendered | Set-Content -LiteralPath $previewConfig -Encoding utf8NoBOM
-$plan = Get-ChezmoiOutput ($base + @('execute-template','--file',(Join-Path $repo 'home/.chezmoitemplates/windows/plan.json.tmpl'))) | ConvertFrom-Json
-$plan | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $review 'packages.json') -Encoding utf8NoBOM
-$diff = Get-ChezmoiOutput ($base + @('diff'))
-$diff | Set-Content -LiteralPath (Join-Path $review 'config.diff') -Encoding utf8NoBOM
-if ($Mode -eq 'Diff') {
-    $diff
-    Write-Output "Review artifacts: $review"
-    Write-Output "Current-user script policy: $(Get-ExecutionPolicy). Restricted requires RemoteSigned for the reviewed PowerShell profile. Group policy is never overridden."
-    return
-}
-$managed = @((Get-ChezmoiOutput ($base + @('managed','--include=files,symlinks','--path-style=relative'))) -split "`n" | Where-Object { $_ } | ForEach-Object { $_.Trim().Replace('\','/') })
-if ($managed.Count -lt 15 -or $managed -contains '.zshrc' -or $managed -contains '.tmux.conf') { throw 'Empty or invalid Windows deployment targets.' }
-if ($Mode -eq 'Verify') {
-    if (-not (Test-Path -LiteralPath $config)) { throw 'Windows selection has not been applied.' }
-    $null = Get-ChezmoiOutput @('--config',$config,'--no-tty','--no-pager','verify')
-    Test-WindowsTools $review
-    Write-Output 'Windows managed configuration and actual CLI execution verification passed.'
-    return
-}
+function New-ConfigurationBackup {
+    param($Managed, [string] $Review, [string] $UserHome = $HOME)
 # Capture only managed destinations plus the registry values changed by this workflow.
-$backup = New-PrivateDirectory (Join-Path $HOME ('.local/state/dotfiles/backups/' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') + '-windows'))
+$backup = New-PrivateDirectory (Join-Path $UserHome ('.local/state/dotfiles/backups/' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffffffZ') + '-windows'))
 $manifest = @()
 $extraBackups = @('.config/chezmoi/chezmoi.toml',
     'Documents/PowerShell/Microsoft.PowerShell_profile.ps1',
@@ -225,37 +183,24 @@ $extraBackups = @('.config/chezmoi/chezmoi.toml',
     'Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1',
     '.pi/agent/settings.json', '.grok/config.toml')
 foreach ($relative in @($managed + $extraBackups | Select-Object -Unique)) {
-    $target = [IO.Path]::GetFullPath((Join-Path $HOME $relative))
-    if (-not $target.StartsWith($HOME + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw "Target outside actual home: $relative" }
+    $target = [IO.Path]::GetFullPath((Join-Path $UserHome $relative))
+    if (-not $target.StartsWith($UserHome + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw "Target outside actual home: $relative" }
     $entry = @{path=$relative;exists=(Test-Path -LiteralPath $target -PathType Leaf)}
     if ($entry.exists) {
         $destination = Join-Path $backup ('files/' + $relative)
         $null = New-Item -ItemType Directory -Path (Split-Path $destination) -Force
         Copy-Item -LiteralPath $target -Destination $destination
+        $entry.acl = (Get-Acl -LiteralPath $target).Sddl
         $entry.hash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
     }
     $manifest += $entry
 }
 @{files=$manifest;userPath=[Environment]::GetEnvironmentVariable('Path','User');policy=[Environment]::GetEnvironmentVariable('PSExecutionPolicyPreference');currentUserPolicy=(Get-ExecutionPolicy -Scope CurrentUser).ToString()} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $backup 'manifest.json') -Encoding utf8NoBOM
 Copy-Item -LiteralPath (Join-Path $review 'config.diff') -Destination (Join-Path $backup 'before.diff')
-Write-Output "Private targeted backup: $backup"
-$null = New-Item -ItemType Directory -Path (Split-Path $config) -Force
-if (Test-Path -LiteralPath $config) {
-    $existing = Get-ChezmoiOutput @('--config',$config,'data','--format','json') | ConvertFrom-Json
-    Assert-ExistingSelection $existing $selection
+Write-Host "Private targeted backup: $backup"
+return $backup
 }
-Copy-Item -LiteralPath $previewConfig -Destination $config -Force
-$actual = @('--config',$config,'--no-tty','--no-pager')
-$null = Get-ChezmoiOutput ($actual + @('apply',(Join-Path $HOME '.config/mise')))
-Push-Location $HOME
-try { Invoke-Checked 'mise' @('install','--yes') } finally { Pop-Location }
-foreach ($package in $plan.editor) { Install-WinGetPackage $package }
-foreach ($installer in $plan.official) { Install-OfficialCli $installer $backup }
-# Vendor installers can add profile/completion loaders. Review the final diff too.
-$finalDiff = Get-ChezmoiOutput ($actual + @('diff'))
-$finalDiff | Set-Content -LiteralPath (Join-Path $backup 'after-install.diff') -Encoding utf8NoBOM
-# A one-time process Bypass permits the fresh Windows entry script, but must
-# not hide a persistent Restricted policy that would block future profiles.
+function Enable-ProfilePolicy {
 $currentProfilePolicy = Get-ExecutionPolicy -Scope CurrentUser
 $profilePolicyNeeded = $currentProfilePolicy -eq 'Restricted' -or
     ($currentProfilePolicy -eq 'Undefined' -and (Get-ExecutionPolicy -Scope LocalMachine) -in @('Undefined','Restricted'))
@@ -273,10 +218,111 @@ if ($profilePolicyNeeded) {
         Set-ExecutionPolicy -Scope Process -ExecutionPolicy $entryProcessPolicy -Force
     }
 }
-# Apply mode is explicitly authorized; its latest diff and targets were backed up above.
-# --no-tty redirects prompts to stdin, so it alone does not make apply noninteractive.
-$null = Get-ChezmoiOutput ($actual + @('--force','apply'))
-$null = Get-ChezmoiOutput ($actual + @('verify'))
-if ($selection.features.desktop) { Install-NativeDesktop }
-Test-WindowsTools $review
-Write-Output 'Windows profile applied and CLI execution verified. AI authentication remains separate.'
+}
+function Repair-MiseCommands {
+    param($Plan)
+    $installed = (& mise ls --current --json | Out-String | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect selected mise tools.' }
+    foreach ($property in $Plan.mise.PSObject.Properties) {
+        $tool = $property.Name
+        $version = if ($property.Value -is [string]) { $property.Value } else { $property.Value.version }
+        $entries = $installed.PSObject.Properties | Where-Object Name -eq $tool
+        if (-not $entries) { continue }
+        $selected = @($entries.Value | Where-Object { $_.installed -and $_.version -eq $version })
+        if (-not $selected.Count) { continue }
+        $catalogEntry = @($catalog.mise.PSObject.Properties.Value | Where-Object backend -eq $tool)
+        $command = if ($catalogEntry.Count) { $catalogEntry[0].command } else {
+            switch ($tool) { 'github:anomalyco/opencode' {'opencode'} 'pypi:aider-chat' {'aider'} default {$tool} }
+        }
+        $executable = & mise which $command 2>$null | Select-Object -First 1
+        if ($LASTEXITCODE -ne 0 -or -not $executable -or -not (Test-Path -LiteralPath $executable -PathType Leaf)) {
+            Invoke-Checked 'mise' @('uninstall','--yes',"${tool}@${version}")
+        }
+    }
+    Invoke-Checked 'mise' @('install','--yes')
+}
+function Invoke-ProtectedVendors {
+    param($Plan, [string] $Backup, $Managed)
+    $saved = @()
+    foreach ($relative in @('Documents/PowerShell/profile.ps1','Documents/PowerShell/Microsoft.PowerShell_profile.ps1')) {
+        $path = Join-Path $HOME $relative
+        if ($relative -in $Managed -and (Test-Path -LiteralPath $path -PathType Leaf)) {
+            if ((Get-Item -LiteralPath $path).LinkType) { throw "Vendor loader is a symlink: $path" }
+            $saved += @{path=$path;content=[IO.File]::ReadAllBytes($path);acl=(Get-Acl -LiteralPath $path)}
+        }
+    }
+    try {
+        foreach ($installer in $Plan.official) { Install-OfficialCli $installer $Backup }
+    } finally {
+        foreach ($entry in $saved) {
+            [IO.File]::WriteAllBytes($entry.path,$entry.content)
+            Set-Acl -LiteralPath $entry.path -AclObject $entry.acl
+        }
+    }
+}
+if ($LibraryOnly) { return }
+if (-not $IsWindows -or [Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'Reviewed Windows 11 x64 environment required.' }
+if ($HOME -ne $env:USERPROFILE) { throw 'Run with the actual Windows user home.' }
+foreach ($name in @('XDG_CONFIG_HOME','XDG_DATA_HOME','MISE_CONFIG_DIR','MISE_DATA_DIR','MISE_GLOBAL_CONFIG_FILE','GH_CONFIG_DIR')) {
+    if ([Environment]::GetEnvironmentVariable($name)) { throw "$name redirects the native environment; review it first." }
+}
+if ($env:MISE_ENV -and $env:MISE_ENV -ne 'windows') { throw 'MISE_ENV selects an unreviewed Windows environment.' }
+
+if ($Stage) {
+    $context = Get-Content -LiteralPath $ContextPath -Raw | ConvertFrom-Json
+    if ($context.automation -ne $true -or [IO.Path]::GetFullPath($context.source) -ne $repo -or [IO.Path]::GetFullPath($context.destination) -ne $HOME) { throw 'Native login home and explicit automation required.' }
+    $selection = Get-MachineData $context.profile
+    $expected = Get-Content (Join-Path $repo 'tests/profiles/windows-full.json') -Raw | ConvertFrom-Json
+    $expected.features.desktop = $selection.features.desktop
+    Assert-ExistingSelection $selection $expected
+    $review = New-PrivateDirectory (Join-Path $HOME '.local/state/dotfiles/review/windows')
+    $scratch = New-PrivateDirectory (Join-Path ([IO.Path]::GetTempPath()) ('dotfiles-review-' + [Guid]::NewGuid().ToString('N')))
+    try {
+        $state = Join-Path $scratch 'query.boltdb'
+        $managed = @((Read-Review $context $state @('managed','--include=files,symlinks','--path-style=relative')) -split "`n" | Where-Object { $_ } | ForEach-Object { $_.Trim().Replace('\','/') })
+        if ($managed.Count -lt 15 -or '.zshrc' -in $managed) { throw 'Invalid Windows deployment targets.' }
+        if ($Stage -eq 'Before') {
+            $diff = Read-Review $context $state @('diff','--exclude=scripts')
+            $diff | Set-Content (Join-Path $review 'config.diff') -Encoding utf8NoBOM
+            $backup = New-ConfigurationBackup $managed $review
+            $backup | Set-Content (Join-Path $review 'last-backup.txt') -Encoding utf8NoBOM
+            foreach ($package in $catalog.bootstrap) { Install-WinGetPackage $package }
+            Enable-ProfilePolicy
+            return
+        }
+        $plan = $context.plan
+        $plan | ConvertTo-Json -Depth 15 | Set-Content (Join-Path $review 'packages.json') -Encoding utf8NoBOM
+        $backup = (Get-Content (Join-Path $review 'last-backup.txt') -Raw).Trim()
+        Push-Location $HOME
+        try { Repair-MiseCommands $plan } finally { Pop-Location }
+        foreach ($package in $plan.editor) { Install-WinGetPackage $package }
+        Invoke-ProtectedVendors $plan $backup $managed
+        if ($selection.features.desktop) { Install-NativeDesktop }
+        Test-WindowsTools $review
+        $null = Read-Review $context $state @('verify','--exclude=scripts')
+        if ((Read-Review $context $state @('diff','--exclude=scripts')).Trim()) { throw 'Configuration differs after installation.' }
+        Write-Output 'Windows configuration and CLI execution verified; authentication/GUI remain separate.'
+        return
+    } finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
+}
+if ($Mode -eq 'Plan') { Write-Output 'Prepare chezmoi, then init --apply. Existing providers and authentication are preserved.'; return }
+if ($Mode -eq 'DesktopPlan') { @{ghostty='unsupported: native Windows release unavailable';orca='checksum-pinned official installer'} | ConvertTo-Json; return }
+if ($Mode -eq 'DesktopApply') { Install-NativeDesktop; return }
+if ($Mode -in @('Bootstrap','Apply')) {
+    foreach ($package in $catalog.bootstrap) { Install-WinGetPackage $package }
+    if ($Mode -eq 'Bootstrap') { return }
+}
+if ($Mode -eq 'Apply') {
+    $arguments = @('--source',$repo)
+    if ($ProfilePath) {
+        $null = Get-Selection $ProfilePath
+        $arguments += @('--override-data-file',$ProfilePath)
+    }
+    Invoke-Checked 'chezmoi' ($arguments + @('init','--apply'))
+    return
+}
+if ($Mode -eq 'Diff') { Invoke-Checked 'chezmoi' @('--source',$repo,'diff'); return }
+if ($Mode -eq 'Verify') {
+    Invoke-Checked 'chezmoi' @('--source',$repo,'verify','--exclude=scripts')
+    Test-WindowsTools (Join-Path $HOME '.local/state/dotfiles/review/windows')
+}
