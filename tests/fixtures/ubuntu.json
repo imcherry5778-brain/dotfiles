@@ -1,0 +1,4 @@
+{
+  "platform": "ubuntu",
+  "chezmoi": { "os": "linux", "osRelease": { "id": "ubuntu" } }
+}

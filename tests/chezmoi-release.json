@@ -1,0 +1,21 @@
+{
+  "version": "2.73.0",
+  "assets": {
+    "linux-amd64": {
+      "name": "chezmoi-linux-amd64",
+      "sha256": "4b42a0fb0dec69f37964c6701f89daa6bf6393aaeb92bbcbc8f3ee9f08a49bcd"
+    },
+    "darwin-amd64": {
+      "name": "chezmoi-darwin-amd64",
+      "sha256": "7f782d1c8e930e205e0487a0fd79d8bb62327adf204af8233672e252f019852a"
+    },
+    "darwin-arm64": {
+      "name": "chezmoi-darwin-arm64",
+      "sha256": "4ba16b902a275576ac78a75a1c3370eb09eb21d96ec4ddda53570125837ddb2a"
+    },
+    "windows-amd64": {
+      "name": "chezmoi-windows-amd64.exe",
+      "sha256": "8cb8353d6a20719d97e3106ae652724ecba3795ef08c761d9d8ce4f624441a47"
+    }
+  }
+}

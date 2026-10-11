@@ -1,0 +1,12 @@
+min_version = "2026.10.3"
+
+# Repository operations only. Global CLI inventory belongs to home/dot_config/mise.
+[tasks.plan]
+description = "Show the setup plan without installing or applying anything"
+run = "sh install.sh --plan"
+run_windows = "pwsh -NoProfile -File install.ps1 -Mode Plan"
+
+[tasks.check]
+description = "Check repository boundaries and report local prerequisites"
+run = "sh scripts/unix/check.sh"
+run_windows = "pwsh -NoProfile -File scripts/windows/check.ps1"

@@ -1,0 +1,4 @@
+{
+  "platform": "arch",
+  "chezmoi": { "os": "linux", "osRelease": { "id": "arch" } }
+}

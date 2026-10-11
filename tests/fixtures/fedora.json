@@ -1,0 +1,4 @@
+{
+  "platform": "fedora",
+  "chezmoi": { "os": "linux", "osRelease": { "id": "fedora" } }
+}

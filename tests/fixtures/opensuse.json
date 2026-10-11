@@ -1,0 +1,4 @@
+{
+  "platform": "opensuse-tumbleweed",
+  "chezmoi": { "os": "linux", "osRelease": { "id": "opensuse-tumbleweed" } }
+}

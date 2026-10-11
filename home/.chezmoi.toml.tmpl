@@ -1,0 +1,22 @@
+{{- $platform := .chezmoi.os -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   $platform = .chezmoi.osRelease.id -}}
+{{- else if eq .chezmoi.os "darwin" -}}
+{{-   $platform = "macos" -}}
+{{- end -}}
+{{- if hasKey . "platform" -}}
+{{-   $platform = .platform -}}
+{{- end -}}
+{{- if not (has $platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed" "macos" "windows")) -}}
+{{-   fail (printf "Unsupported platform %q. Review docs/platforms.md before initialization." $platform) -}}
+{{- end -}}
+{{- $family := "linux" -}}
+{{- if eq $platform "macos" -}}{{- $family = "darwin" -}}{{- end -}}
+{{- if eq $platform "windows" -}}{{- $family = "windows" -}}{{- end -}}
+{{- if ne $family .chezmoi.os -}}
+{{-   fail "Configured platform does not match the current operating system." -}}
+{{- end -}}
+sourceDir = {{ .chezmoi.workingTree | quote }}
+
+[data]
+platform = {{ $platform | quote }}

@@ -1,0 +1,9 @@
+[repository]
+owner = "imcherry5778-brain"
+name = "dotfiles"
+
+# Shared choices only; no tool inventory or machine credentials here.
+[features]
+ai = true
+conda = false
+preserve_existing_tools = false

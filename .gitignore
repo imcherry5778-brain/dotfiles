@@ -1,0 +1,23 @@
+# Generated repository artifacts, not the user's home.
+/.artifacts/
+/.cache/
+/.tmp/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Local overrides and credentials must not become shared source.
+mise.local.toml
+mise.*.local.toml
+config.local.toml
+config.*.local.toml
+miserc.local.toml
+.env
+.env.*
+!.env.example
+**/auth.json
+**/credentials.json
+**/hosts.yml
+*.pem
+*.key
