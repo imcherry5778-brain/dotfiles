@@ -11,7 +11,7 @@ case "${1:---plan}" in
       '1. Review platform, current configuration and installation ownership.' \
       '2. Prepare OS prerequisites and mise-managed Python automatically during --apply.' \
       '3. Review a fresh configuration diff and create a private targeted backup.' \
-      '4. Install missing CLI/apps, apply configuration and verify actual execution.' \
+      '4. Let chezmoi deploy configuration, then install missing CLI/apps and verify actual execution.' \
       'Use --apply for native full setup, or --apply --profile FILE for a reviewed selection; existing providers are preserved.'
     ;;
   --check)

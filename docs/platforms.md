@@ -9,7 +9,7 @@
 | macOS | macos / darwin | 개인 ARM64 Mac 24개 CLI·Ghostty·Orca·Zsh·LazyVim lock·클립보드·반복 적용 검증; hosted ARM64 full 설치 성공 |
 | Windows | windows / windows | 개인 Windows 11 native CLI·Orca GUI 검증 완료; PowerShell 5.1 시작·PS7 인계·새 PS7 프로필 실행·반복 적용 hosted CLI 설치 검증 성공 |
 
-Foundation checks는 구문·격리 렌더링·초기화·배포 경계·경로 처리를 확인한다. Installation checks는 별도로 Fedora 44 common baseline 13개, Ubuntu 26.04 desktop CLI 15개, Ubuntu·Arch·openSUSE full CLI 22개와 Ghostty·Orca 설치·실행과 Zsh/tmux·반복 적용, Windows native CLI, Mac ARM64 24개 CLI 설치를 확인한다. 어느 쪽도 로그인·SSH/GPG·클립보드·GUI·Neovim 플러그인 설치·모든 배포판 호환성 완료를 의미하지 않는다.
+Foundation checks는 구문·격리 렌더링·초기화·배포 경계·경로 처리를 확인한다. Installation checks는 별도로 Fedora 44 common baseline 13개, Ubuntu 26.04 desktop CLI 15개, Fedora·Ubuntu·Arch·openSUSE full CLI 22개와 Ghostty·Orca 설치·실행과 Zsh/tmux·반복 적용, Windows native CLI, Mac ARM64 24개 CLI 설치를 확인한다. 어느 쪽도 로그인·SSH/GPG·클립보드·GUI·Neovim 플러그인 설치·모든 배포판 호환성 완료를 의미하지 않는다.
 
 현재 실사용 configuration source는 Fedora·Ubuntu·Arch·openSUSE·Windows·Mac에 적용했다. [Fedora 실제 기기 검증](fedora-application.md)과 [Ubuntu 실제 기기 검증](ubuntu-application.md), [Arch 실제 기기 검증](arch-application.md), [openSUSE 실제 기기 검증](opensuse-application.md)은 hosted CI와 별도로 기록한다. 다른 OS의 기반 init/plan/check가 성공했다고 그 OS에 Fedora 설정을 배포하지 않는다. 모든 플랫폼은 명시적 enabled 선택이 필요하다. Windows/Mac은 추가 native opt-in으로 배포 경계를 유지한다.
 

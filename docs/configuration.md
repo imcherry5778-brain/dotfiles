@@ -6,11 +6,11 @@ config sourceDir는 Git checkout 루트인 .chezmoi.workingTree에서 유도한�
 
 ## 기본값과 플랫폼 선택
 
-배포 enabled/externals는 모두 false다. Conda·Bitwarden·개인 Fedora 도구·웹 편집기 구성도 기본 false다. OS가 Fedora이거나 도구가 설치되어 있다는 이유로 개인 기능을 자동 선택하지 않는다. 플랫폼만 초기화한 것은 Fedora 설정을 적용한 것이 아니다.
+배포 enabled/externals는 모두 false다. Conda·Bitwarden·개인 Fedora 도구·웹 편집기 구성도 기본 false다. plain init은 비활성 검토 설정을 만들고, 새 기기나 비활성 검토 설정의 명시적 init --apply는 해당 OS portable full과 automation.enabled=true를 선택한다. OS가 Fedora이거나 도구가 설치되어 있다는 이유로 개인 Fedora 기능을 선택하지 않는다. 플랫폼만 초기화한 것은 Fedora 설정을 적용한 것이 아니다.
 
 기존 Fedora 선택의 비밀정보 없는 예는 [기기 데이터 예시](fedora-machine.example.toml)에 있다. 실제 적용 전 단계에서 선택한다. prefix/socket은 정상적인 홈 하위 기본 경로를 유도하고 다른 위치를 쓰면 기기 데이터로 지정한다. 초기화 템플릿은 기존 선택을 반복 초기화에서 보존한다.
 
-`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. enabled=true라도 Fedora/Ubuntu 외에는 제외한다. personal_fedora=true인 Ubuntu는 오류로 거부한다. 두 플랫폼에서는 README·빈 Ghostty/PowerShell 예약 경로·선택하지 않은 기능을 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 개인 Fedora는 enabled=true, externals=false로 적용했다. 기존 OMZ/tmux 플러그인과 로컬 패치를 유지하며 archive를 덮어쓰지 않았다.
+`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. 지원 플랫폼은 Fedora·Ubuntu·Arch·openSUSE Tumbleweed·Mac ARM64·Windows x64다. 개인 Fedora 기능은 다른 플랫폼에서 거부한다. README·빈 예약 경로·선택하지 않은 기능은 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 개인 Fedora는 enabled=true, externals=false로 적용했다. 기존 OMZ/tmux 플러그인과 로컬 패치를 유지하며 archive를 덮어쓰지 않았다.
 
 ## 실제 source
 
@@ -27,7 +27,7 @@ config sourceDir는 Git checkout 루트인 .chezmoi.workingTree에서 유도한�
 | private_dot_codex/modify_private_config.toml | Codex 현재 model/reasoning/service 선호, 나머지 보존 |
 | dot_config/opencode/modify_opencode.json | 기존 autoupdate=false |
 
-Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안정적인 mise shims/gh로 연결하고 빈 reset 항목은 보존한다. 개인 AI 지침과 PowerShell 실제 프로필은 아직 source를 작성하지 않았다.
+Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안정적인 mise shims/gh로 연결하고 빈 reset 항목은 보존한다. 개인 AI 지침은 수집하지 않는다. Windows PowerShell 설정은 Windows 전용 source에서 소유한다.
 
 ## 적용 전 검토에서 수정한 보존 규칙
 
@@ -41,7 +41,7 @@ Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안
 
 ## Ubuntu 차이
 
-Ubuntu의 modify_dot_bashrc는 기존 .bashrc 끝에 공통 모듈 로드 한 줄만 추가하며 반복 적용 시 중복하지 않는다. .profile과 .bash_logout은 관리하지 않는다. Fedora의 기존 Bash 출력은 .chezmoitemplates/shell/fedora.bashrc.tmpl로 옮겼으며 렌더링 결과는 유지한다.
+Ubuntu의 modify_dot_bashrc는 기존 .bashrc 끝에 공통 모듈 로드 한 줄만 추가하며 반복 적용 시 중복하지 않는다. .profile과 .bash_logout은 관리하지 않는다. 개인 Fedora와 common의 기존 Bash 출력은 .chezmoitemplates/shell/fedora.bashrc.tmpl에서 유지한다. Fedora portable full은 기존 Bash 파일에 공통 모듈 한 줄을 추가한다.
 
 Ubuntu의 .config/shell/bashrc.bash는 mise·fzf 단축키·zoxide와 선택적 carapace 공급자를 초기화한다. fzf --bash 초기화 전 native completion 등록을 저장하고 복원하여 Ubuntu의 Tab 공급자를 유지한다. Zsh도 OMZ/기본 공급자가 없을 때만 선택한 CLI의 carapace 공급자를 연결한다. Fedora RPM completion·native adapter·spec 복사본은 Ubuntu에 배포하지 않는다. 공유 carapace 본문은 template 한 곳에서 소유한다.
 
