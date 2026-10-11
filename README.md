@@ -47,6 +47,7 @@ mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run pla
 
 ## 상세 문서
 
+- [Windows 실제 적용 결과·복구](docs/windows-application.md)
 - [Native Windows 설치·설정 계약](docs/windows.md)
 - [openSUSE 실제 적용 결과·복구](docs/opensuse-application.md)
 - [Arch 실제 적용 결과·복구](docs/arch-application.md)
