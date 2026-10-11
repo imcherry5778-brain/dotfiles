@@ -40,6 +40,7 @@ function Invoke-TestPwsh {
     if ($LASTEXITCODE -ne 0) { throw 'PowerShell 5.1 handoff failed.' }
     $report = Import-Clixml -LiteralPath $env:DOTFILES_TEST_REPORT
     if ($report.install -notcontains 'Microsoft.PowerShell' -or $report.install -notcontains '--exact') { throw 'Wrong bootstrap owner.' }
+    if ($report.handoff -notcontains '-ExecutionPolicy' -or $report.handoff -notcontains 'Bypass') { throw 'Restricted native entry cannot continue.' }
     if ($report.handoff -notcontains 'Apply' -or $report.handoff -notcontains 'profile with spaces.json') { throw 'Handoff changed the requested arguments.' }
     Write-Output 'PowerShell 5.1: native parsing, missing-PowerShell WinGet owner and same-argument handoff passed.'
 } finally {

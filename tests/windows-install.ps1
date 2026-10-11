@@ -23,7 +23,7 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force
 # PowerShell 7 stores its policy separately from Windows PowerShell 5.1.
 $existingPwsh = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue
 if ($existingPwsh) {
-    & $existingPwsh.Source -NoProfile -ExecutionPolicy Bypass -Command 'Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force'
+    & $existingPwsh.Source -NoProfile -Command 'Set-ExecutionPolicy -Scope Process -ExecutionPolicy Undefined -Force; Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force'
     if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare the disposable PowerShell 7 policy.' }
 }
 $profile = Join-Path $repo 'tests/profiles/windows-cli.json'

@@ -263,7 +263,15 @@ if ($profilePolicyNeeded) {
     foreach ($scope in @('MachinePolicy','UserPolicy')) {
         if ((Get-ExecutionPolicy -Scope $scope) -ne 'Undefined') { throw 'PowerShell execution group policy requires administrator review.' }
     }
-    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+    # Set-ExecutionPolicy rejects a successful persistent write while a more
+    # specific Process Bypass is active. Suspend only that process preference.
+    $entryProcessPolicy = Get-ExecutionPolicy -Scope Process
+    try {
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Undefined -Force
+        Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+    } finally {
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy $entryProcessPolicy -Force
+    }
 }
 # Apply mode is explicitly authorized; its latest diff and targets were backed up above.
 # --no-tty redirects prompts to stdin, so it alone does not make apply noninteractive.

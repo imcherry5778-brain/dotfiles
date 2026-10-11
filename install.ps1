@@ -33,7 +33,9 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
       $pwsh = @{Source=$candidate}
     }
   }
-  $arguments = @('-NoProfile','-File',(Join-Path $repoRoot 'install.ps1'),'-Mode',$Mode)
+  # The reviewed entry script must also run when PowerShell 7 starts Restricted.
+  # This process-only option does not override Group Policy.
+  $arguments = @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repoRoot 'install.ps1'),'-Mode',$Mode)
   if ($ProfilePath) { $arguments += @('-ProfilePath',$ProfilePath) }
   & $pwsh.Source @arguments
   exit $LASTEXITCODE
