@@ -43,6 +43,10 @@ def prepare_packages(host, *, desktop=False):
                 raise ValueError('Arch package databases are absent. Run a full pacman -Syu first; never -Sy alone.')
             run(administrative_command(['pacman', '-S', '--needed', '--noconfirm', *missing]))
     else:
+        # Minimal openSUSE images already provide busybox awk. No GNU-only awk
+        # feature is required; avoid replacing its existing package/provider.
+        if shutil.which('awk'):
+            packages = [name for name in packages if name != 'gawk']
         missing = [name for name in packages if subprocess.run(['rpm', '-q', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode]
         if missing:
             install_opensuse_packages(missing)

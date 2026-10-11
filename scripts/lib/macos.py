@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 from lib.runtime import download_verified, run
+from lib.tools import verify_mise_tools
 
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = json.loads((ROOT / 'scripts/macos-providers.json').read_text())
@@ -57,11 +58,10 @@ def install_apps():
 
 
 def verify_tools(mise):
-    commands = ['rg', 'fd', 'bat', 'jq', 'fzf', 'zoxide', 'gh', 'lazygit', 'delta', 'nvim', 'yazi', 'uv', 'carapace',
-                'node', 'pnpm', 'tmux', 'opencode', 'aider', 'pi', 'agy', 'claude', 'codex', 'kiro-cli', 'grok']
-    evidence = {}
-    for command in commands:
-        evidence[command] = run([mise, 'exec', '--', command, '--version'], capture=True, timeout=60).strip()
+    evidence = verify_mise_tools(mise)
+    for command in ['agy', 'claude', 'codex', 'kiro-cli', 'grok']:
+        evidence[command] = {'executable': shutil.which(command),
+                             'output': run([mise, 'exec', '--', command, '--version'], capture=True, timeout=60).strip()}
     if not any(Path(directory, 'Ghostty.app').exists() for directory in ['/Applications', str(Path.home() / 'Applications')]):
         raise ValueError('Ghostty app is absent.')
     if not any(Path(directory, 'Orca.app').exists() for directory in ['/Applications', str(Path.home() / 'Applications')]):

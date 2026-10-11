@@ -72,3 +72,20 @@ openSUSE: `verify-desktop.py --chezmoi /path/to/chezmoi --platform opensuse-tumb
 ## Native Windows 설정 검증
 
 Windows에서 `./tests/verify-windows.ps1`을 실행한다. WinGet 설치 자체와 분리된 격리 대상 검사이며, 공백이 있는 checkout/home, Windows 파일명, AppData 대상, 기존 PowerShell 프로필과 5.1 설정·AI 훅 보존, provider 단일 소유권, 반복 apply의 바이트 안정성과 렌더링 PowerShell 구문을 검사한다. Foundation checks의 Windows hosted job에서도 실행한다. 실제 설치 계약은 [Windows 문서](../docs/windows.md)를 참고한다.
+
+## Whole installation contract
+
+`tests/run-install.sh` prepares mise-managed Python before Linux acceptance tests.
+Minimal Dockerfiles provide clone/network/admin essentials; installer-owned prerequisites
+are installed by the installer. `verify-regression.py` checks the five existing profile
+renders against `profile-regression.json`, recorded from the pre-Mac source. Blank-only
+format changes and the explicitly preserved, separate OpenCode bump are normalized.
+Changes to target lists, other configuration content and provider declarations fail.
+
+`windows-install.ps1` starts from native PowerShell 5.1 in the actual hosted user home,
+uses Microsoft's WinGet bootstrap when the runner lacks it, and installs/repeats the CLI
+profile. Orca's interactive GUI and authentication remain outside this CI profile.
+`macos-install.sh` runs ARM64 full installation and repeat/login-shell checks in the
+actual hosted Mac home. Both scripts refuse non-hosted environments. Neither is a
+remote deployment workflow or a self-hosted runner. Personal Mac GUI/clipboard checks
+are recorded separately in docs/macos-application.md.

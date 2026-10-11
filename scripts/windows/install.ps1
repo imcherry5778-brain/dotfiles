@@ -90,9 +90,23 @@ function Get-Selection {
     }
     return $selection
 }
+function Assert-ExistingSelection {
+    param($Existing, $Requested)
+    if ($Existing.platform -ne $Requested.platform) { throw 'Existing chezmoi platform differs; review before replacing it.' }
+    foreach ($section in @('features','deployment')) {
+        $actual = $Existing.$section.PSObject.Properties
+        $wanted = $Requested.$section.PSObject.Properties
+        if (@($actual).Count -ne @($wanted).Count) { throw "Existing $section selection differs; no replacement performed." }
+        foreach ($property in $wanted) {
+            if ($property.Name -notin $actual.Name -or $Existing.$section.($property.Name) -ne $property.Value) {
+                throw "Existing $section selection differs; no replacement performed."
+            }
+        }
+    }
+}
 function Get-MachineData {
     param($Selection)
-    $documents = [Environment]::GetFolderPath('MyDocuments')
+    $documents = [Environment]::GetFolderPath('MyDocuments', [Environment+SpecialFolderOption]::DoNotVerify)
     if ([IO.Path]::GetFullPath($documents) -ne [IO.Path]::GetFullPath((Join-Path $HOME 'Documents'))) {
         throw 'Redirected Documents requires a separate PowerShell profile destination review.'
     }
@@ -227,7 +241,7 @@ Write-Output "Private targeted backup: $backup"
 $null = New-Item -ItemType Directory -Path (Split-Path $config) -Force
 if (Test-Path -LiteralPath $config) {
     $existing = Get-ChezmoiOutput @('--config',$config,'data','--format','json') | ConvertFrom-Json
-    if ($existing.platform -ne 'windows' -or -not $existing.features.windows_native) { throw 'Existing chezmoi selection differs; no replacement performed.' }
+    Assert-ExistingSelection $existing $selection
 }
 Copy-Item -LiteralPath $previewConfig -Destination $config -Force
 $actual = @('--config',$config,'--no-tty','--no-pager')

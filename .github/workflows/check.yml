@@ -37,6 +37,8 @@ jobs:
         run: |
           ./tests/verify-windows.ps1
           ./tests/verify-windows-providers.ps1
+          powershell.exe -NoProfile -File ./tests/verify-windows51.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify shared installer contracts without downloads
         run: python3 ./tests/verify-installers.py
       - name: Verify native desktop plan without installation

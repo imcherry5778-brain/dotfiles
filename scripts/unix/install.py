@@ -23,6 +23,7 @@ from lib.desktop import desktop_plan, install_desktop
 from lib.packages import prepare_packages
 from lib.backup import backup_targets
 from lib.macos import install_native_cli, install_apps, verify_tools
+from lib.tools import verify_mise_tools
 
 
 def validate_profile(path):
@@ -75,9 +76,16 @@ def preflight(profile_path):
         raise ValueError('Installation profile must match the actual OS.')
     if host.distribution == 'ubuntu' and platform.freedesktop_os_release().get('VERSION_ID') != '26.04':
         raise ValueError('Ubuntu installation is reviewed for 26.04 only.')
-    if any(os.environ.get(key) for key in ['MISE_ENV', 'MISE_CONFIG_DIR', 'MISE_GLOBAL_CONFIG_FILE',
+    if any(os.environ.get(key) for key in ['MISE_CONFIG_DIR', 'MISE_GLOBAL_CONFIG_FILE',
                                           'MISE_DATA_DIR', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME']):
         raise ValueError('Baseline installer requires default user config/data locations; do not redirect HOME or XDG.')
+    # mise exec exports the selected global environments on repeat installation.
+    # Accept only the environment list already declared by this user's config.
+    if os.environ.get('MISE_ENV'):
+        selection = USER_HOME / '.config/mise/miserc.toml'
+        declared = tomllib.loads(selection.read_text()).get('env', []) if selection.exists() else []
+        if os.environ['MISE_ENV'].split(',') != declared:
+            raise ValueError('MISE_ENV overrides the reviewed global environment selection.')
     # An existing personal environment must not be downgraded into this baseline.
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     if config.exists():
@@ -190,10 +198,9 @@ def install(profile_path):
     run(actual + ['verify'])
     if run(actual + ['diff'], capture=True).strip():
         raise ValueError('Configuration still differs after installation.')
-    if host.system == 'macos':
-        evidence = verify_tools(mise)
-        (review / 'cli-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
-        (review / 'cli-verification.json').chmod(0o600)
+    evidence = verify_tools(mise) if host.system == 'macos' else verify_mise_tools(mise)
+    (review / 'cli-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+    (review / 'cli-verification.json').chmod(0o600)
     print(f"{profile['platform']} configuration and tools applied. Authentication and desktop verification remain separate.", flush=True)
 
 
