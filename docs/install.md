@@ -48,3 +48,10 @@ sh install.sh --apply --profile tests/profiles/fedora-common.json
 기존 개인 환경의 이전·백업·복구나 RPM 제거를 자동 수행하지 않는다. 네트워크 또는 설치 오류는 즉시 실패하며 원자적 rollback을 제공하지 않는다. 인증·SSH/GPG 키·GUI·AI CLI·Conda는 이 baseline 밖이다. Neovim 플러그인 설치/업데이트는 별도 앱 동작이며 설치 CI에서 완료로 표시하지 않는다.
 
 GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora 44 컨테이너를 생성한다. OS 의존성만 root 단계에서 준비하고 실제 설치와 테스트는 dotfiles-test 일반 사용자의 원래 홈에서 실행한다. HOME/XDG를 바꿔 성공시키지 않는다. 공백 경로의 checkout, 빈 tool cache, 실제 CLI 경로, 셸·tmux, 기존 Git/gh 설정 보존, 두 번째 설치의 내용·링크·권한 안정성을 검사한다. 컨테이너를 종료하면 설치 환경은 폐기된다. 사용자 PC에 원격 적용하는 workflow가 아니다.
+
+
+## 확인한 실행 결과
+
+2026-10-11, 코드 commit `c566f13`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704512)가 통과했다. Fedora 44 일반 사용자에서 13개 CLI를 새로 설치하고 모든 실행 파일의 실제 경로·버전을 확인했다. Zsh/tmux runtime와 Neovim Lua 구문 검사 후 같은 진입점을 재실행했고, external 파일을 포함한 managed 경로 1,902개의 내용·링크·권한이 동일하며 chezmoi diff가 비어 있음을 확인했다.
+
+같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다.
