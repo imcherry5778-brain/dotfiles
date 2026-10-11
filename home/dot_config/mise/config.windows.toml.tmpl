@@ -10,4 +10,3 @@
 "github:anomalyco/opencode" = {{ index $existingAi "opencode" | quote }}
 "pypi:aider-chat" = { version = {{ (index $ai "pipx:aider-chat").version | quote }}, uvx = true, uvx_args = "--python 3.12 --with pip" }
 node = {{ $node | quote }}
-zig = {{ .windows.editorCompilerVersion | quote }}

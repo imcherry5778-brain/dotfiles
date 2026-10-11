@@ -76,7 +76,6 @@
         "command": "carapace"
       }
     },
-    "editorCompilerVersion": "0.15.2",
     "official": [
       {
         "tool": "agy",
@@ -133,6 +132,13 @@
         "sha256": "c83dac29885215c79137e48cbc034d3d7c8c11afba3082ff1df0e0769aa902a4",
         "arguments": [],
         "updateOwner": "publisher"
+      }
+    ],
+    "editor": [
+      {
+        "id": "BrechtSanders.WinLibs.POSIX.UCRT",
+        "command": "gcc",
+        "version": "16.1.0-14.0.0-r4"
       }
     ]
   }

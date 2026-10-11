@@ -8,13 +8,16 @@ if (-not $IsWindows) { throw 'Native Windows execution required.' }
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $catalog = (Get-Content (Join-Path $repo 'home/.chezmoidata/windows.json') -Raw | ConvertFrom-Json).windows
 $plan = Get-Content -LiteralPath $PlanPath -Raw | ConvertFrom-Json
-$commands = @($plan.bootstrap.command) + @($catalog.mise.PSObject.Properties.Value.command) + @('node','npm','zig','aider','opencode','ya','uvx') + @($plan.official.command)
+$commands = @($plan.bootstrap.command) + @($plan.editor.command) + @($catalog.mise.PSObject.Properties.Value.command) + @('node','npm','aider','opencode','ya','uvx') + @($plan.official.command)
 $results = @()
 foreach ($name in $commands | Select-Object -Unique) {
     $command = Get-Command $name -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $command) { throw "Missing command in the native mise environment: $name" }
-    $arguments = if ($name -eq 'zig') { @('version') } else { @('--version') }
-    $output = & $command.Source @arguments 2>&1 | Out-String
+    $versionArgument = switch ($name) {
+        'pwsh' { '-Version' }
+        default { '--version' }
+    }
+    $output = & $command.Source $versionArgument 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { throw "$name version check failed (exit $LASTEXITCODE)." }
     $results += @{command=$name;path=$command.Source;version=$output.Trim();exitCode=$LASTEXITCODE}
 }

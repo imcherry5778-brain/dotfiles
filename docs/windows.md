@@ -10,9 +10,10 @@ Windows 11 x64 / PowerShell 7을 사용한다. 설치 도구는 제품별로 선
 | rg, fd, bat, jq, fzf, zoxide, gh, lazygit, delta, Neovim, Yazi, uv, Carapace | mise aqua | 공통 CLI 버전을 읽고 Windows backend를 명시 |
 | OpenCode | mise GitHub release | 기존 공통 AI 버전 유지, major 변경 없음 |
 | Aider | mise pypi → uv | 공통 Aider 버전과 Python 3.12 격리 환경. pip도 공식 설치 옵션에 맞춰 추가 |
-| Node, Zig | mise | Node는 편집기와 Pi에 필요. Zig는 Tree-sitter C parser 빌드 의존성 |
+| Node | mise | 편집기와 Pi에 필요한 runtime |
 | agy, Claude, Codex, Pi, Kiro, Grok | 공식 Windows 설치기 | 검토한 설치기 원문 SHA-256 고정. 설치 payload·업데이트는 공급사 정책 |
 | Orca | 공식 EXE | 기존 release metadata의 SHA-256 검증. 실제 GUI와 bundled CLI 별도 검증 |
+| Windows C compiler (WinLibs GCC) | WinGet | Neovim Tree-sitter의 네이티브 파서 빌드 의존성. 기존 GCC는 보존 |
 | Ghostty | Windows 제외 | 공식 Windows release가 없음. 기존 Windows Terminal 유지 |
 
 WinGet 설치기도 공식 MSI/EXE를 실행할 수 있고 mise도 공식 release를 받는다. 여기서 provider는 설치·업데이트 책임이며 artifact 출처와 구분한다. 공통 CLI는 mise에만 선언하고 공식 AI 설치 항목은 mise에서 제외한다. Scoop·Chocolatey·별도 pipx는 추가하지 않는다.
@@ -79,3 +80,7 @@ Orca 설치 UI는 공식 설치기의 표시를 따른다. Windows Terminal의 �
 공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
 
 Windows WinGet에서 제공되는 mise 2026.9.18로 실제 설치를 검증한다. 저장소 작업의 최소 버전도 이에 맞추며 Linux에 설치된 mise 버전이나 기존 설정은 변경하지 않는다.
+
+Windows 파서 빌드는 WinLibs GCC를 사용한다. 현재 Tree-sitter CLI가 Zig에 전달한 Rust 대상 `x86_64-pc-windows-msvc`가 실제 빌드에서 거부되어, Zig wrapper 대신 Windows 전용 컴파일러를 사용한다. [WinLibs 공식 배포](https://www.winlibs.com/)와 [WinGet 공식 manifest](https://github.com/microsoft/winget-pkgs/tree/master/manifests/b/BrechtSanders/WinLibs/POSIX/UCRT/16.1.0-14.0.0-r4)를 따른다. GCC가 이미 있으면 공급자를 보존한다. Linux 컴파일러와 공통 설정은 변경하지 않는다.
+
+Orca는 공식 애플리케이션 아래 `resources/bin`을 한 번만 등록하고 번들 CLI의 version/help를 실행한다. 명시적인 Apply에서는 최종 diff와 관리 대상 백업 이후 `chezmoi --force apply`를 사용한다. `--no-tty`만으로는 stdin의 덮어쓰기 질문이 없어지지 않는다. [chezmoi 공식 옵션 설명](https://www.chezmoi.io/reference/command-line-flags/global/)을 따른다.

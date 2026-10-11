@@ -117,9 +117,21 @@ function Get-OrcaExecutable {
     }
     return $null
 }
+function Register-OrcaCli {
+    param([string] $Executable)
+    # Use the publisher's native launcher, including its companion runtime files.
+    Add-UserCommandPath (Join-Path (Split-Path $Executable) 'resources/bin')
+    $null = Invoke-Checked 'orca' @('--version')
+    $null = Invoke-Checked 'orca' @('--help')
+}
 function Install-NativeDesktop {
     Write-Output 'Ghostty: official native Windows release is unavailable; existing Windows Terminal is preserved.'
-    if (Get-OrcaExecutable) { Write-Output 'Orca: existing installation preserved.'; return }
+    $existing = Get-OrcaExecutable
+    if ($existing) {
+        Register-OrcaCli $existing
+        Write-Output 'Orca: existing installation and bundled CLI preserved.'
+        return
+    }
     $release = Get-Content -LiteralPath (Join-Path $repo 'scripts/desktop-release.json') -Raw | ConvertFrom-Json
     $asset = $release.orca.assets.'windows-x64'
     $scratch = New-PrivateDirectory (Join-Path ([IO.Path]::GetTempPath()) ('dotfiles-orca-' + [Guid]::NewGuid().ToString('N')))
@@ -129,7 +141,9 @@ function Install-NativeDesktop {
         # Publisher UI is intentional: no undocumented silent installer flags.
         $process = Start-Process -FilePath $installer -Wait -PassThru
         if ($process.ExitCode -ne 0) { throw "Orca installer exit $($process.ExitCode)" }
-        if (-not (Get-OrcaExecutable)) { throw 'Orca installer finished without a detectable native installation.' }
+        $installed = Get-OrcaExecutable
+        if (-not $installed) { throw 'Orca installer finished without a detectable native installation.' }
+        Register-OrcaCli $installed
     } finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
 }
 if ($LibraryOnly) { return }
@@ -218,6 +232,7 @@ $actual = @('--config',$config,'--no-tty','--no-pager')
 $null = Get-ChezmoiOutput ($actual + @('apply',(Join-Path $HOME '.config/mise')))
 Push-Location $HOME
 try { Invoke-Checked 'mise' @('install','--yes') } finally { Pop-Location }
+foreach ($package in $plan.editor) { Install-WinGetPackage $package }
 foreach ($installer in $plan.official) { Install-OfficialCli $installer $backup }
 # Vendor installers can add profile/completion loaders. Review the final diff too.
 $finalDiff = Get-ChezmoiOutput ($actual + @('diff'))
@@ -228,7 +243,9 @@ if ((Get-ExecutionPolicy) -eq 'Restricted') {
     }
     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
 }
-$null = Get-ChezmoiOutput ($actual + @('apply'))
+# Apply mode is explicitly authorized; its latest diff and targets were backed up above.
+# --no-tty redirects prompts to stdin, so it alone does not make apply noninteractive.
+$null = Get-ChezmoiOutput ($actual + @('--force','apply'))
 $null = Get-ChezmoiOutput ($actual + @('verify'))
 if ($selection.features.desktop) { Install-NativeDesktop }
 Test-WindowsTools $review

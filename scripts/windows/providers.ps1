@@ -92,6 +92,7 @@ function Install-OfficialCli {
 }
 function Test-WindowsTools {
     param([string] $Review)
+    Update-SessionPath
     $report = Join-Path $Review 'tool-verification.json'
     Push-Location $HOME
     try {
