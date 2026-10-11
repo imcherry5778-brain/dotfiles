@@ -18,7 +18,7 @@ USER_HOME = Path.home()
 RELEASE = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
 TARGET = RELEASE.get('ID', '').strip('"')
 FULL = os.environ.get('DOTFILES_FULL_INSTALL') == '1'
-PROFILE = ROOT / 'tests/profiles' / ('ubuntu-full.json' if FULL else 'ubuntu-desktop.json' if TARGET == 'ubuntu' else 'fedora-common.json')
+PROFILE = ROOT / 'tests/profiles' / (f'{TARGET}-full.json' if FULL else f'{TARGET}-desktop.json' if TARGET in {'ubuntu', 'arch'} else 'fedora-common.json')
 
 
 def run(argv, *, capture=True, timeout=900, env=None):
@@ -62,7 +62,7 @@ def verify_guards():
     require(module.validate_profile(PROFILE) == profile, 'Valid installation profile rejected.')
     with tempfile.TemporaryDirectory() as temporary:
         invalid = Path(temporary) / 'invalid.json'
-        cases = [dict(profile, platform='arch'), dict(profile, deployment={'enabled': False, 'externals': True}),
+        cases = [dict(profile, platform='opensuse-tumbleweed'), dict(profile, deployment={'enabled': False, 'externals': True}),
                  dict(profile, features=dict(profile['features'], personal_fedora=True)),
                  dict(profile, machine={'home': '/wrong'}),
                  dict(profile, features=dict(profile['features'], ai=not profile['features']['ai'])),
@@ -93,8 +93,8 @@ done
 [[ $(printf '%s\n' $path | sort | uniq -d) == '' ]]
 print 'ZSH_RUNTIME_OK'
 """
-    code = code.replace('EXPECTED_PLUGINS', '11' if TARGET == 'ubuntu' else '10')
-    if TARGET == 'ubuntu':
+    code = code.replace('EXPECTED_PLUGINS', '11' if TARGET in {'ubuntu', 'arch'} else '10')
+    if TARGET in {'ubuntu', 'arch'}:
         code += r'''
 (( $+functions[_sc_carapace_base] ))
 [[ $(command -v node) == $HOME/.local/share/mise/installs/* ]]
@@ -134,19 +134,22 @@ complete -p
 alias ll la l
 printf 'HISTORY:%s:%s:%s\n' "$HISTCONTROL" "$HISTSIZE" "$HISTFILESIZE"
 shopt -p histappend checkwinsize
+:
 """
+    if TARGET == 'arch':
+        code = code.replace('alias ll la l', 'alias ls grep')
     return run(['bash', '--noprofile', '-ic', code])
 
 
-def verify_ubuntu_bash(before, originals):
+def verify_native_bash(before, originals):
     after = bash_state()
     for line in before.splitlines():
-        require(line in after.splitlines(), f'Ubuntu Bash behavior lost: {line}')
-    for name in ['.profile', '.bash_logout']:
-        require((USER_HOME / name).read_bytes() == originals[name], f'Ubuntu {name} was replaced.')
+        require(line in after.splitlines(), f'{TARGET} Bash behavior lost: {line}')
+    for name in originals.keys() - {'.bashrc'}:
+        require((USER_HOME / name).read_bytes() == originals[name], f'{TARGET} {name} was replaced.')
     content = (USER_HOME / '.bashrc').read_bytes()
-    require(content.startswith(originals['.bashrc']), 'Ubuntu original Bash configuration was overwritten.')
-    require(content.count(b'source "$HOME/.config/shell/bashrc.bash"') == 1, 'Ubuntu Bash module duplicated.')
+    require(content.startswith(originals['.bashrc']), 'Native original Bash configuration was overwritten.')
+    require(content.count(b'source "$HOME/.config/shell/bashrc.bash"') == 1, 'Native Bash module duplicated.')
     code = r"""
 set -e
 [[ $PRESERVED_CLI == yes && $EDITOR == nvim && $VISUAL == nvim ]]
@@ -154,35 +157,36 @@ set -e
 declare -F _sc_carapace_bash
 [[ $(bind -X) == *__fzf_history__* ]]
 declare -F __zoxide_z
-printf 'UBUNTU_BASH_OK\n'
+printf 'NATIVE_BASH_OK\n'
 """
-    require('UBUNTU_BASH_OK' in run(['bash', '--noprofile', '-ic', code]), 'Ubuntu CLI shell module did not initialize.')
+    require('NATIVE_BASH_OK' in run(['bash', '--noprofile', '-ic', code]), 'Native CLI shell module did not initialize.')
 
 
 def main():
     require(Path('/.dockerenv').exists() and os.geteuid() != 0, 'Run only in the disposable non-root Docker test user.')
     require(pwd.getpwuid(os.getuid()).pw_name == 'dotfiles-test' and USER_HOME == Path('/home/dotfiles-test'), 'Unexpected test user/home.')
     require(' ' in str(ROOT), 'Checkout path must exercise spaces.')
-    require(TARGET in {'fedora', 'ubuntu'}, 'Unexpected container distribution.')
+    require(TARGET in {'fedora', 'ubuntu', 'arch'}, 'Unexpected container distribution.')
     # Distribution useradd may copy OS shell defaults from /etc/skel; those are legitimate inputs.
     require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.local/share/mise').exists(), 'Cold installation requires no prior dotfiles setup or tool caches.')
     verify_guards()
-    ubuntu_original = None
-    if TARGET == 'ubuntu':
-        ubuntu_original = {name: (USER_HOME / name).read_bytes() for name in ['.bashrc', '.profile', '.bash_logout']}
+    original_shell = pwd.getpwuid(os.getuid()).pw_shell
+    native_original = None
+    if TARGET in {'ubuntu', 'arch'}:
+        native_original = {name: (USER_HOME / name).read_bytes() for name in (['.bashrc', '.profile', '.bash_logout'] if TARGET == 'ubuntu' else ['.bashrc', '.bash_profile'])}
         with (USER_HOME / '.bashrc').open('a') as stream:
             stream.write("\n# User customization retained across installation.\nalias preserved_cli='printf retained'\nexport PRESERVED_CLI=yes\n")
-        ubuntu_original['.bashrc'] = (USER_HOME / '.bashrc').read_bytes()
+        native_original['.bashrc'] = (USER_HOME / '.bashrc').read_bytes()
         native = bash_state()
         native_count = sum(line.startswith('complete ') for line in native.splitlines())
-        require(native_count >= 100, 'Ubuntu native completion baseline is absent; preservation test would be empty.')
+        require(native_count >= 100, 'Native completion baseline is absent; preservation test would be empty.')
     run(['git', '-c', 'init.templateDir=', 'init', '--quiet', '--initial-branch=main', ROOT])
     # Ordinary, non-secret pre-existing settings must survive the actual installer.
     identity = '[user]\n name = CI Existing User\n email = ci@example.invalid\n[commit]\n gpgsign = false\n[acceptance]\n keep = existing\n'
     (USER_HOME / '.gitconfig').write_text(identity)
     gh_config = USER_HOME / '.config/gh/config.yml'
     gh_config.parent.mkdir(parents=True)
-    if TARGET == 'ubuntu':
+    if TARGET in {'ubuntu', 'arch'}:
         for relative in ['.config', '.local', '.local/share']:
             directory = USER_HOME / relative
             directory.mkdir(parents=True, exist_ok=True)
@@ -196,15 +200,16 @@ def main():
     mise = USER_HOME / '.local/bin/mise'
     tools = tomllib.loads((USER_HOME / '.config/mise/config.toml').read_text())['tools']
     require(len(tools) == 13, 'Expected the common 13-tool inventory, not a personal environment.')
-    expected_env = ['ai', 'ai-managed', 'editor-ubuntu'] if FULL else ['ai', 'editor-ubuntu'] if TARGET == 'ubuntu' else []
+    editor_env = 'editor-ubuntu' if TARGET == 'ubuntu' else 'editor-web'
+    expected_env = ['ai', 'ai-managed', editor_env] if FULL else ['ai', editor_env] if TARGET in {'ubuntu', 'arch'} else []
     require(tomllib.loads((USER_HOME / '.config/mise/miserc.toml').read_text())['env'] == expected_env, 'Wrong mise environments selected.')
-    if TARGET == 'ubuntu':
+    if TARGET in {'ubuntu', 'arch'}:
         for name in [environment for environment in expected_env if environment != 'personal-fedora']:
             extras = tomllib.loads((USER_HOME / f'.config/mise/config.{name}.toml').read_text())['tools']
             require(not set(extras) & set(tools), 'Duplicate tool owners.')
             tools.update(extras)
-        require(len(tools) == (22 if FULL else 15), 'Wrong Ubuntu tool inventory.')
-        verify_ubuntu_bash(native, ubuntu_original)
+        require(len(tools) == (22 if FULL else 15), 'Wrong desktop tool inventory.')
+        verify_native_bash(native, native_original)
     installed = json.loads(run([mise, 'ls', '--current', '--json']))
     require(set(installed) == set(tools), 'Installed tool selection differs from the single config inventory.')
     commands = {'ripgrep': 'rg', 'neovim': 'nvim', 'npm:@earendil-works/pi-coding-agent': 'pi',
@@ -221,7 +226,12 @@ def main():
         versions[tool] = version
     if FULL:
         run(['ghostty', '--version'], timeout=30)
-        require(run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'orca-ide']).strip() == 'installed', 'Orca native package missing.')
+        if TARGET == 'ubuntu':
+            require(run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'orca-ide']).strip() == 'installed', 'Orca native package missing.')
+        else:
+            output = run([USER_HOME / '.local/bin/orca-ide', '--version'], timeout=30)
+            require('1.4.224' in output, 'Orca bundled CLI version missing.')
+            require((USER_HOME / '.local/share/applications/orca-ide.desktop').is_file(), 'Orca desktop launcher missing.')
     # CLI installation may need the read-only job token; runtime checks do not.
     runtime_env = dict(os.environ)
     runtime_env.pop('GITHUB_TOKEN', None)
@@ -242,13 +252,13 @@ def main():
     require('retained: repo view' in gh_config.read_text() and '# retained comment' in gh_config.read_text(), 'Unmanaged gh settings lost.')
     for relative, mode in [('.config/gh', 0o700), ('.config/gh/config.yml', 0o600), ('.local/share', 0o700)]:
         require(stat.S_IMODE((USER_HOME / relative).stat().st_mode) == mode, f'Wrong private mode: {relative}')
-    if TARGET == 'ubuntu':
-        verify_ubuntu_bash(native, ubuntu_original)
+    if TARGET in {'ubuntu', 'arch'}:
+        verify_native_bash(native, native_original)
         for relative in ['.config', '.local', '.local/share']:
-            require(stat.S_IMODE((USER_HOME / relative).stat().st_mode) == 0o700, f'Ubuntu private directory changed: {relative}')
-        require(pwd.getpwuid(os.getuid()).pw_shell == '/bin/bash', 'Installer silently changed the login shell.')
-    print(json.dumps({'ubuntu_native_completion_specs': native_count if TARGET == 'ubuntu' else None,
-                      'result': 'passed', 'platform': TARGET + RELEASE['VERSION_ID'].strip(chr(34)), 'tools': versions,
+            require(stat.S_IMODE((USER_HOME / relative).stat().st_mode) == 0o700, f'{TARGET} private directory changed: {relative}')
+        require(pwd.getpwuid(os.getuid()).pw_shell == original_shell, 'Installer silently changed the login shell.')
+    print(json.dumps({'native_completion_specs': native_count if TARGET in {'ubuntu', 'arch'} else None,
+                      'result': 'passed', 'platform': TARGET + RELEASE.get('VERSION_ID', '-rolling').strip(chr(34)), 'tools': versions,
                       'managed_paths': len(before_runtime), 'installs': 2,
                       'runtime': ['interactive-zsh', 'tmux-and-plugins', f'{len(tools)}-cli-version-commands', 'neovim-lua-syntax'],
                       'excluded': ['authentication', 'gui', 'neovim-plugin-installation', 'personal-fedora-tools']}, indent=2), flush=True)

@@ -61,6 +61,8 @@ CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행�
 
 설치 profile은 `tests/profiles/fedora-common.json`·`ubuntu-desktop.json`이다. template fixture 디렉터리와 분리한다. 개인 Fedora 34개 도구, OpenCode 외 AI 설치, 인증, GUI와 그 밖 OS의 실제 설치는 이 검사 범위가 아니다. Actions job의 read-only GITHUB_TOKEN은 다운로드에만 쓰고 앱 runtime 검사 환경에서는 제거한다.
 
-Ubuntu source 검사: python3 tests/verify-ubuntu.py --chezmoi /path/to/chezmoi. 실제 홈 대신 공백 경로의 임시 대상으로 초기화 config를 영속화하고, 원본 Bash·profile/logout 보존·단일 추가 라인·권한·반복 적용·15개 도구 단일 소유권·Fedora 기능 거부를 검사한다. 외부 10개 archive 선언은 렌더링만 한다. 설치 CI는 실제 archive를 내려받고 Ubuntu native completion·history·alias 및 사용자 정의가 보존되는지, .config/.local/.local/share 700과 로그인 셸이 유지되는지도 확인한다.
+Ubuntu source 검사: python3 tests/verify-desktop.py --chezmoi /path/to/chezmoi. 실제 홈 대신 공백 경로의 임시 대상으로 초기화 config를 영속화하고, 원본 Bash·profile/logout 보존·단일 추가 라인·권한·반복 적용·15개 도구 단일 소유권·Fedora 기능 거부를 검사한다. 외부 10개 archive 선언은 렌더링만 한다. 설치 CI는 실제 archive를 내려받고 Ubuntu native completion·history·alias 및 사용자 정의가 보존되는지, .config/.local/.local/share 700과 로그인 셸이 유지되는지도 확인한다.
 
 AI/native 앱 확장은 `python3 tests/verify-installers.py`로 오프라인 계약을 검사한다. Ubuntu full source 검증과 22개 CLI·Ghostty/Orca native 패키지 cold install은 기존 baseline 검사와 분리했다. GUI와 로그인을 CI에서 검증했다고 표시하지 않는다.
+
+Arch: `verify-desktop.py --chezmoi /path/to/chezmoi --platform arch`로 Ubuntu와 동일한 보존 검증을 재사용한다. Arch full 프로필은 hosted runner의 새 Arch 컨테이너에서 22개 도구, 공식 Ghostty 패키지와 Orca AppImage/번들 CLI를 설치하고 재실행한다. GUI 검증은 실제 Arch 세션에서 별도 수행한다.

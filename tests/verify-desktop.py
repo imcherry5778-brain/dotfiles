@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ubuntu source checks in disposable destinations; no real-home deployment."""
+"""Ubuntu/Arch source checks in disposable destinations; no real-home deployment."""
 import argparse
 import importlib.util
 import json
@@ -26,16 +26,17 @@ def state(home):
             for p in home.rglob('*')}
 
 
-def verify(chezmoi):
+def verify(chezmoi, target="ubuntu"):
+    editor_env = "editor-ubuntu" if target == "ubuntu" else "editor-web"
     with tempfile.TemporaryDirectory(prefix='ubuntu-source-check-') as temporary:
         scratch = Path(temporary)
         source, home = scratch / 'source with spaces', scratch / 'home with spaces'
         shutil.copytree(ROOT, source, ignore=shutil.ignore_patterns('.git', '__pycache__', '.artifacts'))
         home.mkdir()
         run(['git', '-c', 'init.templateDir=', 'init', '--quiet', source])
-        profile = json.loads((source / 'tests/profiles/ubuntu-desktop.json').read_text())
+        profile = json.loads((source / f'tests/profiles/{target}-desktop.json').read_text())
         profile['deployment']['externals'] = False
-        profile['chezmoi'] = {'os': 'linux', 'osRelease': {'id': 'ubuntu'}, 'homeDir': str(home)}
+        profile['chezmoi'] = {'os': 'linux', 'osRelease': {'id': target}, 'homeDir': str(home)}
         override = scratch / 'profile.json'
         override.write_text(json.dumps(profile))
         config = scratch / 'chezmoi.toml'
@@ -44,7 +45,7 @@ def verify(chezmoi):
         rendered = run(base + ['--override-data-file', override, 'execute-template', '--init', '--file', source / 'home/.chezmoi.toml.tmpl'])
         document = tomllib.loads(rendered)
         assert document['umask'] == 0o077
-        assert document['data']['platform'] == 'ubuntu' and not document['data']['features']['personal_fedora']
+        assert document['data']['platform'] == target and not document['data']['features']['personal_fedora']
         config.write_text(rendered)
         # Use persisted selection rather than masking it with runtime overrides.
         original = "# Local customization\nalias keep_me='printf preserved'\nHISTSIZE=1234\n"
@@ -73,12 +74,12 @@ def verify(chezmoi):
         assert not any('shell-completion/' in p or '/carapace/specs/' in p or 'personal-fedora' in p for p in managed)
         assert not any(p.endswith(('auth.json', 'hosts.yml', 'credentials.json')) for p in managed)
         inventory = {}
-        for name in ['config.toml', 'config.ai.toml', 'config.editor-ubuntu.toml']:
+        for name in ['config.toml', 'config.ai.toml', f'config.{editor_env}.toml']:
             tools = tomllib.loads((home / '.config/mise' / name).read_text())['tools']
             assert not set(tools) & set(inventory), 'Duplicate tool owners'
             inventory.update(tools)
         assert len(inventory) == 15 and 'node' in inventory and 'opencode' in inventory
-        assert tomllib.loads((home / '.config/mise/miserc.toml').read_text())['env'] == ['ai', 'editor-ubuntu']
+        assert tomllib.loads((home / '.config/mise/miserc.toml').read_text())['env'] == ['ai', editor_env]
         for name in ['.bashrc', '.config/shell/bashrc.bash', '.zshrc', '.config/shell/zsh-completion.zsh']:
             run(['zsh' if name.endswith(('zsh', 'zshrc')) else 'bash', '-n', home / name])
         # External archives are rendered only. No downloads in this verifier.
@@ -93,7 +94,7 @@ def verify(chezmoi):
         # Installer must keep platform/feature/profile boundaries explicit.
         spec = importlib.util.spec_from_file_location('installer', ROOT / 'scripts/unix/install.py')
         installer = importlib.util.module_from_spec(spec); spec.loader.exec_module(installer)
-        installer.validate_profile(ROOT / 'tests/profiles/ubuntu-desktop.json')
+        installer.validate_profile(ROOT / f'tests/profiles/{target}-desktop.json')
         installer.validate_profile(ROOT / 'tests/profiles/fedora-common.json')
     # Full AI profile is opt-in; its tool ownership must not leak into Fedora/baseline.
     with tempfile.TemporaryDirectory(prefix='ubuntu-full-source-') as temporary:
@@ -102,9 +103,9 @@ def verify(chezmoi):
         shutil.copytree(ROOT, source, ignore=shutil.ignore_patterns('.git', '__pycache__', '.artifacts'))
         home.mkdir()
         run(['git', '-c', 'init.templateDir=', 'init', '--quiet', source])
-        profile = json.loads((ROOT / 'tests/profiles/ubuntu-full.json').read_text())
+        profile = json.loads((ROOT / f'tests/profiles/{target}-full.json').read_text())
         profile['deployment']['externals'] = False
-        profile['chezmoi'] = {'os': 'linux', 'osRelease': {'id': 'ubuntu'}}
+        profile['chezmoi'] = {'os': 'linux', 'osRelease': {'id': target}}
         override = scratch / 'profile.json'
         override.write_text(json.dumps(profile))
         config = scratch / 'chezmoi.toml'
@@ -114,20 +115,22 @@ def verify(chezmoi):
         config.write_text(run(base + ['execute-template', '--init', '--file', source / 'home/.chezmoi.toml.tmpl']))
         run(base + ['apply'])
         inventory = {}
-        for name in ['config.toml', 'config.ai.toml', 'config.ai-managed.toml', 'config.editor-ubuntu.toml']:
+        for name in ['config.toml', 'config.ai.toml', 'config.ai-managed.toml', f'config.{editor_env}.toml']:
             tools = tomllib.loads((home / '.config/mise' / name).read_text())['tools']
             assert not set(tools) & set(inventory), 'Duplicate tool owners in full profile'
             inventory.update(tools)
         assert len(inventory) == 22
-        assert tomllib.loads((home / '.config/mise/miserc.toml').read_text())['env'] == ['ai', 'ai-managed', 'editor-ubuntu']
+        assert tomllib.loads((home / '.config/mise/miserc.toml').read_text())['env'] == ['ai', 'ai-managed', editor_env]
         before = state(home)
         run(base + ['apply'])
         assert state(home) == before and not run(base + ['diff']).strip()
         assert not (home / '.config/ghostty/config').exists(), 'Default-only Ghostty config must not be generated'
-    print('Ubuntu source: persisted profile, 15/22 unique tools, explicit AI opt-in, Bash preservation, private modes, repeated apply and guards passed.')
+    print(target + ' source: persisted profile, 15/22 unique tools, explicit AI opt-in, Bash preservation, private modes, repeated apply and guards passed.')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chezmoi', required=True)
-    verify(parser.parse_args().chezmoi)
+    parser.add_argument('--platform', choices=['ubuntu', 'arch'], default='ubuntu')
+    args = parser.parse_args()
+    verify(args.chezmoi, args.platform)

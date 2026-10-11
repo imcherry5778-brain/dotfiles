@@ -7,6 +7,7 @@ import shutil
 import tempfile
 
 from lib.runtime import Host, administrative_command, download_verified, run
+from lib.appimage import install_orca_appimage, orca_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,6 +18,12 @@ def package_present(host, name):
             return run(["dpkg-query", "-W", "-f=${db:Status-Status}", name], capture=True).strip() == "installed"
         except subprocess.CalledProcessError:
             return False
+    if host.distribution == "arch":
+        if name == "orca-ide":
+            return all(path.is_file() for path in [orca_directory() / "resources/bin/orca-ide",
+                                                  Path.home() / ".local/bin/orca-ide",
+                                                  Path.home() / ".local/share/applications/orca-ide.desktop"])
+        return subprocess.run(["pacman", "-Q", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
     if host.distribution == "fedora":
         return subprocess.run(["rpm", "-q", name], stdout=subprocess.DEVNULL).returncode == 0
     if host.system == "macos":
@@ -31,6 +38,8 @@ def desktop_plan(host):
     """A pure plan is useful on every OS, including CI without a desktop."""
     if host.distribution == "ubuntu":
         return {"ghostty": "Ubuntu 26.04 official APT package", "orca": "checksum-pinned official .deb"}
+    if host.distribution == "arch":
+        return {"ghostty": "Arch extra official package; existing sync database", "orca": "checksum-pinned official AppImage, unpacked with bundled CLI"}
     if host.distribution == "fedora":
         return {"ghostty": "officially documented scottames/ghostty COPR", "orca": "checksum-pinned official .rpm"}
     if host.system == "macos":
@@ -52,6 +61,9 @@ def install_ghostty(host):
         if release.get("VERSION_ID") != "26.04":
             raise ValueError("Official Ubuntu Ghostty package reviewed for 26.04 only.")
         run(administrative_command(["apt-get", "install", "--yes", "--no-remove", "ghostty"]))
+    elif host.distribution == "arch":
+        # Never refresh sync databases alone: Arch does not support partial upgrades.
+        run(administrative_command(["pacman", "-S", "--needed", "--noconfirm", "ghostty"]))
     elif host.distribution == "fedora":
         run(administrative_command(["dnf", "copr", "enable", "--assumeyes", "scottames/ghostty"]))
         run(administrative_command(["dnf", "install", "--assumeyes", "ghostty"]))
@@ -73,6 +85,9 @@ def install_orca(host):
     asset = release["orca"]["assets"].get(key)
     if not asset:
         raise ValueError(f"No reviewed Orca asset for {key}.")
+    if host.distribution == "arch":
+        install_orca_appimage(asset, release["orca"]["version"])
+        return
     with tempfile.TemporaryDirectory(prefix="dotfiles-orca-") as temporary:
         package = Path(temporary) / asset["name"]
         download_verified(asset["url"], package, asset["sha256"])

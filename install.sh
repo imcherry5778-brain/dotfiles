@@ -6,13 +6,13 @@ case "${1:---plan}" in
   --plan)
     [ "$#" -le 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
     printf '%s\n' \
-      'dotfiles: reviewed Fedora/Ubuntu CLI installer; deployment disabled by default' \
+      'dotfiles: reviewed Fedora/Ubuntu/Arch CLI installer; deployment disabled by default' \
       "Repository: $repo_root" \
       '1. Review platform, current configuration and installation ownership.' \
       '2. Prepare Git, mise and chezmoi in a separately authorized bootstrap.' \
       '3. Initialize machine data and review a configuration diff.' \
       '4. Prepare selected tool prerequisites, then apply only the separately reviewed migration.' \
-      'Use --apply --profile FILE only for a separately reviewed Fedora common or Ubuntu desktop CLI installation.'
+      'Use --apply --profile FILE only for a separately reviewed Fedora common or Ubuntu/Arch desktop CLI installation.'
     ;;
   --check)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Explicit reviewed Fedora/Ubuntu installer; never invoked by shell startup or apply hooks."""
+"""Explicit reviewed Fedora/Ubuntu/Arch installer; never invoked by shell startup or apply hooks."""
 import argparse
 import json
 import os
@@ -23,19 +23,19 @@ from lib.desktop import desktop_plan, install_desktop
 def validate_profile(path):
     profile = json.loads(path.read_text())
     target = profile.get('platform')
-    if target not in {'fedora', 'ubuntu'} or profile.get('deployment') != {'enabled': True, 'externals': True}:
-        raise ValueError('Explicit reviewed Fedora/Ubuntu enabled/externals profile required.')
+    if target not in {'fedora', 'ubuntu', 'arch'} or profile.get('deployment') != {'enabled': True, 'externals': True}:
+        raise ValueError('Explicit reviewed Fedora/Ubuntu/Arch enabled/externals profile required.')
     features = profile.get('features', {})
     required = {'ai', 'personal_fedora', 'conda', 'bitwarden_agent', 'delta', 'editor_web'}
-    expected = {key: target == 'ubuntu' and key in {'ai', 'editor_web'} for key in required}
+    expected = {key: target in {'ubuntu', 'arch'} and key in {'ai', 'editor_web'} for key in required}
     optional = {key: features.get(key, False) for key in ['managed_ai', 'desktop']}
     expected.update({key: value for key, value in optional.items() if key in features})
     if features != expected or any(type(value) is not bool for value in features.values()):
-        raise ValueError('Only the Fedora common or Ubuntu desktop CLI profile is installable; review other selections separately.')
-    if optional['managed_ai'] and (target != 'ubuntu' or not features['ai']):
-        raise ValueError('Managed AI migration is currently reviewed for Ubuntu only; preserve Fedora providers.')
-    if optional['desktop'] and target != 'ubuntu':
-        raise ValueError('Desktop profile installation is reviewed for Ubuntu only.')
+        raise ValueError('Only the Fedora common or Ubuntu/Arch desktop CLI profile is installable; review other selections separately.')
+    if optional['managed_ai'] and (target not in {'ubuntu', 'arch'} or not features['ai']):
+        raise ValueError('Managed AI migration is currently reviewed for Ubuntu/Arch only; preserve Fedora providers.')
+    if optional['desktop'] and target not in {'ubuntu', 'arch'}:
+        raise ValueError('Desktop profile installation is reviewed for Ubuntu/Arch only.')
     if set(profile) != {'platform', 'deployment', 'features'}:
         raise ValueError('Installation profile may not override machine paths or chezmoi runtime data.')
     return profile
@@ -61,7 +61,7 @@ def preflight(profile_path):
     if os.geteuid() == 0 or USER_HOME != Path(pwd.getpwuid(os.getuid()).pw_dir):
         raise ValueError('Run as a regular user with their actual login home.')
     if platform.system() != 'Linux' or platform.machine() != 'x86_64':
-        raise ValueError('Installation currently supports reviewed Fedora/Ubuntu x86_64 profiles only.')
+        raise ValueError('Installation currently supports reviewed Fedora/Ubuntu/Arch x86_64 profiles only.')
     release = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
     if release.get('ID', '').strip('"') != profile['platform']:
         raise ValueError('Installation profile must match the actual OS.')
@@ -73,18 +73,18 @@ def preflight(profile_path):
     for binary in ['git', 'zsh', 'tmux', 'tar', 'gzip', 'unzip']:
         if not shutil.which(binary):
             raise ValueError(f'Missing OS prerequisite: {binary}. Installer does not run sudo or dnf.')
-    if profile['platform'] == 'ubuntu':
+    if profile['platform'] in {'ubuntu', 'arch'}:
         for binary in ['curl', 'wl-copy', 'gcc', 'make']:
             if not shutil.which(binary):
-                raise ValueError(f'Missing Ubuntu OS prerequisite: {binary}. Prepare OS packages separately.')
+                raise ValueError(f'Missing desktop OS prerequisite: {binary}. Prepare OS packages separately.')
         if not Path('/usr/share/bash-completion/bash_completion').is_file():
-            raise ValueError('Ubuntu bash-completion is required to preserve native providers.')
+            raise ValueError('Desktop bash-completion is required to preserve native providers.')
     # An existing personal environment must not be downgraded into this baseline.
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     if config.exists():
         document = tomllib.loads(config.read_text())
-        if profile['platform'] == 'ubuntu' and document.get('umask') != 0o077:
-            raise ValueError('Existing Ubuntu chezmoi permissions policy differs; review it before installation.')
+        if profile['platform'] in {'ubuntu', 'arch'} and document.get('umask') != 0o077:
+            raise ValueError('Existing desktop chezmoi permissions policy differs; review it before installation.')
         data = document.get('data', {})
         if not matches_profile(data, profile):
             raise ValueError('Existing chezmoi machine selection differs; review the migration instead of replacing it.')

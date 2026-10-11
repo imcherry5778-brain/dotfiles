@@ -48,4 +48,7 @@ jobs:
         run: python3 ./tests/verify-fedora.py --chezmoi $env:CHEZMOI_BIN --gh (Get-Command gh).Source
       - name: Verify Ubuntu configuration in an isolated destination
         if: runner.os == 'Linux'
-        run: python3 ./tests/verify-ubuntu.py --chezmoi $env:CHEZMOI_BIN
+        run: |
+          python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform arch

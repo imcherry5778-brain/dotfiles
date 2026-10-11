@@ -17,8 +17,8 @@
 {{-   fail "Configured platform does not match the current operating system." -}}
 {{- end -}}
 sourceDir = {{ .chezmoi.workingTree | quote }}
-{{ if eq $platform "ubuntu" -}}
-# Keep Ubuntu user configuration directories private; this is chezmoi-only.
+{{ if has $platform (list "ubuntu" "arch") -}}
+# Keep {{ ternary "Ubuntu" "Arch" (eq $platform "ubuntu") }} user configuration directories private; this is chezmoi-only.
 umask = 0o077
 {{ end -}}
 

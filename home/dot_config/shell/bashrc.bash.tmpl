@@ -1,4 +1,4 @@
-# Common interactive CLI additions. Ubuntu's original ~/.bashrc remains intact.
+# Common interactive CLI additions. {{ ternary "Ubuntu" "Arch" (eq .platform "ubuntu") }}'s original ~/.bashrc remains intact.
 [[ $- == *i* ]] || return
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
@@ -26,7 +26,7 @@ fi
 command -v yazi >/dev/null 2>&1 && alias y=yazi
 alias ssh='TERM=xterm-256color ssh'
 if command -v fzf >/dev/null 2>&1; then
-  # Enable Ctrl-R/Ctrl-T/Alt-C, while keeping Ubuntu's native Tab providers.
+  # Enable Ctrl-R/Ctrl-T/Alt-C, while keeping {{ ternary "Ubuntu" "Arch" (eq .platform "ubuntu") }}'s native Tab providers.
   _df_bash_completions=$(complete -p)
   source <(fzf --bash)
   complete -r

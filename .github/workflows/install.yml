@@ -31,6 +31,9 @@ jobs:
           - platform: ubuntu
             name: Ubuntu 26.04 / AI and native desktop apps
             full: "1"
+          - platform: arch
+            name: Arch Linux / AI and native desktop apps
+            full: "1"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

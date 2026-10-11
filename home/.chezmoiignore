@@ -1,12 +1,12 @@
 # Reviewed Fedora/Ubuntu sources. Explicit opt-in is required even for preview.
-{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu"))) }}
+{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu" "arch"))) }}
 **
 {{ else }}
-{{ if and (dig "features" "managed_ai" false .) (or (ne .platform "ubuntu") (not .features.ai)) }}
-{{ fail "managed_ai requires the reviewed Ubuntu AI profile; preserve existing Fedora providers." }}
+{{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "ubuntu" "arch"))) (not .features.ai)) }}
+{{ fail "managed_ai requires the reviewed Ubuntu/Arch AI profile; preserve existing Fedora providers." }}
 {{ end }}
-{{ if and (eq .platform "ubuntu") .features.personal_fedora }}
-{{ fail "personal_fedora is Fedora-only; review Ubuntu tools separately." }}
+{{ if and (ne .platform "fedora") .features.personal_fedora }}
+{{ fail "personal_fedora is Fedora-only; review other OS tools separately." }}
 {{ end }}
 README.md
 **/README.md
@@ -35,11 +35,15 @@ README.md
 {{ end }}
 {{ end }}
 
-{{ if ne .platform "ubuntu" }}
+{{ if not (has .platform (list "ubuntu" "arch")) }}
 .config/shell
 .config/shell/**
 {{ end }}
 
 {{ if or (ne .platform "ubuntu") (not .features.editor_web) }}
 .config/mise/config.editor-ubuntu.toml
+{{ end }}
+
+{{ if or (ne .platform "arch") (not .features.editor_web) }}
+.config/mise/config.editor-web.toml
 {{ end }}
