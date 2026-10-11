@@ -12,7 +12,7 @@ cd "$HOME/projects/imcherry5778-brain/dotfiles"
 sh install.sh --plan
 ```
 
-Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 기본 PowerShell 5.1에서 시작할 수 있다. WinGet이 없다면 Microsoft App Installer를 설치/갱신한 뒤 실행한다. 관리자 암호·UAC·앱 권한은 사용자가 처리한다.
+Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 아래 Bypass는 검토한 checkout의 최초 진입을 위한 프로세스 한정 옵션이다. Apply는 필요한 경우 기존 정책을 백업한 뒤 CurrentUser RemoteSigned를 설정하며 Group Policy를 우회하지 않는다. 기본 PowerShell 5.1에서 시작할 수 있다. WinGet이 없다면 Microsoft App Installer를 설치/갱신한 뒤 실행한다. 관리자 암호·UAC·앱 권한은 사용자가 처리한다.
 
 ## 하나의 명시적 설치 명령
 
@@ -23,7 +23,7 @@ Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 기본 Po
 | Arch 전체 | `sh install.sh --apply --profile tests/profiles/arch-full.json` |
 | openSUSE 전체 | `sh install.sh --apply --profile tests/profiles/opensuse-tumbleweed-full.json` |
 | Mac 전체 | `sh install.sh --apply --profile tests/profiles/macos-full.json` |
-| Windows 전체 | `./install.ps1 -Mode Apply -ProfilePath tests/profiles/windows-full.json` |
+| Windows 전체 | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Apply -ProfilePath tests/profiles/windows-full.json` |
 
 Fedora common은 공통 13개 CLI만 선택한다. 기존 개인 Fedora의 AI/Conda/개인 도구 선택을 대체하는 프로필이 아니다. Ubuntu/Arch/openSUSE의 desktop 프로필은 15개 CLI, full은 22개 CLI와 앱을 선택한다. Mac은 19개 mise 도구와 native AI 5개를 검증한다. Windows CLI-only 프로필은 hosted CI에서 GUI 설치를 제외하기 위해 사용한다. Windows Ghostty는 공식 native 배포가 없어 Windows Terminal을 유지한다.
 

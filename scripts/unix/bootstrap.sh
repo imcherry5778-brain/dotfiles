@@ -19,6 +19,8 @@ bootstrap_runtime() {
   done
   case "$(uname -s):$(uname -m)" in
     Darwin:arm64)
+      # Suppress Homebrew periodic whole-install cleanup in this process only.
+      export HOMEBREW_NO_INSTALL_CLEANUP=1
       [ -x /opt/homebrew/bin/brew ] || {
         xcode-select -p >/dev/null 2>&1 || { xcode-select --install; printf '%s\n' 'Complete Apple Command Line Tools installation, then repeat this command.' >&2; return 1; }
         bootstrap_download=$(mktemp)

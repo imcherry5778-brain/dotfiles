@@ -17,13 +17,17 @@ $identity = "[user]`n name = CI Existing User`n email = ci@example.invalid`n[acc
 $gitconfig = Join-Path $HOME '.gitconfig'
 # Runner-provided settings are legitimate inputs too.
 Add-Content -LiteralPath $gitconfig -Value $identity
+# Fresh personal Windows defaults to Restricted. Test that process-only Bypass
+# does not leave future user profiles blocked; this is the disposable runner only.
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force
 $profile = Join-Path $repo 'tests/profiles/windows-cli.json'
-& powershell.exe -NoProfile -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
 if ($LASTEXITCODE -ne 0) { throw 'First native install failed.' }
+if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') { throw 'Future native PowerShell profiles remain blocked.' }
 $env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'))
 $before = & chezmoi --no-tty --no-pager diff | Out-String
 if ($LASTEXITCODE -ne 0 -or $before.Trim()) { throw 'Unexpected diff after first installation.' }
-& powershell.exe -NoProfile -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
 if ($LASTEXITCODE -ne 0) { throw 'Second native install failed.' }
 $after = & chezmoi --no-tty --no-pager diff | Out-String
 if ($LASTEXITCODE -ne 0 -or $after.Trim()) { throw 'Repeat apply is not stable.' }

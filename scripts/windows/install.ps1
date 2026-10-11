@@ -253,7 +253,12 @@ foreach ($installer in $plan.official) { Install-OfficialCli $installer $backup 
 # Vendor installers can add profile/completion loaders. Review the final diff too.
 $finalDiff = Get-ChezmoiOutput ($actual + @('diff'))
 $finalDiff | Set-Content -LiteralPath (Join-Path $backup 'after-install.diff') -Encoding utf8NoBOM
-if ((Get-ExecutionPolicy) -eq 'Restricted') {
+# A one-time process Bypass permits the fresh Windows entry script, but must
+# not hide a persistent Restricted policy that would block future profiles.
+$currentProfilePolicy = Get-ExecutionPolicy -Scope CurrentUser
+$profilePolicyNeeded = $currentProfilePolicy -eq 'Restricted' -or
+    ($currentProfilePolicy -eq 'Undefined' -and (Get-ExecutionPolicy -Scope LocalMachine) -in @('Undefined','Restricted'))
+if ($profilePolicyNeeded) {
     foreach ($scope in @('MachinePolicy','UserPolicy')) {
         if ((Get-ExecutionPolicy -Scope $scope) -ne 'Undefined') { throw 'PowerShell execution group policy requires administrator review.' }
     }
