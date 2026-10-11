@@ -12,7 +12,7 @@ cd "$HOME/projects/imcherry5778-brain/dotfiles"
 sh install.sh --plan
 ```
 
-Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 아래 Bypass는 검토한 checkout의 최초 진입을 위한 프로세스 한정 옵션이다. Apply는 필요한 경우 기존 정책을 백업한 뒤 CurrentUser RemoteSigned를 설정하며 Group Policy를 우회하지 않는다. 기본 PowerShell 5.1에서 시작할 수 있다. WinGet이 없다면 Microsoft App Installer를 설치/갱신한 뒤 실행한다. 관리자 암호·UAC·앱 권한은 사용자가 처리한다.
+Windows는 실제 `$HOME` 아래 같은 상대 경로를 사용한다. 아래 Bypass는 검토한 checkout의 최초 진입을 위한 프로세스 한정 옵션이다. Apply는 필요한 경우 PowerShell 7의 사용자 정책 파일을 백업한 뒤 CurrentUser RemoteSigned를 설정하며 Group Policy를 우회하지 않는다. Windows PowerShell 5.1의 정책은 별도로 유지한다. Diff/Verify는 PowerShell 7이 없을 때 설치하지 않고 준비가 필요하다고 알린다. 기본 PowerShell 5.1에서 시작할 수 있다. WinGet이 없다면 Microsoft App Installer를 설치/갱신한 뒤 실행한다. 관리자 암호·UAC·앱 권한은 사용자가 처리한다.
 
 ## 하나의 명시적 설치 명령
 

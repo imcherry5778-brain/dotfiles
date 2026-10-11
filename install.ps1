@@ -18,6 +18,9 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
   if (-not $isNativeWindows) { throw 'PowerShell 7 is required on non-Windows platforms.' }
   $pwsh = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue
   if (-not $pwsh) {
+    if ($Mode -notin @('Apply','Bootstrap','DesktopApply')) {
+      throw 'PowerShell 7 is unavailable. Prepare it with explicit Apply or Bootstrap; read-only modes never install it.'
+    }
     if (-not (Get-Command winget -CommandType Application -ErrorAction SilentlyContinue)) {
       throw 'Install or update Microsoft App Installer to enable WinGet, then repeat this command.'
     }
