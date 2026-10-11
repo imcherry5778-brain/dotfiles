@@ -93,7 +93,8 @@ def version_output(mise, command):
     with tempfile.TemporaryDirectory(prefix='dotfiles-version-') as temporary:
         scratch = Path(temporary)
         variables = {'ansible': {'ANSIBLE_LOCAL_TEMP': str(scratch / 'ansible')},
-                     'az': {'AZURE_CONFIG_DIR': str(scratch / 'azure')},
+                     'az': {'AZURE_CONFIG_DIR': str(scratch / 'azure'),
+                            'AZURE_CORE_COLLECT_TELEMETRY': 'false'},
                      'bw': {'BITWARDENCLI_APPDATA_DIR': str(scratch / 'bitwarden')},
                      'k9s': {'K9S_CONFIG_DIR': str(scratch / 'k9s')},
                      'kubectl': {'KUBECONFIG': str(scratch / 'no-cluster-config')}}

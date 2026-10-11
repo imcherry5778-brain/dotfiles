@@ -144,6 +144,8 @@ class InstallerContracts(unittest.TestCase):
                 self.assertEqual(version_output('mise',command), 'version')
                 call = execute.call_args
                 self.assertTrue(Path(call.kwargs['env'][variable]).is_absolute())
+                if command == 'az':
+                    self.assertEqual(call.kwargs['env']['AZURE_CORE_COLLECT_TELEMETRY'], 'false')
                 if command == 'kubectl':
                     self.assertIn('--client=true', call.args[0])
 
