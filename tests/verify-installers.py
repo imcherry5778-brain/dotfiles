@@ -18,7 +18,7 @@ from lib.desktop import desktop_plan, install_ghostty, install_orca, install_ope
 from lib.runtime import Host, download_verified
 from lib.backup import backup_targets
 from lib.packages import prepare_packages
-from lib.macos import install_cask, install_native_cli
+from lib.macos import install_cask, install_native_cli, inspect_ghostty_configuration
 from lib.appimage import install_orca_appimage, desktop_quote
 
 spec = importlib.util.spec_from_file_location("installer", ROOT / "scripts/unix/install.py")
@@ -27,6 +27,19 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_mac_checks_both_ghostty_locations(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            xdg = home / '.config/ghostty/config'; xdg.parent.mkdir(parents=True)
+            xdg.write_text('font-family = D2Coding\n')
+            native = home / 'Library/Application Support/com.mitchellh.ghostty/config.ghostty'
+            native.parent.mkdir(parents=True); native.write_text('')
+            with patch('lib.macos.Path.home', return_value=home):
+                inspect_ghostty_configuration()
+                native.write_text('font-family = Other Font\n')
+                with self.assertRaisesRegex(ValueError, 'font override'):
+                    inspect_ghostty_configuration()
+
     def test_existing_bootstrap_versions_accept_publisher_v_prefix(self):
         with patch.object(installer.shutil, 'which', return_value='/existing/chezmoi'), \
              patch.object(installer, 'run', return_value='chezmoi version v2.73.0, built at upstream'):
@@ -67,13 +80,15 @@ class InstallerContracts(unittest.TestCase):
             (home / 'existing').write_text('private retained')
             (home / 'existing').chmod(0o600)
             (home / 'link').symlink_to('existing')
-            backup = backup_targets(home, ['existing', 'link', 'absent'], 'reviewed diff', 'macos')
+            (home / 'retained-dir').mkdir(); (home / 'retained-dir').chmod(0o755)
+            backup = backup_targets(home, ['existing', 'link', 'absent'], 'reviewed diff', 'macos', directories=['retained-dir','new-dir'])
             self.assertEqual((backup / 'files/existing').read_text(), 'private retained')
             self.assertEqual((backup / 'files/existing').stat().st_mode & 0o777, 0o600)
             self.assertEqual(os.readlink(backup / 'files/link'), 'existing')
             self.assertEqual(backup.stat().st_mode & 0o777, 0o700)
             entries = json.loads((backup / 'manifest.json').read_text())
             self.assertFalse(next(e for e in entries if e['path'] == 'absent')['exists'])
+            self.assertEqual(next(e for e in entries if e['path'] == 'retained-dir')['mode'], 0o755)
             with self.assertRaises(ValueError):
                 backup_targets(home, ['../outside'], '', 'macos')
 

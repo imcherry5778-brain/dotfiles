@@ -4,12 +4,25 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import re
 import tempfile
 from lib.runtime import download_verified, run
 from lib.tools import verify_mise_tools
 
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = json.loads((ROOT / 'scripts/macos-providers.json').read_text())
+
+
+def inspect_ghostty_configuration():
+    # Ghostty loads XDG and the native Mac path. Refuse an ambiguous font override
+    # instead of silently applying D2Coding in a lower-priority file.
+    directory = Path.home() / 'Library/Application Support/com.mitchellh.ghostty'
+    paths = [Path.home() / '.config/ghostty/config', directory / 'config.ghostty', directory / 'config']
+    for path in paths:
+        if path.exists():
+            fonts = re.findall(r'(?m)^\s*font-family\s*=\s*([^\n]+)', path.read_text())
+            if any(font.strip().strip('"') != 'D2Coding' for font in fonts):
+                raise ValueError(f'Existing Ghostty font override needs review before D2Coding: {path}')
 
 
 def install_cask(cask, command=None, application=None):

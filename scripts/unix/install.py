@@ -22,7 +22,7 @@ from lib.runtime import Host, download_verified, run
 from lib.desktop import desktop_plan, install_desktop
 from lib.packages import prepare_packages
 from lib.backup import backup_targets
-from lib.macos import install_native_cli, install_apps, verify_tools
+from lib.macos import install_native_cli, install_apps, verify_tools, inspect_ghostty_configuration
 from lib.tools import verify_mise_tools
 
 
@@ -128,6 +128,8 @@ def pinned_binary(name, metadata_path, repository):
 def install(profile_path):
     profile = preflight(profile_path)
     host = Host.detect()
+    if host.system == 'macos':
+        inspect_ghostty_configuration()
     prepare_packages(host, desktop=profile['platform'] in DESKTOP_PLATFORMS)
     mise = pinned_binary('mise', ROOT / 'scripts/mise-release.json', 'jdx/mise')
     chezmoi = pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
@@ -168,7 +170,14 @@ def install(profile_path):
     extras = {'.config/chezmoi/chezmoi.toml', '.grok/config.toml'}
     if host.system == 'macos':
         extras.update({'.zprofile', '.bashrc', '.bash_profile'})
-    backup = backup_targets(USER_HOME, managed | extras, diff, profile['platform'])
+    def changed_targets(kind):
+        rows = run(base + ['status', f'--include={kind}', '--path-style=relative'], capture=True).splitlines()
+        return {row[3:] for row in rows if len(row) >= 4 and row[1] != ' '}
+    changed_files = changed_targets('files,symlinks')
+    if not changed_files <= managed:
+        raise ValueError('Status contains a target outside the reviewed managed file list.')
+    changed_directories = changed_targets('dirs')
+    backup = backup_targets(USER_HOME, changed_files | extras, diff, profile['platform'], directories=changed_directories)
     print(f'Private targeted backup: {backup}', flush=True)
     config.parent.mkdir(parents=True, exist_ok=True)
     if config.exists():

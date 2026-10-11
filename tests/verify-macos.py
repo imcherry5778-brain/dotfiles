@@ -2,6 +2,8 @@
 """Mac configuration contracts in a disposable destination; runs on any Unix host."""
 import argparse
 import json
+import os
+import socket
 from pathlib import Path
 import shutil
 import subprocess
@@ -43,7 +45,21 @@ def verify(chezmoi):
         assert (home / '.zprofile').read_text().startswith(original)
         assert (home / '.bashrc').read_text() == '# native bash retained\n'
         assert ghostty.read_text() == 'font-family = D2Coding\n# retained\n'
-        assert '[[ ! -S ${SSH_AUTH_SOCK:-}' in (home / '.zshrc').read_text()
+        assert '-z ${SSH_CONNECTION:-} || ! -S ${SSH_AUTH_SOCK:-}' in (home / '.zshrc').read_text()
+        # Real Unix sockets distinguish SSH forwarding from a local launchd agent.
+        text = (home / '.zshrc').read_text()
+        start = text.index('# Keep a live forwarded agent;')
+        block = text[start:text.index('\nfi', start) + 3]
+        bitwarden = home / '.bitwarden-ssh-agent.sock'
+        forwarded = scratch / 'forwarded.sock'
+        with socket.socket(socket.AF_UNIX) as fallback, socket.socket(socket.AF_UNIX) as agent:
+            fallback.bind(str(bitwarden)); agent.bind(str(forwarded))
+            for connection, current, expected in [('', forwarded, bitwarden), ('ssh session', forwarded, forwarded),
+                                                  ('ssh session', home / 'missing', bitwarden)]:
+                environment = dict(os.environ, SSH_CONNECTION=connection, SSH_AUTH_SOCK=str(current))
+                output = subprocess.run(['zsh', '-f', '-c', block + '\nprint -r -- "$SSH_AUTH_SOCK"'],
+                                        env=environment, capture_output=True, text=True, check=True).stdout.strip()
+                assert output == str(expected), 'Mac agent priority regression'
         inventory = {}
         for name in ['config.toml', 'config.ai.toml', 'config.macos.toml']:
             tools = tomllib.loads((home / '.config/mise' / name).read_text())['tools']

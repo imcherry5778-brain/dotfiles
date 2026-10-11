@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 
 
-def backup_targets(home, targets, diff, platform):
+def backup_targets(home, targets, diff, platform, *, directories=()):
     destination = home / '.local/state/dotfiles/backups' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ') + '-' + platform)
     destination.mkdir(parents=True, mode=0o700)
     destination.chmod(0o700)
@@ -33,11 +33,21 @@ def backup_targets(home, targets, diff, platform):
             else:
                 raise ValueError(f'Managed file is a directory: {relative}')
         manifest.append(entry)
+    for relative in sorted(set(directories)):
+        path = home / relative
+        if Path(relative).is_absolute() or not Path(relative).parts or '..' in Path(relative).parts:
+            raise ValueError(f'Invalid managed directory: {relative}')
+        if path.exists() and (not path.is_dir() or path.is_symlink()):
+            raise ValueError(f'Managed directory conflicts with an existing file/link: {relative}')
+        entry = {'path': relative, 'directory': True, 'exists': path.exists()}
+        if path.exists():
+            entry['mode'] = path.stat().st_mode & 0o777
+        manifest.append(entry)
     (destination / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (destination / 'before.diff').write_text(diff)
     for path in destination.glob('*'):
         if path.is_file():
             path.chmod(0o600)
-    (destination / 'RESTORE.md').write_text('Restore only paths listed in manifest.json from files/, preserving permissions and symlinks. Paths with exists=false were newly created; remove only those managed destinations. This restores configuration, not installed binaries.\n')
+    (destination / 'RESTORE.md').write_text('Restore only paths listed in manifest.json from files/, preserving permissions and symlinks. Directory entries record permissions only, never their full contents. Paths with exists=false were newly created; remove only those managed files and empty managed directories. This restores configuration, not installed binaries.\n')
     (destination / 'RESTORE.md').chmod(0o600)
     return destination

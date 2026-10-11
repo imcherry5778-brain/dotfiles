@@ -65,7 +65,7 @@ fi
 {{ if .features.bitwarden_agent -}}
 {{ if eq .platform "macos" -}}
 # Keep a live forwarded agent; fall back to the existing Bitwarden socket.
-if [[ ! -S ${SSH_AUTH_SOCK:-} && -S {{ .machine.ssh_agent_socket | shellQuote }} ]]; then
+if [[ ( -z ${SSH_CONNECTION:-} || ! -S ${SSH_AUTH_SOCK:-} ) && -S {{ .machine.ssh_agent_socket | shellQuote }} ]]; then
   export SSH_AUTH_SOCK={{ .machine.ssh_agent_socket | shellQuote }}
 fi
 {{ else -}}
