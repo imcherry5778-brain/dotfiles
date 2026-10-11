@@ -28,10 +28,10 @@
 Python 3.11+, Zsh, Bash, Git과 지정한 chezmoi를 사용한다.
 
 ```sh
-python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi
+python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi --gh /path/to/gh
 ```
 
-임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias 보존, AI hooks·MCP·미관리 키 보존, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. 다른 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
+임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias·빈 scalar·주석 보존, AI hooks·MCP·미관리 키·no-op 원문 보존, 파일/디렉터리 권한의 재적용 안정성, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. 다른 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
 
 기존 mise가 있으면 `--mise /path/to/mise`로 격리한 config 디렉터리에서 global environment 3개와 34개 도구 선택을 실제 mise로 확인할 수 있다. 설치 명령은 실행하지 않는다.
 
@@ -40,3 +40,7 @@ python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi
 Linux에서 기존 OMZ와 bubblewrap이 있으면 `--oh-my-zsh /path/to/existing/oh-my-zsh`를 추가할 수 있다. 기존 OMZ·선별된 completion을 임시로 복사하고 host root는 읽기 전용, 네트워크는 차단, 실제 HOME 경로는 임시 홈으로 mount한다. HOME 환경변수를 다른 값으로 지정하지 않는다. CLI는 모형으로 실행하므로 이 테스트는 초기화 소유권·플러그인 순서·누락 시 fallback을 확인하며 실제 CLI 자체를 검증하지 않는다.
 
 CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행한다. Linux 러너에 설치하는 Zsh는 일회성 테스트 의존성이며 사용자 Fedora 설치가 아니다. optional mise/OMZ runtime 검사는 현재 Fedora의 격리 환경에서 별도로 실행했다.
+
+`--gh /path/to/gh`는 기존 GitHub CLI의 실제 config 파서로 editor/browser/pager/http_unix_socket의 빈 값과 HTTPS 설정을 확인한다. `GH_CONFIG_DIR`은 임시 fixture 디렉터리만 가리키며 인증 명령이나 실제 계정 파일은 사용하지 않는다. Linux CI도 러너의 gh로 이 검사를 실행한다. gh의 변경된 flow YAML처럼 안전한 줄 갱신을 보장하지 못하는 입력과 잘못된 YAML은 원문을 덮어쓰지 않고 실패하는지 검사한다.
+
+현재 Fedora의 실제 경로를 유지한 읽기 전용 mount preview는 로컬 검토 기록이며 저장소 fixture 검사와 구분한다. mise selector의 기기 실제 경로 동작, 실제 completion 본문, tmux GUI/clipboard 같은 범위는 fixture 성공만으로 보장하지 않는다.

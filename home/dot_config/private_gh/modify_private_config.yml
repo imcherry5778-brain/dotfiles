@@ -1,0 +1,42 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $current := dict -}}
+{{- if trim .chezmoi.stdin -}}{{- $current = fromYaml .chezmoi.stdin | default dict -}}{{- end -}}
+{{- $aliases := get $current "aliases" | default dict -}}
+{{- if not (kindIs "map" $aliases) -}}{{- fail "gh aliases must be a YAML mapping" -}}{{- end -}}
+{{- if and (eq (get $current "git_protocol") "https") (eq (get $aliases "co") "pr checkout") -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{- /* Patch ordinary block YAML, preserving blank scalars, comments and unknown text.
+      Verify the complete parsed document; unsupported layouts fail without overwriting. */ -}}
+{{- $expected := deepCopy $current | setValueAtPath "git_protocol" "https" | setValueAtPath "aliases.co" "pr checkout" -}}
+{{- $text := .chezmoi.stdin -}}
+{{- if and $text (not (hasSuffix "\n" $text)) -}}{{- $text = printf "%s\n" $text -}}{{- end -}}
+{{- if ne (get $current "git_protocol") "https" -}}
+  {{- if hasKey $current "git_protocol" -}}
+    {{- $text = regexReplaceAll `(?m)^(git_protocol:[ \t]*)[^#\r\n]*(#[^\r\n]*)?` $text "${1}https ${2}" -}}
+  {{- else -}}
+    {{- $text = printf "%sgit_protocol: https\n" $text -}}
+  {{- end -}}
+{{- end -}}
+{{- if ne (get $aliases "co") "pr checkout" -}}
+  {{- if not (hasKey $current "aliases") -}}
+    {{- $text = printf "%saliases:\n  co: pr checkout\n" $text -}}
+  {{- else -}}
+    {{- $block := regexFind `(?m)^aliases:[^\n]*\n(?:[ \t]+[^\n]*\n|[ \t]*\n)*` $text -}}
+    {{- $updated := $block -}}
+    {{- if hasKey $aliases "co" -}}
+      {{- $updated = regexReplaceAll `(?m)^([ \t]+co:[ \t]*)[^#\r\n]*(#[^\r\n]*)?` $block "${1}pr checkout ${2}" -}}
+    {{- else if not $aliases -}}
+      {{- $updated = regexReplaceAll `(?m)^(aliases:)[^#\r\n]*(#[^\r\n]*)?` $block "${1} ${2}\n  co: pr checkout" -}}
+    {{- else -}}
+      {{- $indent := regexFind `(?m)^[ \t]+` $block -}}
+      {{- $updated = regexReplaceAll `(?m)^(aliases:[^\r\n]*)` $block (printf "${1}\n%sco: pr checkout" $indent) -}}
+    {{- end -}}
+    {{- $text = replace $block $updated $text -}}
+  {{- end -}}
+{{- end -}}
+{{- if not (deepEqual (fromYaml $text) $expected) -}}
+  {{- fail "gh config uses an unsupported YAML layout; preserve it and edit git_protocol/aliases.co manually before retrying" -}}
+{{- end -}}
+{{- $text -}}
+{{- end -}}

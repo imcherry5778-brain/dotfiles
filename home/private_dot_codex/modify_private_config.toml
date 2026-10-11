@@ -1,4 +1,8 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- $current := dict -}}
 {{- if trim .chezmoi.stdin -}}{{- $current = fromToml .chezmoi.stdin -}}{{- end -}}
+{{- if and (eq (get $current "model") "gpt-6.1-sol") (eq (get $current "model_reasoning_effort") "high") (eq (get $current "service_tier") "priority") -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
 {{ $current | setValueAtPath "model" "gpt-6.1-sol" | setValueAtPath "model_reasoning_effort" "high" | setValueAtPath "service_tier" "priority" | toToml }}
+{{- end -}}

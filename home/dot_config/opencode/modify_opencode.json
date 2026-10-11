@@ -1,4 +1,8 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- $current := dict -}}
 {{- if trim .chezmoi.stdin -}}{{- $current = fromJson .chezmoi.stdin -}}{{- end -}}
+{{- if and (hasKey $current "autoupdate") (deepEqual (get $current "autoupdate") false) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
 {{ $current | setValueAtPath "autoupdate" false | toPrettyJson }}
+{{- end -}}

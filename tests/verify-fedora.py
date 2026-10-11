@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import tempfile
 import tomllib
@@ -28,7 +29,7 @@ def snapshot(directory):
     }
 
 
-def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None):
+def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None, gh_binary=None):
     with tempfile.TemporaryDirectory(prefix="fedora-config-check-") as temporary:
         scratch = Path(temporary)
         source = scratch / "source with spaces"
@@ -74,7 +75,11 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None):
               '[commit]\n gpgsign = true\n[credential "https://github.com"]\n helper =\n'
               ' helper = !/old/mise/installs/gh/old/gh auth git-credential\n'
               '[custom]\n preserved = yes\n')
-        write(".config/gh/config.yml", 'aliases:\n  custom: issue list\nprompt: disabled\n')
+        write(".config/gh/config.yml", '# Keep this comment\neditor:\nbrowser:\npager:\nhttp_unix_socket:\naliases:\n  custom: issue list\nprompt: disabled\n')
+        (destination / ".config/gh").chmod(0o751)
+        (destination / ".config/gh/config.yml").chmod(0o600)
+        (destination / ".local/share").mkdir(parents=True, exist_ok=True)
+        (destination / ".local/share").chmod(0o700)
         write(".claude/settings.json", json.dumps({"hooks": {"Stop": [{"command": "fixture-orca-hook"}]},
               "statusLine": {"command": "fixture-status"}, "unknown": {"keep": True}}))
         write(".codex/config.toml", '[hooks.state]\nfixture = "keep"\n[mcp_servers.fixture]\ncommand = "fixture-only"\n'
@@ -84,8 +89,12 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None):
         # These applies are confined to the disposable home above. External downloads are disabled.
         run(base + ["apply"])
         first = snapshot(destination)
+        first_modes = {str(p.relative_to(destination)): stat.S_IMODE(p.stat().st_mode)
+                       for p in destination.rglob("*") if not p.is_symlink()}
         run(base + ["apply"])
         second = snapshot(destination)
+        assert first_modes == {str(p.relative_to(destination)): stat.S_IMODE(p.stat().st_mode)
+                               for p in destination.rglob("*") if not p.is_symlink()}, "Repeat apply changed permissions"
         assert second == first, "Repeat apply changed: " + str([k for k in second if first.get(k) != second[k]])
         assert not run(base + ["diff"]).strip(), "Repeated preview has a diff"
         assert (destination / "unmanaged-marker").read_text() == "must survive\n"
@@ -98,7 +107,12 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None):
         assert run(["git", "config", "--file", destination / ".gitconfig", "--get", "user.email"]).strip() == "fixture@example.invalid"
         helper = run(["git", "config", "--file", destination / ".gitconfig", "--get-all", "credential.https://github.com.helper"])
         assert "isolated home with spaces/.local/share/mise/shims/gh' auth git-credential" in helper
+        for relative, mode in [(".local/share", 0o700), (".config/gh", 0o700),
+                               (".config/gh/config.yml", 0o600)]:
+            assert stat.S_IMODE((destination / relative).stat().st_mode) == mode, relative
         gh = (destination / ".config/gh/config.yml").read_text()
+        assert '# Keep this comment' in gh
+        assert all(f"{key}:\n" in gh for key in ["editor", "browser", "pager", "http_unix_socket"])
         assert "custom: issue list" in gh and "co: pr checkout" in gh and "prompt: disabled" in gh
         claude = json.loads((destination / ".claude/settings.json").read_text())
         assert claude["unknown"]["keep"] and claude["hooks"]["Stop"][0]["command"] == "fixture-orca-hook"
@@ -111,6 +125,66 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None):
         assert codex["model"] == "gpt-6.1-sol" and codex["model_reasoning_effort"] == "high"
         opencode = json.loads((destination / ".config/opencode/opencode.json").read_text())
         assert opencode["provider"]["fixture"]["keep"] and opencode["autoupdate"] is False
+
+        # Exact no-op: preserve formatting, comments, ordering and missing final newline.
+        for relative, content in [
+            (".claude/settings.json", '{ "tui": "fullscreen", "theme": "dark", "hooks": {"keep": true} }'),
+            (".codex/config.toml", '# Preserve comment\nservice_tier = "priority"\nmodel_reasoning_effort = "high"\nmodel = "gpt-6.1-sol"'),
+            (".config/opencode/opencode.json", '{ "provider": {"keep": true}, "autoupdate": false }'),
+        ]:
+            write(relative, content)
+            assert run(base + ["cat", destination / relative]) == content, relative
+            run(base + ["apply", destination / relative])
+            assert (destination / relative).read_text() == content, relative
+
+        gh_path = destination / ".config/gh/config.yml"
+        gh_cases = [
+            ('# exact no-op\neditor:\naliases: {co: "pr checkout", custom: "issue list"}\ngit_protocol: https', False),
+            ('# Empty scalars\neditor:\nbrowser:\npager:\nhttp_unix_socket:\ngit_protocol: ssh # transport\naliases:\n  co: issue list # shortcut\n  custom: issue list\nunknown: {nested: null}\n', True),
+            ('aliases:\n    custom: issue list\n', True),
+            ('aliases: {} # keep header\n', True),
+            ('# only a comment\n', True),
+            ('', True),
+        ]
+        for content, changed in gh_cases:
+            write(".config/gh/config.yml", content)
+            target = run(base + ["cat", gh_path])
+            assert (target != content) is changed
+            if not changed:
+                assert target == content
+            else:
+                for line in content.splitlines():
+                    if line.startswith('#') or line.startswith('unknown:') or 'custom:' in line:
+                        assert line in target, line
+                for comment in ['# transport', '# shortcut', '# keep header']:
+                    if comment in content:
+                        assert comment in target, comment
+            run(base + ["apply", gh_path])
+            assert run(base + ["cat", gh_path]) == target
+            assert stat.S_IMODE(gh_path.stat().st_mode) == 0o600
+            assert stat.S_IMODE(gh_path.parent.stat().st_mode) == 0o700
+            if gh_binary:
+                environment = os.environ.copy()
+                environment["GH_CONFIG_DIR"] = str(gh_path.parent)
+                for key, expected in [("git_protocol", "https"), ("editor", ""), ("browser", ""),
+                                      ("pager", ""), ("http_unix_socket", "")]:
+                    result = subprocess.run([gh_binary, "config", "get", key], text=True,
+                                            capture_output=True, env=environment, timeout=30)
+                    assert result.returncode == 0 and result.stdout.rstrip('\n') == expected, (key, result.stdout)
+        # Unsupported changed layouts and invalid input must not be overwritten.
+        for content in ['aliases: {co: "issue list", custom: "keep"}\ngit_protocol: ssh\n',
+                        'aliases: [invalid\n']:
+            write(".config/gh/config.yml", content)
+            result = subprocess.run([str(x) for x in base + ["apply", gh_path]], text=True, capture_output=True)
+            assert result.returncode != 0 and gh_path.read_text() == content
+        # A fresh machine must also receive a private directory.
+        shutil.rmtree(gh_path.parent)
+        fresh_base = base.copy()
+        fresh_base[fresh_base.index("--persistent-state") + 1] = scratch / "fresh-gh-state.boltdb"
+        run(fresh_base + ["apply", gh_path.parent])
+        assert gh_path.is_file() and stat.S_IMODE(gh_path.stat().st_mode) == 0o600
+        assert stat.S_IMODE(gh_path.parent.stat().st_mode) == 0o700
+        print("gh: blank scalars/comments, actual parser (when supplied), unchanged AI text and private modes: OK")
 
         configs = ["config.toml", "config.ai.toml", "config.personal-fedora.toml"]
         inventories = [tomllib.loads((destination / ".config/mise" / name).read_text())["tools"] for name in configs]
@@ -275,6 +349,8 @@ if __name__ == "__main__":
     parser.add_argument("--mise", help="Optional existing mise executable; config inspection only")
     parser.add_argument("--oh-my-zsh", help="Optional existing OMZ for a read-only Linux namespace runtime test with mock CLIs")
     parser.add_argument("--neovim", help="Optional existing Neovim for syntax-only Lua compilation; plugins are not loaded")
+    parser.add_argument("--gh", help="Optional existing GitHub CLI; read back empty values with its actual config parser")
     args = parser.parse_args()
     verify(str(Path(args.chezmoi).resolve()), str(Path(args.mise).resolve()) if args.mise else None, args.oh_my_zsh,
-           str(Path(args.neovim).resolve()) if args.neovim else None)
+           str(Path(args.neovim).resolve()) if args.neovim else None,
+           str(Path(args.gh).resolve()) if args.gh else None)
