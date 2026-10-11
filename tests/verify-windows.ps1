@@ -95,6 +95,8 @@ try {
         $env:MISE_ENV = 'unreviewed'
         & pwsh -NoProfile -File (Join-Path $source 'install.ps1') -Mode Plan *> (Join-Path $scratch 'expected-environment-error.txt')
         if ($LASTEXITCODE -eq 0) { throw 'An unreviewed mise environment was accepted.' }
+        # The rejection is expected. Hosted pwsh checks the final native exit code.
+        $global:LASTEXITCODE = 0
     } finally { $env:MISE_ENV = $originalMiseEnv }
     Write-Output 'Native Windows paths, preserved profile/hooks/legacy settings, provider ownership and repeated apply: OK'
 } finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
