@@ -74,12 +74,12 @@ def verify_guards():
 
 def verify_shell(env):
     code = r"""
-set -e
+set -ex
 [[ $ZSH_THEME == robbyrussell && $HISTSIZE == 50000 && $SAVEHIST == 50000 ]]
 [[ $EDITOR == nvim && $VISUAL == nvim && $SUDO_EDITOR == $HOME/.local/share/mise/installs/* ]]
 [[ ${aliases[vi]} == nvim && ${aliases[y]} == yazi ]]
 [[ ${#plugins} == 10 && $plugins[-1] == zsh-syntax-highlighting ]]
-(( $+functions[_zoxide_z] && $+widgets[fzf-history-widget] && $+widgets[history-substring-search-up] ))
+(( $+functions[__zoxide_z] && $+widgets[fzf-history-widget] && $+widgets[history-substring-search-up] ))
 [[ $(bindkey '^X^H') == *stash-to-history* ]]
 [[ $(bindkey '^[OA') == *history-substring-search-up* ]]
 for binary in rg fd bat jq carapace delta fzf zoxide gh lazygit nvim yazi uv; do

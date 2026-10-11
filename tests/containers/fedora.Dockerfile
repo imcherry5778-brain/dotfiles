@@ -1,5 +1,5 @@
 FROM registry.fedoraproject.org/fedora:44
-RUN dnf install -y git zsh tmux python3 ca-certificates curl tar gzip unzip xz bzip2 util-linux findutils shadow-utils ncurses libstdc++ && dnf clean all
+RUN dnf install -y git zsh tmux python3 ca-certificates curl tar gzip unzip xz bzip2 util-linux util-linux-script findutils shadow-utils ncurses libstdc++ && dnf clean all
 RUN useradd --create-home --shell /bin/zsh dotfiles-test
 COPY --chown=dotfiles-test:dotfiles-test [".", "/home/dotfiles-test/dotfiles source/"]
 USER dotfiles-test

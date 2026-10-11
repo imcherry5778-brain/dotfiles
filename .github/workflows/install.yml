@@ -3,9 +3,9 @@ name: Installation checks
 on:
   push:
     branches: [main]
-    paths: ['home/**', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+    paths: ['home/**', '.chezmoiroot', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
   pull_request:
-    paths: ['home/**', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+    paths: ['home/**', '.chezmoiroot', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
   workflow_dispatch:
 
 permissions:
