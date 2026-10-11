@@ -2,7 +2,7 @@
 
 `imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를, mise는 CLI 설치와 버전을 관리한다.
 
-**현재 단계: 개인 Fedora 적용 완료와 Ubuntu CLI 구성·GitHub-hosted 설치 검증.** 공통 CLI 13개와 기존 개인 도구를 mise로 선택하고 검토한 설정을 실제 홈에 적용했다. [적용 결과·관리 방법](docs/fedora-application.md)과 [유지·변경·제외 판단](docs/fedora-review.md)을 확인한다. 다른 OS의 실제 적용은 별도 단계다.
+**현재 단계: 개인 Fedora·Ubuntu 적용 완료와 GitHub-hosted 설치 검증.** Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu는 공통 13개와 OpenCode·Node를 mise로 관리한다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. 다른 OS의 실제 적용은 별도 단계다.
 
 ## 위치와 구조
 
@@ -22,7 +22,7 @@ dotfiles/
 └── .github/workflows/        # 3개 OS 기반 검증 + Fedora/Ubuntu 실제 설치 검증
 ```
 
-`deployment.enabled=false`가 기본값이라 모든 배포 대상이 제외된다. 새 기기에서는 명시적인 선택이 필요하다. 개인 Fedora에서는 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
+`deployment.enabled=false`가 기본값이라 모든 배포 대상이 제외된다. 새 기기에서는 명시적인 선택이 필요하다. 개인 Fedora·Ubuntu에서는 각 OS의 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
 
 ## 지금 실행할 수 있는 것
 
@@ -46,7 +46,8 @@ mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run pla
 
 ## 상세 문서
 
-- [Ubuntu 구성·적용 준비](docs/ubuntu-review.md)
+- [Ubuntu 실제 적용 결과·복구](docs/ubuntu-application.md)
+- [Ubuntu 구성·적용 전 검토](docs/ubuntu-review.md)
 - [Fedora 실제 적용 결과](docs/fedora-application.md)
 - [Fedora 유지·변경·제외 판단](docs/fedora-review.md)
 - [설계와 폴더 규칙](docs/architecture.md)

@@ -3,7 +3,7 @@
 | 대상 | OS 판정 값 | 현재 검증 범위 |
 |---|---|---|
 | Fedora | fedora / linux | 개인 홈 적용·verify; 34개 도구 선택, 실제 PTY Zsh/Bash·기존 LazyVim/LSP 시작·native completion 보존; Fedora 44 컨테이너 baseline 설치·Zsh/tmux 반복 검증 |
-| Ubuntu | ubuntu / linux | 격리된 profile·Bash 보존·권한·15개 도구 source 검사; Ubuntu 26.04 컨테이너에서 실제 15개 CLI 설치·Bash/PTY Zsh·tmux·두 번째 적용 통과, 실제 사용자 홈은 미적용 |
+| Ubuntu | ubuntu / linux | 개인 Ubuntu 26.04.1 홈에 15개 CLI·설정 적용; Bash 자동완성 150개 보존, 반복 apply·verify, 실제 Ptyxis/Zsh·Wayland 클립보드·LazyVim 33개 플러그인 잠금 버전 검증; Ubuntu 26.04 컨테이너 설치도 통과 |
 | Arch | arch / linux | fixture만; pacman·데스크톱 미검증 |
 | openSUSE Tumbleweed | opensuse-tumbleweed / linux | fixture만; Zypper·데스크톱 미검증 |
 | macOS | macos / darwin | fixture와 CI의 기반 검사; 실제 기기 미검증 |
@@ -11,7 +11,7 @@
 
 Foundation checks는 구문·격리 렌더링·초기화·배포 경계·경로 처리를 확인한다. Installation checks는 별도로 Fedora 44 common baseline 13개 및 Ubuntu 26.04 desktop CLI 15개 설치·실행과 Zsh/tmux·반복 적용을 확인한다. 어느 쪽도 로그인·SSH/GPG·클립보드·GUI·Neovim 플러그인 설치·모든 배포판 호환성 완료를 의미하지 않는다.
 
-현재 실사용 configuration source는 Fedora에 적용했다. [실제 기기 검증](fedora-application.md)은 hosted CI와 별도로 기록한다. 다른 OS의 기반 init/plan/check가 성공했다고 그 OS에 Fedora 설정을 배포하지 않는다. `.chezmoiignore`가 Fedora/Ubuntu 외 대상 전체를 제외하며 두 플랫폼도 명시적 enabled 선택이 필요하다.
+현재 실사용 configuration source는 Fedora와 Ubuntu에 적용했다. [Fedora 실제 기기 검증](fedora-application.md)과 [Ubuntu 실제 기기 검증](ubuntu-application.md)은 hosted CI와 별도로 기록한다. 다른 OS의 기반 init/plan/check가 성공했다고 그 OS에 Fedora 설정을 배포하지 않는다. `.chezmoiignore`가 Fedora/Ubuntu 외 대상 전체를 제외하며 두 플랫폼도 명시적 enabled 선택이 필요하다.
 
 각 OS는 자기 사용자 홈에 독립 checkout을 둔다. 경로 예시는 Linux /home/<user>/projects/imcherry5778-brain/dotfiles, macOS /Users/<user>/projects/imcherry5778-brain/dotfiles, Windows의 실제 $HOME 아래 projects/imcherry5778-brain/dotfiles다.
 

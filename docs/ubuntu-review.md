@@ -1,6 +1,6 @@
 # Ubuntu CLI 구성과 적용 준비
 
-2026-10-11에 설치된 Ubuntu 26.04.1을 읽기 전용으로 조사했다. 사용자 홈은 Bash 기본값과 GNOME 설정이며 선정 도구 중 APT jq만 있었다. Zsh·tmux·Git·mise·chezmoi와 나머지 CLI는 없었다. 실제 Ubuntu 적용은 아직 진행하지 않았다.
+2026-10-11에 설치된 Ubuntu 26.04.1을 읽기 전용으로 조사했다. 사용자 홈은 Bash 기본값과 GNOME 설정이며 선정 도구 중 APT jq만 있었다. Zsh·tmux·Git·mise·chezmoi와 나머지 CLI는 없었다. 이 문서는 적용 전 검토 기록이다. 이후 사용자 승인으로 진행한 실제 적용은 [적용 결과](ubuntu-application.md)에 기록했다.
 
 ## 유지와 변경
 
