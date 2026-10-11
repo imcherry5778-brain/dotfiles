@@ -12,4 +12,4 @@ SDK·클라우드·Conda는 다른 OS의 기본 설치로 확대하지 않는다
 
 Windows는 PowerShell 7 + Windows Terminal, Unix는 Zsh + Oh My Zsh와 Ghostty를 계획한다. Windows에 WSL을 필수로 설치하지 않는다. 실제 Windows/macOS 프로필과 앱 설정 이전은 아직 수행하지 않았다.
 
-Ubuntu는 ai/editor-ubuntu 환경을 명시적으로 선택한다. config.editor-ubuntu.toml은 선택한 LazyVim 웹 기능에 필요한 Node/npm만 소유한다. Fedora의 Node는 기존 personal-fedora inventory에 남으며 Ubuntu 전용 파일은 Fedora에서 제외된다. Ubuntu 전체 선택은 공통 13개 + OpenCode + Node = 15개다. 기존 Ubuntu baseline은 15개를 유지한다. ubuntu-full profile은 managed_ai/desktop을 명시적으로 켜서 추가 AI 7개를 포함한 mise 22개 CLI와 native Ghostty·Orca를 설치한다. Fedora에는 새 AI 공급자를 선택하지 않는다. [설치 자동화 계약](installation-automation.md)을 참고한다.
+Ubuntu는 ai/editor-ubuntu 환경을 명시적으로 선택한다. config.editor-ubuntu.toml은 선택한 LazyVim 웹 기능에 필요한 Node/npm만 소유한다. Fedora의 Node는 기존 personal-fedora inventory에 남으며 Ubuntu 전용 파일은 Fedora에서 제외된다. Ubuntu 기본 선택은 공통 13개 + OpenCode + Node = 15개다. 기존 Ubuntu baseline은 15개를 유지한다. ubuntu-full profile은 managed_ai/desktop을 명시적으로 켜서 추가 AI 7개를 포함한 mise 22개 CLI와 native Ghostty·Orca를 설치한다. Fedora에는 새 AI 공급자를 선택하지 않는다. [설치 자동화 계약](installation-automation.md)을 참고한다.
