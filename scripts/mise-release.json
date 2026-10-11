@@ -1,0 +1,9 @@
+{
+  "version": "2026.10.3",
+  "assets": {
+    "linux-amd64": {
+      "name": "mise-v2026.10.3-linux-x64",
+      "sha256": "8d48bc510b7d844fad0bc7156c0855c2a1e7230c51e498a7f6b63b021f8b57c5"
+    }
+  }
+}

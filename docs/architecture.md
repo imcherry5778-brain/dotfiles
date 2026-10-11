@@ -7,9 +7,9 @@
 | 위치/도구 | 책임 |
 |---|---|
 | home + chezmoi | 개인 설정 파일, 공유 기본값, 기기 차이 |
-| home/dot_config/mise | 향후 전역 CLI 버전·잠금·설치 선언 |
+| home/dot_config/mise | 전역 CLI 버전·설치 선언 |
 | 루트 mise.toml | 저장소 운영 작업. 현재 plan/check만 |
-| install.sh / install.ps1 | 최초 진입점. 현재는 읽기 전용 계획·검사 |
+| install.sh / install.ps1 | 최초 진입점. 기본 계획·검사, install.sh의 명시적 Fedora baseline 설치 |
 | scripts/unix, scripts/windows | 해당 셸 문법의 실제 구현 |
 | docs | 정책·절차·확인한 근거 |
 | tests | 임시 홈에서 실행하는 검증과 fixture |
@@ -20,7 +20,7 @@ OS별로 전체 홈 설정을 복제하지 않는다. 공통 앱 설정은 한 �
 
 ## 현재 구조와 확장 순서
 
-현재 home에는 선정한 Fedora 설정·기기 초기화·고정 업스트림 선언·CLI 버전 선언이 있다. 배포와 업스트림 다운로드는 기본 비활성이다. 실제 사용자 설정에 적용하지 않았고 설치 훅도 없다. 유지·변경의 상세 판단은 [Fedora 검토](fedora-review.md)를 따른다.
+현재 home에는 선정한 Fedora 설정·기기 초기화·고정 업스트림 선언·CLI 버전 선언이 있다. 배포와 업스트림 다운로드는 기본 비활성이다. 실제 사용자 설정에 적용하지 않았고 설치 훅도 없다. 별도 GitHub-hosted 설치 CI는 동일한 install.sh에서 명시적으로 설치하고 적용한다. 유지·변경의 상세 판단은 [Fedora 검토](fedora-review.md)를 따른다.
 
 1. Fedora의 실제 최신 파일·버전·공급자와 이전 범위를 재확인한다.
 2. Zsh·Git·completion·터미널/tmux·Neovim을 작은 변경 단위로 이전한다.

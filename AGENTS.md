@@ -1,9 +1,9 @@
 # Repository working rules
 
 - This is `imcherry5778-brain/dotfiles`; the organization directory is not the Git root.
-- Current phase is Fedora configuration drafting. Analyze and commit selected configuration sources; do not apply them to the real home, install or upgrade host tools, alter global Git settings, or change VMs/boot/partitions.
+- Current phase is Fedora configuration drafting and disposable GitHub-hosted installation testing. Analyze and commit selected configuration sources; do not apply them to the real home, install or upgrade host tools, alter global Git settings, or change VMs/boot/partitions.
 - Keep deployable source under `home/`. `.chezmoiroot` points there. Repository docs, tests and operational code stay outside it.
-- `home/.chezmoiignore` disables deployment by default. Tests may opt into Fedora targets only in an isolated destination. Real deployment requires a subsequent user instruction.
+- `home/.chezmoiignore` disables deployment by default. Tests may opt into Fedora targets in an isolated destination or the disposable Fedora CI container user. Real deployment requires a subsequent user instruction.
 - Use chezmoi for configuration files and machine differences; use mise for tool versions. Never declare the same install inventory in multiple owners.
 - Root `mise.toml` contains repository tasks, not a duplicate of the future global CLI inventory.
 - Preserve existing Fedora behavior when migration is later authorized. Do not copy credentials, sessions, generated memory, plugin caches, SSH keys or the complete home into this repository.

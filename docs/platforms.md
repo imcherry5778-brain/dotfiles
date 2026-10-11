@@ -2,14 +2,14 @@
 
 | 대상 | OS 판정 값 | 현재 검증 범위 |
 |---|---|---|
-| Fedora | fedora / linux | 실제 설정 분석, draft 반복 적용·부분 갱신·문법·격리된 OMZ 초기화; 실제 홈 미적용 |
+| Fedora | fedora / linux | 실제 설정 분석, draft 반복 적용·부분 갱신·문법·격리된 OMZ 초기화; 실제 홈 미적용; Fedora 44 컨테이너 common baseline 설치·CLI·Zsh/tmux 반복 검증 |
 | Ubuntu | ubuntu / linux | fixture, CI의 Linux 러너 기본 검사 |
 | Arch | arch / linux | fixture만; pacman·데스크톱 미검증 |
 | openSUSE Tumbleweed | opensuse-tumbleweed / linux | fixture만; Zypper·데스크톱 미검증 |
 | macOS | macos / darwin | fixture와 CI의 기반 검사; 실제 기기 미검증 |
 | Windows | windows / windows | fixture와 CI의 PowerShell 기반 검사; 실제 기기 미검증 |
 
-CI 성공은 스크립트 구문·격리 렌더링·초기화·배포 경계·경로 처리를 확인한다. 로그인·SSH/GPG·클립보드·GUI·도구 설치·모든 배포판 호환성 완료를 의미하지 않는다.
+Foundation checks는 구문·격리 렌더링·초기화·배포 경계·경로 처리를 확인한다. Installation checks는 별도로 Fedora 44 common baseline의 13개 CLI 설치·실행과 Zsh/tmux·반복 적용을 확인한다. 어느 쪽도 로그인·SSH/GPG·클립보드·GUI·Neovim 플러그인 설치·모든 배포판 호환성 완료를 의미하지 않는다.
 
 현재 실사용 configuration source는 Fedora draft만 있다. 다른 OS의 기반 init/plan/check가 성공했다고 그 OS에 Fedora 설정을 배포하지 않는다. `.chezmoiignore`가 Fedora 외 대상 전체를 제외한다.
 

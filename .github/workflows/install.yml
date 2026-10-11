@@ -1,0 +1,33 @@
+name: Installation checks
+
+on:
+  push:
+    branches: [main]
+    paths: ['home/**', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+  pull_request:
+    paths: ['home/**', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fedora:
+    name: Fedora 44 / common baseline / cold install
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build clean Fedora user environment
+        run: docker build --pull --file tests/containers/fedora.Dockerfile --tag dotfiles-install-test .
+      - name: Install, apply, run applications and repeat
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: docker run --rm --env GITHUB_TOKEN dotfiles-install-test

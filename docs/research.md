@@ -37,3 +37,14 @@
 - [Codex 기본 설정](https://learn.chatgpt.com/docs/config-file/config-basic), [설정 참조](https://learn.chatgpt.com/docs/config-file/config-reference): 사용자 config와 프로젝트/관리형 config를 구분하며 현재 선호만 관리한다.
 - [fzf-tab](https://github.com/Aloxaf/fzf-tab): 공식 v1.3.0 파일 tree와 실제 설치본을 비교해 동일 revision을 확인했다.
 - [delta 공식 릴리스](https://github.com/dandavison/delta/releases/tag/0.20.1): 이번 신규 후보 버전이며 설치하지 않았다.
+
+
+## 설치 CI 판단에 추가 확인한 근거
+
+- [GitHub-hosted runners](https://docs.github.com/en/actions/concepts/runners/github-hosted-runners): GitHub의 일회성 머신과 지원 OS. Fedora userspace는 hosted Ubuntu 위 컨테이너에서 검증한다.
+- [mise CI](https://mise.jdx.dev/continuous-integration.html): CI에서 실제 선언과 설치를 실행하는 방식. 이 저장소는 사용자 진입점과 같은 bootstrap을 검증하려고 mise-action 대신 install.sh를 호출한다.
+- [공식 mise 2026.10.3 체크섬](https://github.com/jdx/mise/releases/download/v2026.10.3/SHASUMS256.txt): scripts/mise-release.json의 Linux x64 SHA-256 출처.
+- [kitos9112/dotfiles workflows](https://github.com/kitos9112/dotfiles/tree/main/.github/workflows): Linux container의 비-root 설치와 macOS 임시 대상 적용 사례. 실행 훅을 제외하는 테스트는 실제 전체 설치와 구분했다.
+- [DevSecNinja/dotfiles workflows](https://github.com/DevSecNinja/dotfiles/tree/main/.github/workflows): 실제 설치·Windows profile·devcontainer 검사 사례. 오류를 성공으로 처리하는 일부 패턴은 채택하지 않았다.
+
+이번 선택은 빠른 기반 검사와 비용이 더 드는 cold install 검사를 분리하고, 설치 선언을 복제하지 않으며, 실제 Fedora 개인 환경 이전을 별도 단계로 유지하는 것이다. Actions 성공을 사용자 기기에 자동 적용된 것으로 해석하지 않는다.

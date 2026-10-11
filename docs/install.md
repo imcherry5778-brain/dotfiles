@@ -1,6 +1,6 @@
 # 최초 설치와 현재 진입점
 
-현재 install.sh/install.ps1은 설치 프로그램의 초기 인터페이스이며 실제 bootstrap을 수행하지 않는다. 기본 동작은 계획 출력이고 Check 동작도 읽기 전용이다. 아직 없는 설치 기능을 완료된 것으로 표시하지 않는다.
+기본 동작은 계획 출력이고 Check 동작도 읽기 전용이다. install.sh의 `--apply --profile FILE`은 Fedora x86_64 common baseline 설치만 지원한다. install.ps1의 Windows 설치는 아직 구현하지 않았다.
 
 ## checkout 위치
 
@@ -21,10 +21,30 @@ git clone https://github.com/imcherry5778-brain/dotfiles.git $destination
 
 기존 경로가 있으면 새 clone으로 덮어쓰지 않고 해당 checkout을 확인한다. Git 인증 방식은 기기 설정을 사용하며 전역 인증 공급자를 이 프로젝트가 자동 변경하지 않는다.
 
-## 미래 bootstrap의 계약
+## 명시적 Fedora baseline 설치의 계약
 
 Git·mise·chezmoi·사용할 셸의 현재 설치를 확인하고 필요한 최소 도구만 확보한다. 그다음 sourceDir를 현재 checkout으로 연결하고 기기 데이터를 초기화한다. sourceDir는 /home 등의 문자열을 하드코딩하지 않고 현재 위치를 사용한다.
 
 `chezmoi init`은 config·source·상태를 만들 수 있고 `chezmoi init --apply`는 대상 파일도 변경한다. 실제 호스트에서 초기화·적용하는 것은 후속 이전 단계이며 이번 구조 검증에서 실행하지 않는다.
 
 리뷰한 설정 diff와 배포를 분리하고 기존 파일을 보존한다. 프로그램 설치·업그레이드·버전 삭제를 셸 시작이나 chezmoi 자동 훅에 연결하지 않는다. 인증은 각 OS에서 별도로 준비한다.
+
+
+`tests/profiles/fedora-common.json`은 설치 CI의 명시적 선택 자료다. 모든 개인/AI feature는 false이고 배포·외부 소스만 true다. 현재 개인 Fedora 이전용 profile이 아니다.
+
+```sh
+# 승인한 새 Fedora baseline 환경에서만 사용. 실제 사용자 홈을 변경한다.
+sh install.sh --apply --profile tests/profiles/fedora-common.json
+```
+
+설치 순서:
+
+1. 일반 사용자·실제 로그인 홈·Fedora x86_64·기본 config/data 위치와 OS 의존성을 검사한다. Git, Python 3.11+, Zsh, tmux, tar, gzip, unzip은 OS가 제공해야 한다. sudo/dnf는 이 진입점에서 실행하지 않는다.
+2. mise 2026.10.3과 chezmoi 2.73.0이 없으면 공식 실행 파일을 SHA-256 검증 후 ~/.local/bin에 설치한다. 기존 다른 버전이나 충돌 파일은 덮어쓰지 않고 중단한다.
+3. 선택 자료로 chezmoi config를 초기화하고 필수 배포 대상이 실제 존재하는지 확인한다. 기존 다른 기기 profile은 자동 변경하지 않는다.
+4. global mise 설정을 먼저 적용하고 실제 홈에서 mise install을 실행한다. 도구 목록과 버전은 home/dot_config/mise/config.toml만 소유한다.
+5. 셸·Git·gh·tmux·Neovim 설정과 고정 external 소스를 적용하고 chezmoi verify를 실행한다.
+
+기존 개인 환경의 이전·백업·복구나 RPM 제거를 자동 수행하지 않는다. 네트워크 또는 설치 오류는 즉시 실패하며 원자적 rollback을 제공하지 않는다. 인증·SSH/GPG 키·GUI·AI CLI·Conda는 이 baseline 밖이다. Neovim 플러그인 설치/업데이트는 별도 앱 동작이며 설치 CI에서 완료로 표시하지 않는다.
+
+GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora 44 컨테이너를 생성한다. OS 의존성만 root 단계에서 준비하고 실제 설치와 테스트는 dotfiles-test 일반 사용자의 원래 홈에서 실행한다. HOME/XDG를 바꿔 성공시키지 않는다. 공백 경로의 checkout, 빈 tool cache, 실제 CLI 경로, 셸·tmux, 기존 Git/gh 설정 보존, 두 번째 설치의 내용·링크·권한 안정성을 검사한다. 컨테이너를 종료하면 설치 환경은 폐기된다. 사용자 PC에 원격 적용하는 workflow가 아니다.
