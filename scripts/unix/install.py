@@ -13,6 +13,8 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 USER_HOME = Path.home()
+# Installer imports must not leave bytecode in the source checkout, especially as root.
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "scripts"))
 from lib.runtime import Host, download_verified, run
 from lib.desktop import desktop_plan, install_desktop
