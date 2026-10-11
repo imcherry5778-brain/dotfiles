@@ -16,3 +16,5 @@
 - Current authorized work refactors repository installation around chezmoi init --apply, retains provider/backup safeguards, adds portable Fedora full and missing-tool repair, and verifies only disposable hosted CI. No personal OS installation or configuration reapplication is authorized in this task. Preserve the local uncommitted OpenCode bump.
 
 - Current user authorization extends the existing personal Fedora migration: retain its 34 mise tools, native AI/apps, Conda, Bitwarden and externals=false; verify CI before fresh diff/targeted backup and real Fedora automation activation. Do not reapply other OS or commit the separate OpenCode edit.
+
+- Latest user authorization: merge PR #1 and migrate existing Ubuntu, Arch, openSUSE, Windows and Mac to enabled chezmoi automation after fresh diff and private backups. Preserve existing profiles, tool versions, native providers, authentication, Fedora OpenCode edit and QGA/SELinux/SSD guards. FreeBSD is excluded.

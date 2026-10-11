@@ -34,8 +34,14 @@ def prepare_packages(host, *, desktop=False):
             run(['mise', 'trust', config])
             command = ['mise', '-C', temporary, 'bootstrap', 'packages', 'apply']
             if manager == 'apt':
-                # Metadata refresh never upgrades installed packages.
-                run(administrative_command(['apt-get', 'update']))
+                # Existing complete environments need no elevated metadata refresh.
+                # An unpacked/absent package still needs normal APT preparation.
+                missing = any(subprocess.run(
+                    ['dpkg-query', '-W', '-f=${db:Status-Status}', name],
+                    capture_output=True, text=True).stdout.strip() != 'installed'
+                    for name in packages)
+                if missing:
+                    run(administrative_command(['apt-get', 'update']))
             run(command)
     elif host.distribution == 'arch':
         missing = [name for name in packages if subprocess.run(['pacman', '-Q', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode]
