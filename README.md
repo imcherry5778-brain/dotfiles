@@ -2,7 +2,7 @@
 
 `imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를 관리한다. 공통 CLI는 mise로 관리하고, Windows의 PowerShell·Git·mise·chezmoi는 WinGet으로 준비한다. AI CLI는 도구별 공식 설치 경로를 사용한다.
 
-**현재 단계: chezmoi 중심 설치 흐름 개편과 hosted CI 검증.** 기존 OS 적용 결과는 다음과 같다. Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. Windows 실제 결과는 별도 문서에 기록되어 있다. Mac의 24개 CLI·Ghostty·Orca·셸·편집기·클립보드·재실행 결과와 개인 백업은 [Mac 적용 기록](docs/macos-application.md)에 기록했다.
+**현재 단계: chezmoi 중심 설치 흐름과 hosted CI 검증 완료, 개인 Fedora 자동화 활성화.** 기존 OS 적용 결과는 다음과 같다. Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. Windows 실제 결과는 별도 문서에 기록되어 있다. Mac의 24개 CLI·Ghostty·Orca·셸·편집기·클립보드·재실행 결과와 개인 백업은 [Mac 적용 기록](docs/macos-application.md)에 기록했다.
 
 ## 위치와 구조
 

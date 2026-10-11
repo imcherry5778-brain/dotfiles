@@ -63,4 +63,4 @@ chezmoi diff --exclude=scripts
 
 ## CI
 
-GitHub-hosted만 사용한다. Foundation은 세 OS의 문법·격리 렌더링·기존 프로필 회귀·다운로드/출처 충돌·백업·loader 실패 복원·실제 chezmoi orchestration/dry-run을 검사한다. Installation은 Fedora common/full, Ubuntu baseline/full, Arch full, openSUSE full, Windows native CLI, Mac ARM64 full을 실제 일회성 환경에 설치한다. 반복 `chezmoi apply`와 선택된 fd 바이너리 삭제 후 복구를 검사한다. 기존 개인 OS에는 적용하지 않는다. Windows Orca는 대화형 공식 설치기이므로 CLI-only hosted 검사에서 제외하고 GUI/auth 결과를 과장하지 않는다.
+GitHub-hosted만 사용한다. Foundation은 세 OS의 문법·격리 렌더링·기존 프로필 회귀·다운로드/출처 충돌·백업·loader 실패 복원·실제 chezmoi orchestration/dry-run을 검사한다. Installation은 Fedora common/full/personal migration, Ubuntu baseline/full, Arch full, openSUSE full, Windows native CLI, Mac ARM64 full을 실제 일회성 환경에 설치한다. 개인 Fedora job은 34개 실제 CLI와 Ansible 실행 파일 삭제 후 복구를 검증하며, native 보존 fixture를 실제 GUI 실행으로 해석하지 않는다. 반복 `chezmoi apply`와 선택된 fd 바이너리 삭제 후 복구를 검사한다. 기존 개인 OS에는 적용하지 않는다. Windows Orca는 대화형 공식 설치기이므로 CLI-only hosted 검사에서 제외하고 GUI/auth 결과를 과장하지 않는다.
