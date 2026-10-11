@@ -75,7 +75,8 @@ try {
     if ($plan.bootstrap.Count -ne 4 -or $plan.official.Count -ne 6) { throw 'Wrong bootstrap/native ownership.' }
     if ($plan.PSObject.Properties.Name -contains 'winget') { throw 'CLI inventory leaked into WinGet.' }
     $keys = @($plan.mise.PSObject.Properties.Name)
-    if ($keys.Count -ne 17 -or $keys -notcontains 'pypi:aider-chat' -or $keys -notcontains 'github:anomalyco/opencode') { throw 'Wrong Windows mise inventory.' }
+    if ($keys.Count -ne 16 -or $keys -notcontains 'pypi:aider-chat' -or $keys -notcontains 'github:anomalyco/opencode') { throw 'Wrong Windows mise inventory.' }
+    if ($plan.editor.Count -ne 1 -or $plan.editor[0].command -ne 'gcc' -or $keys -contains 'zig') { throw 'Wrong Windows parser compiler ownership.' }
     foreach ($key in $keys) {
         if ($key -match 'codex|claude|grok|pi-coding-agent|kiro|antigravity') { throw "Official provider duplicated in mise: $key" }
     }
