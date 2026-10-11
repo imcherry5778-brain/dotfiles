@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 import shutil
 import tempfile
+import xml.etree.ElementTree as ET
 
 from lib.runtime import Host, administrative_command, download_verified, run
 from lib.appimage import install_orca_appimage, orca_directory
@@ -18,13 +19,14 @@ def package_present(host, name):
             return run(["dpkg-query", "-W", "-f=${db:Status-Status}", name], capture=True).strip() == "installed"
         except subprocess.CalledProcessError:
             return False
-    if host.distribution == "arch":
+    if host.distribution in {"arch", "opensuse-tumbleweed"}:
         if name == "orca-ide":
             return all(path.is_file() for path in [orca_directory() / "resources/bin/orca-ide",
                                                   Path.home() / ".local/bin/orca-ide",
                                                   Path.home() / ".local/share/applications/orca-ide.desktop"])
-        return subprocess.run(["pacman", "-Q", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
-    if host.distribution == "fedora":
+        if host.distribution == "arch":
+            return subprocess.run(["pacman", "-Q", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    if host.distribution in {"fedora", "opensuse-tumbleweed"}:
         return subprocess.run(["rpm", "-q", name], stdout=subprocess.DEVNULL).returncode == 0
     if host.system == "macos":
         application = "Ghostty.app" if name == "ghostty" else "Orca.app"
@@ -40,6 +42,8 @@ def desktop_plan(host):
         return {"ghostty": "Ubuntu 26.04 official APT package", "orca": "checksum-pinned official .deb"}
     if host.distribution == "arch":
         return {"ghostty": "Arch extra official package; existing sync database", "orca": "checksum-pinned official AppImage, unpacked with bundled CLI"}
+    if host.distribution == "opensuse-tumbleweed":
+        return {"ghostty": "openSUSE official OSS package; existing repository metadata", "orca": "checksum-pinned official AppImage, unpacked with bundled CLI"}
     if host.distribution == "fedora":
         return {"ghostty": "officially documented scottames/ghostty COPR", "orca": "checksum-pinned official .rpm"}
     if host.system == "macos":
@@ -47,6 +51,21 @@ def desktop_plan(host):
     if host.system == "windows":
         return {"ghostty": "unsupported: native Windows build is unavailable", "orca": "checksum-pinned official Windows installer"}
     raise ValueError(f"Desktop packages are not reviewed for {host.distribution}.")
+
+
+def install_opensuse_packages(packages):
+    """Require a pure-addition solver plan; keep installed packages and vendors."""
+    command = ["zypper", "--non-interactive", "--no-refresh", "--xmlout", "install",
+               "--no-recommends", "--no-force-resolution", "--no-allow-vendor-change",
+               "--no-allow-downgrade"]
+    plan = run(administrative_command([*command, "--dry-run", *packages]), capture=True)
+    document = ET.fromstring(plan)
+    summary = document.find("install-summary")
+    if summary is not None:
+        for action in summary:
+            if action.tag.startswith("to-") and action.tag != "to-install" and list(action):
+                raise ValueError(f"openSUSE package plan changes installed packages: {action.tag}; review separately.")
+    run(administrative_command([*command, *packages]))
 
 
 def install_ghostty(host):
@@ -64,6 +83,8 @@ def install_ghostty(host):
     elif host.distribution == "arch":
         # Never refresh sync databases alone: Arch does not support partial upgrades.
         run(administrative_command(["pacman", "-S", "--needed", "--noconfirm", "ghostty"]))
+    elif host.distribution == "opensuse-tumbleweed":
+        install_opensuse_packages(["ghostty"])
     elif host.distribution == "fedora":
         run(administrative_command(["dnf", "copr", "enable", "--assumeyes", "scottames/ghostty"]))
         run(administrative_command(["dnf", "install", "--assumeyes", "ghostty"]))
@@ -81,11 +102,13 @@ def install_orca(host):
         run(["brew", "install", "--cask", "stablyai/orca/orca"])
         return
     release = json.loads((ROOT / "desktop-release.json").read_text())
-    key = f"{host.distribution or host.system}-{host.architecture}"
+    # Arch and openSUSE share the publisher AppImage; checksum metadata has one owner.
+    asset_platform = "linux-appimage" if host.distribution in {"arch", "opensuse-tumbleweed"} else host.distribution or host.system
+    key = f"{asset_platform}-{host.architecture}"
     asset = release["orca"]["assets"].get(key)
     if not asset:
         raise ValueError(f"No reviewed Orca asset for {key}.")
-    if host.distribution == "arch":
+    if host.distribution in {"arch", "opensuse-tumbleweed"}:
         install_orca_appimage(asset, release["orca"]["version"])
         return
     with tempfile.TemporaryDirectory(prefix="dotfiles-orca-") as temporary:

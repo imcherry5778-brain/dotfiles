@@ -82,7 +82,7 @@ bindkey '^X^H' stash-to-history
 # Provider bindings must remain after conda/mamba initialization.
 [[ -r "$HOME/.config/shell-completion/zsh-init.zsh" ]] && source "$HOME/.config/shell-completion/zsh-init.zsh"
 {{ end -}}
-{{ if has .platform (list "ubuntu" "arch") -}}
+{{ if has .platform (list "ubuntu" "arch" "opensuse-tumbleweed") -}}
 # Keep distribution/plugin completions; add carapace only for missing providers.
 [[ -r "$HOME/.config/shell/zsh-completion.zsh" ]] && source "$HOME/.config/shell/zsh-completion.zsh"
 {{ end -}}

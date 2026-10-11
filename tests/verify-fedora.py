@@ -56,7 +56,7 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None, gh_binary=None):
         for platform in ["fedora", "ubuntu", "arch", "opensuse-tumbleweed", "macos", "windows"]:
             override.write_text(json.dumps(data(False, platform)))
             assert not run(base + ["managed"]).strip(), platform
-            if platform not in {"fedora", "ubuntu", "arch"}:
+            if platform not in {"fedora", "ubuntu", "arch", "opensuse-tumbleweed"}:
                 override.write_text(json.dumps(data(True, platform)))
                 assert not run(base + ["managed"]).strip(), platform
         override.write_text(json.dumps(data(True)))

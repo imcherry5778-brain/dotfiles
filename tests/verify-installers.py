@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from lib.desktop import desktop_plan, install_ghostty, install_orca
+from lib.desktop import desktop_plan, install_ghostty, install_orca, install_opensuse_packages
 from lib.runtime import Host, download_verified
 from lib.appimage import install_orca_appimage, desktop_quote
 
@@ -24,7 +24,7 @@ spec.loader.exec_module(installer)
 
 class InstallerContracts(unittest.TestCase):
     def test_existing_profiles_and_opt_in(self):
-        for name in ["fedora-common", "ubuntu-desktop", "ubuntu-full", "arch-full"]:
+        for name in ["fedora-common", "ubuntu-desktop", "ubuntu-full", "arch-full", "opensuse-tumbleweed-full"]:
             profile = installer.validate_profile(ROOT / f"tests/profiles/{name}.json")
             self.assertTrue(installer.matches_profile(profile, profile))
         baseline = installer.validate_profile(ROOT / "tests/profiles/ubuntu-desktop.json")
@@ -46,12 +46,30 @@ class InstallerContracts(unittest.TestCase):
                     installer.validate_profile(path)
 
     def test_native_platform_plans(self):
-        for host in [Host("linux", "x64", "ubuntu"), Host("linux", "arm64", "fedora"), Host("linux", "x64", "arch"),
+        for host in [Host("linux", "x64", "ubuntu"), Host("linux", "arm64", "fedora"), Host("linux", "x64", "arch"), Host("linux", "x64", "opensuse-tumbleweed"),
                      Host("macos", "arm64"), Host("windows", "x64")]:
             self.assertEqual(set(desktop_plan(host)), {"ghostty", "orca"})
         self.assertIn("unsupported", desktop_plan(Host("windows", "x64"))["ghostty"])
         with self.assertRaises(ValueError):
             desktop_plan(Host("linux", "x64", "unsupported"))
+
+    def test_opensuse_solver_preserves_installed_packages(self):
+        for action in ["to-remove", "to-upgrade", "to-downgrade", "to-change-vendor"]:
+            plan = f'<stream><install-summary><{action}><solvable name="existing"/></{action}></install-summary></stream>'
+            with patch("lib.desktop.administrative_command", side_effect=lambda args: args), \
+                 patch("lib.desktop.run", return_value=plan) as execute:
+                with self.assertRaisesRegex(ValueError, "changes installed packages"):
+                    install_opensuse_packages(["ghostty"])
+                self.assertEqual(execute.call_count, 1)
+        plan = '<stream><install-summary><to-install><solvable name="ghostty"/></to-install></install-summary></stream>'
+        with patch("lib.desktop.administrative_command", side_effect=lambda args: args), \
+             patch("lib.desktop.run", return_value=plan) as execute:
+            install_opensuse_packages(["ghostty"])
+            self.assertEqual(execute.call_count, 2)
+            command = execute.call_args.args[0]
+            self.assertIn("--no-force-resolution", command)
+            self.assertIn("--no-allow-vendor-change", command)
+            self.assertNotIn("--dry-run", command)
 
     def test_download_verification_and_existing_file(self):
         payload = b"verified publisher package"

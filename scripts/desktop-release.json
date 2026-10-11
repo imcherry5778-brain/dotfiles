@@ -28,7 +28,7 @@
         "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-windows-setup.exe",
         "sha256": "d192a7f1142b58a8c9bc855275fb37cd41dff7f152fd3cbac3acdd96331ec849"
       },
-      "arch-x64": {
+      "linux-appimage-x64": {
         "name": "orca-linux.AppImage",
         "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-linux.AppImage",
         "sha256": "b1fe9102d987d35d97eb6d9c274a93d9e951aadbe864fc2251a315023f60c746"

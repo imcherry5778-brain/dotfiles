@@ -131,6 +131,6 @@ def verify(chezmoi, target="ubuntu"):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chezmoi', required=True)
-    parser.add_argument('--platform', choices=['ubuntu', 'arch'], default='ubuntu')
+    parser.add_argument('--platform', choices=['ubuntu', 'arch', 'opensuse-tumbleweed'], default='ubuntu')
     args = parser.parse_args()
     verify(args.chezmoi, args.platform)

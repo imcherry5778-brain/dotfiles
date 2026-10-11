@@ -52,3 +52,5 @@ jobs:
           python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform arch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform opensuse-tumbleweed

@@ -1,9 +1,9 @@
 # Reviewed Fedora/Ubuntu sources. Explicit opt-in is required even for preview.
-{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu" "arch"))) }}
+{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) }}
 **
 {{ else }}
-{{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "ubuntu" "arch"))) (not .features.ai)) }}
-{{ fail "managed_ai requires the reviewed Ubuntu/Arch AI profile; preserve existing Fedora providers." }}
+{{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed"))) (not .features.ai)) }}
+{{ fail "managed_ai requires the reviewed Ubuntu/Arch/openSUSE AI profile; preserve existing Fedora providers." }}
 {{ end }}
 {{ if and (ne .platform "fedora") .features.personal_fedora }}
 {{ fail "personal_fedora is Fedora-only; review other OS tools separately." }}
@@ -35,7 +35,7 @@ README.md
 {{ end }}
 {{ end }}
 
-{{ if not (has .platform (list "ubuntu" "arch")) }}
+{{ if not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed")) }}
 .config/shell
 .config/shell/**
 {{ end }}
@@ -44,6 +44,6 @@ README.md
 .config/mise/config.editor-ubuntu.toml
 {{ end }}
 
-{{ if or (ne .platform "arch") (not .features.editor_web) }}
+{{ if or (not (has .platform (list "arch" "opensuse-tumbleweed"))) (not .features.editor_web) }}
 .config/mise/config.editor-web.toml
 {{ end }}
