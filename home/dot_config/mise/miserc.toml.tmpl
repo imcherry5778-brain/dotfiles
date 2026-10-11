@@ -1,5 +1,5 @@
 {{ if eq .platform "windows" -}}
-# Windows fallback tools only; WinGet owns the remaining native CLI.
+# Windows common CLI and runtimes; native AI installers have separate ownership.
 env = ["windows"]
 {{ else -}}
 {{- $envs := list -}}

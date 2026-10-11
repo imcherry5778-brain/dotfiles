@@ -77,6 +77,7 @@ function Receive-VerifiedFile {
         throw
     }
 }
+. (Join-Path $PSScriptRoot 'providers.ps1')
 function Get-Selection {
     param([string] $Path)
     $selection = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
@@ -137,7 +138,7 @@ foreach ($name in @('XDG_CONFIG_HOME','XDG_DATA_HOME','MISE_ENV','MISE_CONFIG_DI
     if ([Environment]::GetEnvironmentVariable($name)) { throw "$name redirects the native environment; review it first." }
 }
 if ($Mode -eq 'Plan') {
-    Write-Output 'Windows: explicit profile, WinGet first, native PowerShell 7; deployment remains opt-in.'
+    Write-Output 'Windows: WinGet bootstrap, mise CLI, official AI installers; deployment remains opt-in.'
     Write-Output 'Bootstrap -> Diff -> Apply -> Verify. Existing providers and authentication are preserved.'
     return
 }
@@ -178,13 +179,19 @@ if ($managed.Count -lt 15 -or $managed -contains '.zshrc' -or $managed -contains
 if ($Mode -eq 'Verify') {
     if (-not (Test-Path -LiteralPath $config)) { throw 'Windows selection has not been applied.' }
     $null = Get-ChezmoiOutput @('--config',$config,'--no-tty','--no-pager','verify')
-    Write-Output 'Windows managed configuration verification passed.'
+    Test-WindowsTools $review
+    Write-Output 'Windows managed configuration and actual CLI execution verification passed.'
     return
 }
 # Capture only managed destinations plus the registry values changed by this workflow.
 $backup = New-PrivateDirectory (Join-Path $HOME ('.local/state/dotfiles/backups/' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') + '-windows'))
 $manifest = @()
-foreach ($relative in @($managed + '.config/chezmoi/chezmoi.toml' | Select-Object -Unique)) {
+$extraBackups = @('.config/chezmoi/chezmoi.toml',
+    'Documents/PowerShell/Microsoft.PowerShell_profile.ps1',
+    'Documents/WindowsPowerShell/profile.ps1',
+    'Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1',
+    '.pi/agent/settings.json', '.grok/config.toml')
+foreach ($relative in @($managed + $extraBackups | Select-Object -Unique)) {
     $target = [IO.Path]::GetFullPath((Join-Path $HOME $relative))
     if (-not $target.StartsWith($HOME + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw "Target outside actual home: $relative" }
     $entry = @{path=$relative;exists=(Test-Path -LiteralPath $target -PathType Leaf)}
@@ -199,7 +206,6 @@ foreach ($relative in @($managed + '.config/chezmoi/chezmoi.toml' | Select-Objec
 @{files=$manifest;userPath=[Environment]::GetEnvironmentVariable('Path','User');policy=[Environment]::GetEnvironmentVariable('PSExecutionPolicyPreference');currentUserPolicy=(Get-ExecutionPolicy -Scope CurrentUser).ToString()} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $backup 'manifest.json') -Encoding utf8NoBOM
 Copy-Item -LiteralPath (Join-Path $review 'config.diff') -Destination (Join-Path $backup 'before.diff')
 Write-Output "Private targeted backup: $backup"
-foreach ($package in @($plan.winget + $plan.buildDependencies)) { Install-WinGetPackage $package }
 $null = New-Item -ItemType Directory -Path (Split-Path $config) -Force
 if (Test-Path -LiteralPath $config) {
     $existing = Get-ChezmoiOutput @('--config',$config,'data','--format','json') | ConvertFrom-Json
@@ -209,19 +215,10 @@ Copy-Item -LiteralPath $previewConfig -Destination $config -Force
 $actual = @('--config',$config,'--no-tty','--no-pager')
 $null = Get-ChezmoiOutput ($actual + @('apply',(Join-Path $HOME '.config/mise')))
 Invoke-Checked 'mise' @('install','--yes')
-$kiro = Join-Path $env:ProgramFiles 'Kiro-Cli/kiro-cli.exe'
-if (-not (Get-Command kiro-cli -ErrorAction SilentlyContinue) -and -not (Test-Path -LiteralPath $kiro)) {
-    $release = Get-Content -LiteralPath (Join-Path $repo 'scripts/windows/native-release.json') -Raw | ConvertFrom-Json
-    if ($release.kiro.version -ne $plan.kiro) { throw 'Kiro asset metadata and shared tool version differ.' }
-    $installer = Join-Path $backup 'kiro-cli.msi'
-    Receive-VerifiedFile $release.kiro $installer
-    # Official Kiro installer uses the documented MSI interface.
-    $process = Start-Process msiexec -ArgumentList @('/i',('"' + $installer + '"'),'/quiet','/norestart') -Wait -PassThru
-    if ($process.ExitCode -notin @(0,3010)) { throw "Kiro MSI exit $($process.ExitCode)" }
-    Remove-Item -LiteralPath $installer
-    Update-SessionPath
-    if (-not (Test-Path -LiteralPath $kiro)) { throw 'Kiro native installation is incomplete.' }
-}
+foreach ($installer in $plan.official) { Install-OfficialCli $installer $backup }
+# Vendor installers can add profile/completion loaders. Review the final diff too.
+$finalDiff = Get-ChezmoiOutput ($actual + @('diff'))
+$finalDiff | Set-Content -LiteralPath (Join-Path $backup 'after-install.diff') -Encoding utf8NoBOM
 if ((Get-ExecutionPolicy) -eq 'Restricted') {
     foreach ($scope in @('MachinePolicy','UserPolicy')) {
         if ((Get-ExecutionPolicy -Scope $scope) -ne 'Undefined') { throw 'PowerShell execution group policy requires administrator review.' }
@@ -231,4 +228,5 @@ if ((Get-ExecutionPolicy) -eq 'Restricted') {
 $null = Get-ChezmoiOutput ($actual + @('apply'))
 $null = Get-ChezmoiOutput ($actual + @('verify'))
 if ($selection.features.desktop) { Install-NativeDesktop }
-Write-Output 'Windows profile applied. AI authentication and login state remain separate.'
+Test-WindowsTools $review
+Write-Output 'Windows profile applied and CLI execution verified. AI authentication remains separate.'

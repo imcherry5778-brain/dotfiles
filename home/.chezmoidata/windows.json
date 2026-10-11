@@ -22,48 +22,118 @@
         "version": "2.73.0"
       }
     ],
-    "winget": {
-      "ripgrep": "BurntSushi.ripgrep.MSVC",
-      "fd": "sharkdp.fd",
-      "bat": "sharkdp.bat",
-      "jq": "jqlang.jq",
-      "carapace": "rsteube.Carapace",
-      "delta": "dandavison.delta",
-      "fzf": "junegunn.fzf",
-      "zoxide": "ajeetdsouza.zoxide",
-      "gh": "GitHub.cli",
-      "lazygit": "JesseDuffield.lazygit",
-      "neovim": "Neovim.Neovim",
-      "yazi": "sxyazi.yazi",
-      "uv": "astral-sh.uv",
-      "agy": "Google.AntigravityCLI",
-      "claude": "Anthropic.ClaudeCode",
-      "codex": "OpenAI.Codex",
-      "opencode": "SST.opencode",
-      "node": "OpenJS.NodeJS"
-    },
-    "versions": {
-      "lazygit": "0.65.1",
-      "claude": "2.1.292",
-      "codex": "0.161.0",
-      "opencode": "1.18.33",
-      "node": "26.8.1"
-    },
-    "commands": {
-      "ripgrep": "rg",
-      "neovim": "nvim"
-    },
-    "buildDependencies": [
-      {
-        "id": "zig.zig",
-        "command": "zig",
-        "version": "0.15.2"
+    "mise": {
+      "ripgrep": {
+        "backend": "aqua:BurntSushi/ripgrep",
+        "command": "rg"
+      },
+      "fd": {
+        "backend": "aqua:sharkdp/fd",
+        "command": "fd"
+      },
+      "bat": {
+        "backend": "aqua:sharkdp/bat",
+        "command": "bat"
+      },
+      "jq": {
+        "backend": "aqua:jqlang/jq",
+        "command": "jq"
+      },
+      "fzf": {
+        "backend": "aqua:junegunn/fzf",
+        "command": "fzf"
+      },
+      "zoxide": {
+        "backend": "aqua:ajeetdsouza/zoxide",
+        "command": "zoxide"
+      },
+      "gh": {
+        "backend": "aqua:cli/cli",
+        "command": "gh"
+      },
+      "lazygit": {
+        "backend": "aqua:jesseduffield/lazygit",
+        "command": "lazygit"
+      },
+      "delta": {
+        "backend": "aqua:dandavison/delta",
+        "command": "delta"
+      },
+      "neovim": {
+        "backend": "aqua:neovim/neovim",
+        "command": "nvim"
+      },
+      "yazi": {
+        "backend": "aqua:sxyazi/yazi",
+        "command": "yazi"
+      },
+      "uv": {
+        "backend": "aqua:astral-sh/uv",
+        "command": "uv"
+      },
+      "carapace": {
+        "backend": "aqua:carapace-sh/carapace-bin",
+        "command": "carapace"
       }
-    ],
-    "grok": {
-      "url": "https://storage.googleapis.com/grok-build-public-artifacts/cli/grok-1.0.50-windows-x86_64.exe",
-      "sha256": "591675b998575204e41c59765b7dcb7496aa6b21bfccb3e98d2cd6fed9f7925a",
-      "version": "1.0.50"
-    }
+    },
+    "editorCompilerVersion": "0.15.2",
+    "official": [
+      {
+        "tool": "agy",
+        "command": "agy",
+        "url": "https://antigravity.google/cli/install.ps1",
+        "sha256": "51c2cb4fada22ce0228da71b9506370383d6544bfebcec85fe7616a52b805344",
+        "arguments": [
+          "--skip-aliases"
+        ],
+        "updateOwner": "publisher"
+      },
+      {
+        "tool": "claude",
+        "command": "claude",
+        "url": "https://claude.ai/install.ps1",
+        "sha256": "cd17c6b555f761d60373659824bf805e1510538226e4c7028e19d7494937a333",
+        "arguments": [
+          "-Target",
+          "stable"
+        ],
+        "updateOwner": "publisher"
+      },
+      {
+        "tool": "codex",
+        "command": "codex",
+        "url": "https://chatgpt.com/codex/install.ps1",
+        "sha256": "f02eb53365d2bbb91f46c4d46ab8e357d087a8cc100794b3eb0c5b4368d6dc42",
+        "arguments": [
+          "-Release",
+          "latest"
+        ],
+        "updateOwner": "publisher"
+      },
+      {
+        "tool": "pi",
+        "command": "pi",
+        "url": "https://pi.dev/install.ps1",
+        "sha256": "bc228f9c0584b86d917561690963e767aa1841233a04ab6208f62f28ee72c40f",
+        "arguments": [],
+        "updateOwner": "publisher"
+      },
+      {
+        "tool": "kiro",
+        "command": "kiro-cli",
+        "url": "https://cli.kiro.dev/install.ps1",
+        "sha256": "2af3e4bb56f4fcce9244fe2f395805a5cf383ce683774664bcb444417eae1d3e",
+        "arguments": [],
+        "updateOwner": "publisher"
+      },
+      {
+        "tool": "grok",
+        "command": "grok",
+        "url": "https://x.ai/cli/install.ps1",
+        "sha256": "c83dac29885215c79137e48cbc034d3d7c8c11afba3082ff1df0e0769aa902a4",
+        "arguments": [],
+        "updateOwner": "publisher"
+      }
+    ]
   }
 }

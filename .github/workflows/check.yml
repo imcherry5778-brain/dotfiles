@@ -34,7 +34,9 @@ jobs:
         run: ./tests/verify.ps1
       - name: Verify native Windows configuration in isolated destinations
         if: runner.os == 'Windows'
-        run: ./tests/verify-windows.ps1
+        run: |
+          ./tests/verify-windows.ps1
+          ./tests/verify-windows-providers.ps1
       - name: Verify shared installer contracts without downloads
         run: python3 ./tests/verify-installers.py
       - name: Verify native desktop plan without installation

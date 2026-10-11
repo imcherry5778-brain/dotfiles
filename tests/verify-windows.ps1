@@ -72,10 +72,16 @@ try {
     $settings = Get-Content -LiteralPath (Join-Path $destination '.claude/settings.json') -Raw | ConvertFrom-Json
     if ($settings.hooks.UserPromptSubmit[0].hooks[0].command -ne 'retained-native-hook' -or $settings.statusLine.command -ne 'keep-me') { throw 'Existing Orca hooks were lost.' }
     $plan = Invoke-Chezmoi ($base + @('execute-template','--file',(Join-Path $source 'home/.chezmoitemplates/windows/plan.json.tmpl'))) | ConvertFrom-Json
-    if ($plan.winget.Count -ne 18 -or @($plan.winget.id | Select-Object -Unique).Count -ne 18) { throw 'WinGet provider ownership is incomplete or duplicated.' }
-    if ($plan.winget.tool -contains 'grok' -or $plan.winget.tool -contains 'pi') { throw 'Fallback provider duplicated in WinGet.' }
-    $fallback = Get-Content -LiteralPath (Join-Path $destination '.config/mise/config.windows.toml') -Raw
-    if ($fallback -match '^ripgrep\s*=' -or $fallback -notmatch 'http:grok' -or $fallback -notmatch 'pipx:aider-chat') { throw 'Wrong fallback mise inventory.' }
+    if ($plan.bootstrap.Count -ne 4 -or $plan.official.Count -ne 6) { throw 'Wrong bootstrap/native ownership.' }
+    if ($plan.PSObject.Properties.Name -contains 'winget') { throw 'CLI inventory leaked into WinGet.' }
+    $keys = @($plan.mise.PSObject.Properties.Name)
+    if ($keys.Count -ne 17 -or $keys -notcontains 'pypi:aider-chat' -or $keys -notcontains 'github:anomalyco/opencode') { throw 'Wrong Windows mise inventory.' }
+    foreach ($key in $keys) {
+        if ($key -match 'codex|claude|grok|pi-coding-agent|kiro|antigravity') { throw "Official provider duplicated in mise: $key" }
+    }
+    foreach ($item in $plan.official) {
+        if ($item.url -notmatch '^https://' -or $item.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Unreviewed vendor script.' }
+    }
     foreach ($file in @((Join-Path $destination '.config/powershell/Dotfiles.ps1'),$profileFile)) {
         $tokens=$null;$errors=$null
         $null=[Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors)

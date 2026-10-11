@@ -1,13 +1,13 @@
+{{- $core := (include "dot_config/mise/config.toml" | fromToml).tools -}}
 {{- $ai := (include "dot_config/mise/config.ai-managed.toml" | fromToml).tools -}}
-{{- if ne (index $ai "grok") .windows.grok.version -}}
-{{- fail "Windows Grok checksum metadata must match the shared tool version." -}}
-{{- end -}}
-# Native Windows fallbacks. WinGet tools are deliberately absent.
+{{- $existingAi := (include "dot_config/mise/config.ai.toml" | fromToml).tools -}}
+{{- $node := (includeTemplate "tools/editor-node.toml.tmpl" . | fromToml).tools.node -}}
+# Native Windows: mise owns common CLI versions; vendor installers own other AI CLI.
 [tools]
-"npm:@earendil-works/pi-coding-agent" = { version = {{ (index $ai "npm:@earendil-works/pi-coding-agent").version | quote }}, allow_builds = false }
-"pipx:aider-chat" = { version = {{ (index $ai "pipx:aider-chat").version | quote }}, uvx = true, uvx_args = "--python 3.12" }
-[tools."http:grok"]
-version = {{ (index $ai "grok") | quote }}
-bin = "grok.exe"
-url = {{ .windows.grok.url | quote }}
-checksum = {{ .windows.grok.sha256 | quote }}
+{{ range $name := keys .windows.mise | sortAlpha -}}
+{{ (index $.windows.mise $name).backend | quote }} = {{ index $core $name | quote }}
+{{ end -}}
+"github:anomalyco/opencode" = {{ index $existingAi "opencode" | quote }}
+"pypi:aider-chat" = { version = {{ (index $ai "pipx:aider-chat").version | quote }}, uvx = true, uvx_args = "--python 3.12 --with pip" }
+node = {{ $node | quote }}
+zig = {{ .windows.editorCompilerVersion | quote }}

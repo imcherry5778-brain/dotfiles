@@ -9,6 +9,15 @@ if (Get-Command zoxide -CommandType Application -ErrorAction SilentlyContinue) {
 if (Get-Command carapace -CommandType Application -ErrorAction SilentlyContinue) {
     (& carapace _carapace powershell) | Out-String | Invoke-Expression
 }
+# Git for Windows supplies Yazi's recommended file.exe. Preserve a local override.
+if (-not $env:YAZI_FILE_ONE) {
+    $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue
+    if ($git) {
+        $gitRoot = Split-Path (Split-Path $git.Source -Parent) -Parent
+        $file = Join-Path $gitRoot 'usr/bin/file.exe'
+        if (Test-Path -LiteralPath $file -PathType Leaf) { $env:YAZI_FILE_ONE = $file }
+    }
+}
 $env:EDITOR = 'nvim'
 $env:VISUAL = 'nvim'
 
