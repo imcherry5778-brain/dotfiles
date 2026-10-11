@@ -31,6 +31,13 @@ def validate_profile(path):
     target = profile.get('platform')
     if any(type(value) is not bool for value in profile.get('features', {}).values()) or any(type(value) is not bool for value in profile.get('deployment', {}).values()):
         raise ValueError('Feature and deployment flags must be Booleans.')
+    if set(profile) != {'platform', 'deployment', 'features'}:
+        raise ValueError('Installation profile may not override machine paths or chezmoi runtime data.')
+    if target == 'fedora' and profile.get('features', {}).get('personal_fedora'):
+        expected = json.loads((ROOT / 'tests/profiles/fedora-personal.json').read_text())
+        if not matches_profile(profile, expected):
+            raise ValueError('Personal Fedora preserves its reviewed features, native providers and externals=false.')
+        return profile
     if target not in REVIEWED_PLATFORMS or profile.get('deployment') != {'enabled': True, 'externals': True}:
         raise ValueError('Explicit reviewed Fedora/Ubuntu/Arch/openSUSE enabled/externals profile required.')
     if target == 'fedora' and profile == json.loads((ROOT / 'tests/profiles/fedora-full.json').read_text()):
@@ -51,8 +58,6 @@ def validate_profile(path):
         raise ValueError('Managed AI migration is currently reviewed for Ubuntu/Arch/openSUSE only; preserve Fedora providers.')
     if optional['desktop'] and target not in DESKTOP_PLATFORMS:
         raise ValueError('Desktop profile installation is reviewed for Ubuntu/Arch/openSUSE only.')
-    if set(profile) != {'platform', 'deployment', 'features'}:
-        raise ValueError('Installation profile may not override machine paths or chezmoi runtime data.')
     return profile
 
 
@@ -90,6 +95,9 @@ def preflight(profile_path):
         declared = tomllib.loads(selection.read_text()).get('env', []) if selection.exists() else []
         if os.environ['MISE_ENV'].split(',') != declared:
             raise ValueError('MISE_ENV overrides the reviewed global environment selection.')
+    if profile['features'].get('personal_fedora'):
+        from lib.fedora import require_existing_environment
+        require_existing_environment(USER_HOME)
     # An existing personal environment must not be downgraded into this baseline.
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     if config.exists():
@@ -195,6 +203,11 @@ def apply_stage(stage, context):
                 assert_ai_providers(USER_HOME)
             if host.system == 'macos':
                 inspect_ghostty_configuration()
+            if profile['features'].get('personal_fedora'):
+                from lib.fedora import snapshot_providers
+                preserved = review / 'preserved-providers.json'
+                preserved.write_text(json.dumps(snapshot_providers(USER_HOME), indent=2) + '\n')
+                preserved.chmod(0o600)
             diff = reader.query('diff', '--exclude=scripts')
             (review / 'config.diff').write_text(diff); (review / 'config.diff').chmod(0o600)
             rows = reader.query('status', '--include=files,symlinks', '--path-style=relative').splitlines()
@@ -224,6 +237,10 @@ def apply_stage(stage, context):
                     install_apps()
             elif profile['features'].get('desktop', False):
                 install_desktop()
+        if profile['features'].get('personal_fedora'):
+            from lib.fedora import snapshot_providers
+            if snapshot_providers(USER_HOME) != json.loads((review / 'preserved-providers.json').read_text()):
+                raise ValueError('An existing native Fedora provider changed during installation.')
         evidence = verify_tools(mise) if host.system == 'macos' and profile['features'].get('desktop', False) else verify_mise_tools(mise)
         (review / 'cli-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
         (review / 'cli-verification.json').chmod(0o600)

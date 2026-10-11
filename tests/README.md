@@ -93,3 +93,7 @@ are recorded separately in docs/macos-application.md.
 ## chezmoi 중심 개편 검증
 
 `verify-automation.py --chezmoi /path/to/chezmoi`는 실제 init --apply와 apply를 격리 대상으로 실행한다. provider runner만 테스트 관찰기로 대체하고 production 전후 템플릿을 그대로 사용해 실행 순서, 반복 실행, diff/dry-run의 비실행, 부모 DB 잠금 중 별도 읽기 state 조회, 초기화 프로필 충돌 거부를 확인한다. hosted 설치 테스트는 production provider를 실제 실행하고 fd 실행 파일을 삭제한 뒤 일반 apply로 복구되는지 확인한다. Fedora full은 22개 CLI와 Ghostty·Orca를 포함하며 개인 Fedora 프로필과 분리한다. 설정 diff는 `--exclude=scripts`로 비교한다.
+
+## 기존 개인 Fedora 이행
+
+Fedora personal migration job은 기존 기기 선택·OMZ/tmux와 native provider fixtures를 준비한 뒤 automation만 활성화한다. 34개 실제 mise 도구의 설치·실행, 정상 fd 유지, 반복 적용, 삭제된 Ansible 실행 파일 복구, native fixture 경로/내용과 사용자 plugin 보존을 확인한다. Native fixture는 실제 AI/Conda/GUI 설치나 인증 검증이 아니다. `verify-installers.py`는 명령 별칭과 private version-probe 상태, personal externals=false 경계를 검사한다.

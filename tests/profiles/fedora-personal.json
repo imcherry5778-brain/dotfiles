@@ -1,0 +1,17 @@
+{
+  "platform": "fedora",
+  "deployment": {
+    "enabled": true,
+    "externals": false
+  },
+  "features": {
+    "ai": true,
+    "personal_fedora": true,
+    "conda": true,
+    "bitwarden_agent": true,
+    "delta": false,
+    "editor_web": true,
+    "managed_ai": false,
+    "desktop": false
+  }
+}

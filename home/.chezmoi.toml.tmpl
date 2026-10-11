@@ -42,10 +42,20 @@
 {{- $_ := mergeOverwrite . $profile -}}
 {{- end -}}
 {{- /* Reject explicit profile replacement before init can overwrite machine data. */ -}}
-{{- if and $initialized .chezmoi.config.data.deployment.enabled -}}
+{{- if and $initialized (dig "deployment" "enabled" false .chezmoi.config.data) -}}
 {{- $existing := .chezmoi.config.data -}}
 {{- range $section := list "platform" "features" "deployment" -}}
-{{- if ne (get $existing $section | toJson) (get $ $section | toJson) -}}
+{{- $old := get $existing $section -}}
+{{- $new := get $ $section -}}
+{{- if eq $section "features" -}}
+{{- $old = deepCopy $old -}}
+{{- $new = deepCopy $new -}}
+{{- range $optional := list "managed_ai" "desktop" -}}
+{{- if not (hasKey $old $optional) -}}{{- $_ := set $old $optional false -}}{{- end -}}
+{{- if not (hasKey $new $optional) -}}{{- $_ := set $new $optional false -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if ne ($old | toJson) ($new | toJson) -}}
 {{- fail (printf "Existing %s selection differs; review migration instead of replacing it." $section) -}}
 {{- end -}}
 {{- end -}}

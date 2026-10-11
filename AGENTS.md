@@ -14,3 +14,5 @@
 - Explain what actually ran versus what is planned. CI rendering does not establish desktop, authentication or all distribution compatibility.
 
 - Current authorized work refactors repository installation around chezmoi init --apply, retains provider/backup safeguards, adds portable Fedora full and missing-tool repair, and verifies only disposable hosted CI. No personal OS installation or configuration reapplication is authorized in this task. Preserve the local uncommitted OpenCode bump.
+
+- Current user authorization extends the existing personal Fedora migration: retain its 34 mise tools, native AI/apps, Conda, Bitwarden and externals=false; verify CI before fresh diff/targeted backup and real Fedora automation activation. Do not reapply other OS or commit the separate OpenCode edit.

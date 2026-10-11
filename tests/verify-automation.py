@@ -94,6 +94,22 @@ with pathlib.Path(sys.argv[2]).open('a') as stream:
         selected = tomllib.loads(preview_config.read_text())['data']
         assert selected['deployment']['enabled'] and selected['automation']['enabled']
         assert selected['features']['desktop'] and selected['features']['ai']
+        # Legacy active profiles can add absent optional=false fields without
+        # falsely appearing to change their installation owners.
+        legacy = scratch / 'legacy-config.toml'
+        legacy.write_text(config.read_text().replace('managed_ai = true', 'managed_ai = false').replace('desktop = true', 'desktop = false').replace('managed_ai = false\n', '').replace('desktop = false\n', ''))
+        old_profile = json.loads(json.dumps(profile))
+        old_profile['features']['managed_ai'] = False
+        old_profile['features']['desktop'] = False
+        old_override = scratch / 'legacy.json'; old_override.write_text(json.dumps(old_profile))
+        legacy_args = [chezmoi, '--source', source, '--destination', home, '--config', legacy,
+                       '--override-data-file', old_override, '--cache', scratch / 'legacy-cache',
+                       '--persistent-state', scratch / 'legacy-state']
+        run([*legacy_args, 'init'])
+        assert tomllib.loads(legacy.read_text())['data']['features']['managed_ai'] is False
+        old_profile['features']['managed_ai'] = True; old_override.write_text(json.dumps(old_profile))
+        rejected = subprocess.run(list(map(str,[*legacy_args,'init'])),capture_output=True,text=True)
+        assert rejected.returncode != 0 and 'selection differs' in rejected.stderr
         # An explicit profile replacement must fail before replacing machine config.
         original = config.read_bytes()
         profile['features']['desktop'] = False; override.write_text(json.dumps(profile))

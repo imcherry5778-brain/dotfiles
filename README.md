@@ -69,6 +69,7 @@ chezmoi diff --exclude=scripts
 - [Arch 실제 적용 결과·복구](docs/arch-application.md)
 - [Ubuntu 실제 적용 결과·복구](docs/ubuntu-application.md)
 - [Ubuntu 구성·적용 전 검토](docs/ubuntu-review.md)
+- [기존 개인 Fedora 자동화 이행](docs/fedora-automation.md)
 - [Fedora 실제 적용 결과](docs/fedora-application.md)
 - [Fedora 유지·변경·제외 판단](docs/fedora-review.md)
 - [설계와 폴더 규칙](docs/architecture.md)

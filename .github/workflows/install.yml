@@ -28,6 +28,10 @@ jobs:
           - platform: fedora
             name: Fedora 44 / full AI and native desktop apps
             full: "1"
+          - platform: fedora
+            name: Fedora 44 / personal migration and 34 mise CLI
+            full: "0"
+            personal: "1"
           - platform: ubuntu
             name: Ubuntu 26.04 / desktop CLI profile
             full: "0"
@@ -52,7 +56,8 @@ jobs:
       - name: Install, apply, run applications and repeat
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: docker run --rm --env GITHUB_TOKEN dotfiles-install-test
+          DOTFILES_PERSONAL_MIGRATION: ${{ matrix.personal || '0' }}
+        run: docker run --rm --env GITHUB_TOKEN --env DOTFILES_PERSONAL_MIGRATION dotfiles-install-test
 
   windows:
     name: Windows / native CLI install from PowerShell 5.1

@@ -56,7 +56,7 @@ class InstallerContracts(unittest.TestCase):
                 if arguments[1] == 'ls':
                     return json.dumps({'fd': [{'version': '10.4.2', 'installed': True}, {'version':'10.3.0','installed':True}]})
                 if arguments[1] == 'which':
-                    return str(home / 'missing-fd')
+                    return str(home / '.local/share/mise/installs/fd/10.4.2/missing-fd')
                 return ''
             with patch('lib.tools.Path.home', return_value=home), patch('lib.tools.run', side_effect=command) as execute:
                 reconcile_mise_tools('mise')
@@ -101,6 +101,51 @@ class InstallerContracts(unittest.TestCase):
                 path = Path(scratch) / 'profile.json'; path.write_text(json.dumps(profile))
                 with self.assertRaisesRegex(ValueError, 'Booleans'):
                     installer.validate_profile(path)
+
+    def test_existing_personal_fedora_is_supported_without_normalizing_owners(self):
+        expected = installer.validate_profile(ROOT / 'tests/profiles/fedora-personal.json')
+        old = json.loads(json.dumps(expected))
+        old['features'].pop('managed_ai'); old['features'].pop('desktop')
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'personal.json'; path.write_text(json.dumps(old))
+            self.assertEqual(installer.validate_profile(path), old)
+            self.assertTrue(installer.matches_profile(old, expected))
+            old['deployment']['externals'] = True; path.write_text(json.dumps(old))
+            with self.assertRaisesRegex(ValueError, 'externals=false'):
+                installer.validate_profile(path)
+
+    def test_personal_aliases_never_reinstall_healthy_owners(self):
+        from lib.tools import COMMANDS
+        for tool, command in {'ansible-core':'ansible', 'aws-cli':'aws', 'azure':'az',
+                              'bitwarden':'bw', 'mysql-client':'mysql', 'rust':'rustc'}.items():
+            self.assertEqual(COMMANDS[tool], command)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
+            (config / 'miserc.toml').write_text('env = []\n')
+            (config / 'config.toml').write_text('[tools]\n"ansible-core" = "2.16.19"\n')
+            executable = home / '.local/share/mise/installs/ansible-core/2.16.19/bin/ansible'
+            executable.parent.mkdir(parents=True); executable.touch()
+            def command(arguments, **options):
+                if arguments[1] == 'ls':
+                    return json.dumps({'ansible-core':[{'version':'2.16.19','installed':True}]})
+                if arguments[1] == 'which':
+                    self.assertEqual(arguments[-1], 'ansible')
+                    return str(executable)
+                return ''
+            with patch('lib.tools.Path.home', return_value=home), patch('lib.tools.run', side_effect=command) as execute:
+                reconcile_mise_tools('mise')
+            self.assertFalse(any('uninstall' in call.args[0] for call in execute.call_args_list))
+
+    def test_version_probes_isolate_state_and_never_contact_kubernetes(self):
+        from lib.tools import version_output
+        for command, variable in {'ansible':'ANSIBLE_LOCAL_TEMP', 'az':'AZURE_CONFIG_DIR',
+                                   'bw':'BITWARDENCLI_APPDATA_DIR', 'kubectl':'KUBECONFIG'}.items():
+            with patch('lib.tools.run', return_value='version') as execute:
+                self.assertEqual(version_output('mise',command), 'version')
+                call = execute.call_args
+                self.assertTrue(Path(call.kwargs['env'][variable]).is_absolute())
+                if command == 'kubectl':
+                    self.assertIn('--client=true', call.args[0])
 
     def test_fedora_full_is_portable_and_not_personal(self):
         profile = installer.validate_profile(ROOT / 'tests/profiles/fedora-full.json')
