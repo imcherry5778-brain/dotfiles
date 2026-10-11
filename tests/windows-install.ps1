@@ -34,7 +34,9 @@ $env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironm
 $processPolicy = $env:PSExecutionPolicyPreference
 try {
     $env:PSExecutionPolicyPreference = $null
-    & pwsh -Command 'if ((Get-ExecutionPolicy -Scope CurrentUser) -ne "RemoteSigned" -or -not (Get-Command z -ErrorAction SilentlyContinue)) { exit 1 }'
+    $profileCheck = 'if ((Get-ExecutionPolicy -Scope CurrentUser) -ne "RemoteSigned" -or -not (Get-Command z -ErrorAction SilentlyContinue)) { exit 1 }'
+    $encodedProfileCheck = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($profileCheck))
+    & pwsh -EncodedCommand $encodedProfileCheck
     if ($LASTEXITCODE -ne 0) { throw 'Future native PowerShell 7 profiles remain blocked.' }
 } finally { $env:PSExecutionPolicyPreference = $processPolicy }
 if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'Restricted') { throw 'Windows PowerShell 5.1 policy was changed.' }
