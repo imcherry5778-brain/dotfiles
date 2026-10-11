@@ -109,6 +109,12 @@ def install_orca(host):
     if not asset:
         raise ValueError(f"No reviewed Orca asset for {key}.")
     if host.distribution in {"arch", "opensuse-tumbleweed"}:
+        if host.distribution == "opensuse-tumbleweed":
+            # AppImage includes Electron, but its native GTK/NSS/audio libraries are OS-owned.
+            dependencies = ["libgtk-3-0", "libcups2", "libnotify4", "mozilla-nss", "libsecret-1-0", "libasound2"]
+            missing = [name for name in dependencies if not package_present(host, name)]
+            if missing:
+                install_opensuse_packages(missing)
         install_orca_appimage(asset, release["orca"]["version"])
         return
     with tempfile.TemporaryDirectory(prefix="dotfiles-orca-") as temporary:
