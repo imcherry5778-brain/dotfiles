@@ -29,7 +29,8 @@ if ($actualHash -ne $asset.sha256) {
   throw "Checksum mismatch: $($asset.name)"
 }
 if (-not $IsWindows) {
-  & chmod 755 -- $binary
+  # The absolute path cannot begin with '-'; BSD chmod treats a post-mode '--' as a file.
+  & chmod 755 $binary
   if ($LASTEXITCODE -ne 0) { throw 'Could not make the test binary executable.' }
 }
 Write-Output $binary
