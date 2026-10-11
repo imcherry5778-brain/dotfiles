@@ -36,3 +36,5 @@ Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안
 - `dot_local/private_share`는 `.local/share`의 기존 700을 유지한다. completion 파일의 최종 경로와 내용은 바뀌지 않는다.
 - `dot_config/private_gh/modify_private_config.yml`은 디렉터리 700 / 파일 600을 선언한다. 현재 Fedora gh 디렉터리 751은 적용 시 700으로 제한된다. chezmoi의 source 속성으로 개별 디렉터리 751을 표현할 수 없으므로, 별도 chmod 스크립트를 추가하지 않고 사용자 전용 권한을 선택했다. 그룹/다른 사용자 접근이 필요한 공유 gh 설정에는 이 선택을 그대로 적용하지 않는다.
 - `.claude`·`.codex` 디렉터리도 사용자 전용 700이며 Claude settings 파일은 600이다. 권한 변경은 source의 제안이고 현재 홈은 수정하지 않았다.
+
+`dot_local/bin/symlink_carapace.tmpl`는 기존 ~/.local/bin/carapace 진입점을 유지하면서 mise shim으로 연결한다. 수동 실행 파일은 Fedora 이전 시 비공개 복구본에 보존한다. Zsh의 mise activation을 거치지 않은 Bash/기존 스크립트도 같은 고정 버전으로 연결되며 install inventory는 mise 한 곳에만 둔다.

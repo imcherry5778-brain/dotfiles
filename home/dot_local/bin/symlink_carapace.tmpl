@@ -1,0 +1,1 @@
+{{ joinPath (dig "machine" "mise_data_dir" "" . | default (joinPath .chezmoi.homeDir ".local/share/mise")) "shims/carapace" }}
