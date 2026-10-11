@@ -21,3 +21,7 @@ miserc.local.toml
 **/hosts.yml
 *.pem
 *.key
+
+# Python installer/test bytecode
+__pycache__/
+*.py[cod]
