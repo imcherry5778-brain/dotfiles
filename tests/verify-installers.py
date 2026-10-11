@@ -9,12 +9,16 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from lib.desktop import desktop_plan, install_ghostty, install_orca, install_opensuse_packages
 from lib.runtime import Host, download_verified
+from lib.backup import backup_targets
+from lib.packages import prepare_packages
+from lib.macos import install_cask, install_native_cli
 from lib.appimage import install_orca_appimage, desktop_quote
 
 spec = importlib.util.spec_from_file_location("installer", ROOT / "scripts/unix/install.py")
@@ -23,6 +27,53 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_mac_existing_provider_is_never_replaced(self):
+        with patch('lib.macos.shutil.which', return_value='/existing/claude'), patch('lib.macos.run') as execute:
+            install_cask('claude-code', command='claude')
+            execute.assert_not_called()
+        with patch('lib.macos.shutil.which', side_effect=lambda command: '/existing/q' if command == 'q' else None), \
+             patch('lib.macos.install_cask'), patch('lib.macos.download_verified') as download:
+            with self.assertRaisesRegex(ValueError, 'provider review'):
+                install_native_cli()
+            download.assert_not_called()
+
+    def test_failed_download_leaves_no_partial_destination(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / 'installer.sh'
+            with patch('urllib.request.urlopen', side_effect=urllib.error.URLError('offline')):
+                with self.assertRaises(urllib.error.URLError):
+                    download_verified('https://publisher.invalid/install.sh', target, 'a' * 64)
+            self.assertFalse(target.exists())
+
+    def test_mac_profile_is_explicit_and_native(self):
+        profile = installer.validate_profile(ROOT / 'tests/profiles/macos-full.json')
+        self.assertTrue(profile['features']['macos_native'])
+        self.assertFalse(profile['features']['managed_ai'])
+        self.assertTrue(installer.matches_profile(profile, profile))
+
+    def test_backup_preserves_file_modes_symlinks_and_absence(self):
+        with tempfile.TemporaryDirectory(prefix='backup with spaces ') as temporary:
+            home = Path(temporary)
+            (home / 'existing').write_text('private retained')
+            (home / 'existing').chmod(0o600)
+            (home / 'link').symlink_to('existing')
+            backup = backup_targets(home, ['existing', 'link', 'absent'], 'reviewed diff', 'macos')
+            self.assertEqual((backup / 'files/existing').read_text(), 'private retained')
+            self.assertEqual((backup / 'files/existing').stat().st_mode & 0o777, 0o600)
+            self.assertEqual(os.readlink(backup / 'files/link'), 'existing')
+            self.assertEqual(backup.stat().st_mode & 0o777, 0o700)
+            entries = json.loads((backup / 'manifest.json').read_text())
+            self.assertFalse(next(e for e in entries if e['path'] == 'absent')['exists'])
+            with self.assertRaises(ValueError):
+                backup_targets(home, ['../outside'], '', 'macos')
+
+    def test_apt_inventory_is_standalone_and_no_upgrade(self):
+        with patch('lib.packages.administrative_command', side_effect=lambda args: args), patch('lib.packages.run') as execute:
+            prepare_packages(Host('linux', 'x64', 'ubuntu'), desktop=True)
+            commands = [call.args[0] for call in execute.call_args_list]
+            self.assertTrue(any(command[-3:] == ['bootstrap', 'packages', 'apply'] for command in commands))
+            self.assertFalse(any('upgrade' in command or 'prune' in command for command in commands))
+
     def test_existing_profiles_and_opt_in(self):
         for name in ["fedora-common", "ubuntu-desktop", "ubuntu-full", "arch-full", "opensuse-tumbleweed-full"]:
             profile = installer.validate_profile(ROOT / f"tests/profiles/{name}.json")

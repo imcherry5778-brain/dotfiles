@@ -168,7 +168,11 @@ def main():
     require(' ' in str(ROOT), 'Checkout path must exercise spaces.')
     require(TARGET in {'fedora', 'ubuntu', 'arch', 'opensuse-tumbleweed'}, 'Unexpected container distribution.')
     # Distribution useradd may copy OS shell defaults from /etc/skel; those are legitimate inputs.
-    require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.local/share/mise').exists(), 'Cold installation requires no prior dotfiles setup or tool caches.')
+    require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.config/mise').exists(), 'Cold installation requires no prior dotfiles selection.')
+    # Only the repository Python exists; OS shell/compiler dependencies were not baked into the image.
+    spec = importlib.util.spec_from_file_location('installer_packages', ROOT / 'scripts/unix/install.py')
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    module.prepare_packages(module.Host.detect(), desktop=TARGET != 'fedora')
     verify_guards()
     original_shell = pwd.getpwuid(os.getuid()).pw_shell
     native_original = None

@@ -1,5 +1,9 @@
 # Personal interactive shell. Installation and configuration application are explicit operations.
 typeset -U path PATH
+{{ if eq .platform "macos" -}}
+export PNPM_HOME="$HOME/Library/pnpm"
+path=(/opt/homebrew/bin /opt/homebrew/sbin "$HOME/.grok/bin" "$PNPM_HOME/bin" $path)
+{{ end -}}
 path=("$HOME/.local/bin" "${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims" $path)
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -59,7 +63,14 @@ if (( $+commands[nvim] )); then
   export SUDO_EDITOR
 fi
 {{ if .features.bitwarden_agent -}}
+{{ if eq .platform "macos" -}}
+# Keep a live forwarded agent; fall back to the existing Bitwarden socket.
+if [[ ! -S ${SSH_AUTH_SOCK:-} && -S {{ .machine.ssh_agent_socket | shellQuote }} ]]; then
+  export SSH_AUTH_SOCK={{ .machine.ssh_agent_socket | shellQuote }}
+fi
+{{ else -}}
 export SSH_AUTH_SOCK={{ .machine.ssh_agent_socket | shellQuote }}
+{{ end -}}
 {{ end -}}
 
 if (( $+widgets[history-substring-search-up] )); then
@@ -82,7 +93,7 @@ bindkey '^X^H' stash-to-history
 # Provider bindings must remain after conda/mamba initialization.
 [[ -r "$HOME/.config/shell-completion/zsh-init.zsh" ]] && source "$HOME/.config/shell-completion/zsh-init.zsh"
 {{ end -}}
-{{ if has .platform (list "ubuntu" "arch" "opensuse-tumbleweed") -}}
+{{ if has .platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos") -}}
 # Keep distribution/plugin completions; add carapace only for missing providers.
 [[ -r "$HOME/.config/shell/zsh-completion.zsh" ]] && source "$HOME/.config/shell/zsh-completion.zsh"
 {{ end -}}

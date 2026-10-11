@@ -1,0 +1,6 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $text := .chezmoi.stdin -}}
+{{- if not (regexMatch `(?m)^\s*font-family\s*=` $text) -}}
+{{- $text = printf "%s\nfont-family = D2Coding\n" (trimSuffix "\n" $text) -}}
+{{- end -}}
+{{- $text -}}

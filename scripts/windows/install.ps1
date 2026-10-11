@@ -83,8 +83,10 @@ function Get-Selection {
     param([string] $Path)
     $selection = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
     $expected = Get-Content -LiteralPath (Join-Path $repo 'tests/profiles/windows-full.json') -Raw | ConvertFrom-Json
+    if ($selection.features.desktop -isnot [bool]) { throw 'desktop must be a Boolean.' }
+    $expected.features.desktop = $selection.features.desktop
     if (($selection | ConvertTo-Json -Depth 10 -Compress) -ne ($expected | ConvertTo-Json -Depth 10 -Compress)) {
-        throw 'Only the explicit reviewed Windows full profile is supported.'
+        throw 'Only the reviewed Windows full or CLI profile is supported.'
     }
     return $selection
 }
@@ -163,9 +165,9 @@ if ($Mode -eq 'DesktopPlan') {
     return
 }
 if ($Mode -eq 'DesktopApply') { Install-NativeDesktop; return }
-if ($Mode -eq 'Bootstrap') {
+if ($Mode -in @('Bootstrap','Apply')) {
     foreach ($package in $catalog.bootstrap) { Install-WinGetPackage $package }
-    return
+    if ($Mode -eq 'Bootstrap') { return }
 }
 if (-not $ProfilePath) { $ProfilePath = Join-Path $repo 'tests/profiles/windows-full.json' }
 $selection = Get-MachineData (Get-Selection $ProfilePath)

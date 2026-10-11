@@ -14,12 +14,15 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[2]
 USER_HOME = Path.home()
 DESKTOP_PLATFORMS = {'ubuntu', 'arch', 'opensuse-tumbleweed'}
-REVIEWED_PLATFORMS = {'fedora', *DESKTOP_PLATFORMS}
+REVIEWED_PLATFORMS = {'fedora', 'macos', *DESKTOP_PLATFORMS}
 # Installer imports must not leave bytecode in the source checkout, especially as root.
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "scripts"))
 from lib.runtime import Host, download_verified, run
 from lib.desktop import desktop_plan, install_desktop
+from lib.packages import prepare_packages
+from lib.backup import backup_targets
+from lib.macos import install_native_cli, install_apps, verify_tools
 
 
 def validate_profile(path):
@@ -27,6 +30,11 @@ def validate_profile(path):
     target = profile.get('platform')
     if target not in REVIEWED_PLATFORMS or profile.get('deployment') != {'enabled': True, 'externals': True}:
         raise ValueError('Explicit reviewed Fedora/Ubuntu/Arch/openSUSE enabled/externals profile required.')
+    if target == 'macos':
+        expected = json.loads((ROOT / 'tests/profiles/macos-full.json').read_text())
+        if profile != expected:
+            raise ValueError('Only the reviewed native Mac full profile is supported.')
+        return profile
     features = profile.get('features', {})
     required = {'ai', 'personal_fedora', 'conda', 'bitwarden_agent', 'delta', 'editor_web'}
     expected = {key: target in DESKTOP_PLATFORMS and key in {'ai', 'editor_web'} for key in required}
@@ -57,35 +65,24 @@ def matches_profile(data, profile):
 
 def preflight(profile_path):
     profile = validate_profile(profile_path)
-    if platform.system() != 'Linux':
-        raise ValueError('Real configuration installation is currently reviewed for Linux only.')
+    host = Host.detect()
+    if (host.system, host.architecture) not in {('linux', 'x64'), ('macos', 'arm64')}:
+        raise ValueError('Supported: reviewed Linux x86_64 or Apple Silicon Mac.')
     import pwd
     if os.geteuid() == 0 or USER_HOME != Path(pwd.getpwuid(os.getuid()).pw_dir):
         raise ValueError('Run as a regular user with their actual login home.')
-    if platform.system() != 'Linux' or platform.machine() != 'x86_64':
-        raise ValueError('Installation currently supports reviewed Fedora/Ubuntu/Arch/openSUSE x86_64 profiles only.')
-    release = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
-    if release.get('ID', '').strip('"') != profile['platform']:
+    if (host.distribution if host.system == 'linux' else host.system) != profile['platform']:
         raise ValueError('Installation profile must match the actual OS.')
-    if profile['platform'] == 'ubuntu' and release.get('VERSION_ID', '').strip('"') != '26.04':
+    if host.distribution == 'ubuntu' and platform.freedesktop_os_release().get('VERSION_ID') != '26.04':
         raise ValueError('Ubuntu installation is reviewed for 26.04 only.')
     if any(os.environ.get(key) for key in ['MISE_ENV', 'MISE_CONFIG_DIR', 'MISE_GLOBAL_CONFIG_FILE',
                                           'MISE_DATA_DIR', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME']):
         raise ValueError('Baseline installer requires default user config/data locations; do not redirect HOME or XDG.')
-    for binary in ['git', 'zsh', 'tmux', 'tar', 'gzip', 'unzip', 'perl', 'sed', 'awk']:
-        if not shutil.which(binary):
-            raise ValueError(f'Missing OS prerequisite: {binary}. Installer does not run sudo or dnf.')
-    if profile['platform'] in DESKTOP_PLATFORMS:
-        for binary in ['curl', 'wl-copy', 'gcc', 'make']:
-            if not shutil.which(binary):
-                raise ValueError(f'Missing desktop OS prerequisite: {binary}. Prepare OS packages separately.')
-        if not Path('/usr/share/bash-completion/bash_completion').is_file():
-            raise ValueError('Desktop bash-completion is required to preserve native providers.')
     # An existing personal environment must not be downgraded into this baseline.
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     if config.exists():
         document = tomllib.loads(config.read_text())
-        if profile['platform'] in DESKTOP_PLATFORMS and document.get('umask') != 0o077:
+        if profile['platform'] in DESKTOP_PLATFORMS | {'macos'} and document.get('umask') != 0o077:
             raise ValueError('Existing desktop chezmoi permissions policy differs; review it before installation.')
         data = document.get('data', {})
         if not matches_profile(data, profile):
@@ -99,10 +96,10 @@ def pinned_binary(name, metadata_path, repository):
     existing = shutil.which(name)
     if existing:
         output = run([existing, '--version'], capture=True)
-        if expected not in output.split()[0:3]:
-            # chezmoi reports vX.Y.Z or X.Y.Z, depending on its build.
-            if not any(word.lstrip('v').rstrip(',') == expected for word in output.split()[:4]):
-                raise ValueError(f'Existing {name} does not match reviewed bootstrap version {expected}; no upgrade performed.')
+        import re
+        match = re.search(r'\b(\d+\.\d+\.\d+)\b', output)
+        if not match or tuple(map(int, match[1].split('.'))) < tuple(map(int, expected.split('.'))):
+            raise ValueError(f'Existing {name} is below {expected}; update through its current provider.')
         return Path(existing)
     asset = release['assets']['linux-amd64']
     directory = USER_HOME / '.local/bin'
@@ -122,45 +119,82 @@ def pinned_binary(name, metadata_path, repository):
 
 def install(profile_path):
     profile = preflight(profile_path)
+    host = Host.detect()
+    prepare_packages(host, desktop=profile['platform'] in DESKTOP_PLATFORMS)
     mise = pinned_binary('mise', ROOT / 'scripts/mise-release.json', 'jdx/mise')
     chezmoi = pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
-    os.environ['PATH'] = str(USER_HOME / '.local/bin') + os.pathsep + os.environ['PATH']
+    paths = [USER_HOME / '.local/bin']
+    if host.system == 'macos':
+        paths.extend([Path('/opt/homebrew/bin'), USER_HOME / '.grok/bin'])
+    os.environ['PATH'] = os.pathsep.join(map(str, paths)) + os.pathsep + os.environ['PATH']
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
-    base = [chezmoi, '--source', ROOT, '--config', config, '--no-tty', '--no-pager']
-    print('Initialize explicit machine selection', flush=True)
-    # chezmoi 2.73 init does not consume override-data-file for its config template.
-    # Render with the documented execute-template --init data path, then persist once.
-    if not config.exists():
-        rendered = run(base + ['--override-data-file', profile_path, 'execute-template',
-                               '--init', '--file', ROOT / 'home/.chezmoi.toml.tmpl'], capture=True)
-        selected = tomllib.loads(rendered)['data']
-        if not matches_profile(selected, profile):
-            raise ValueError('Generated machine config does not match the explicit profile.')
-        config.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(mode='w', dir=config.parent, delete=False) as target:
-            target.write(rendered)
-            temporary_config = Path(target.name)
-        temporary_config.chmod(0o600)
-        temporary_config.replace(config)
-    run(base + ['init', '--config-path', config])
-    selected = json.loads(run(base + ['data', '--format=json'], capture=True))
+    review = USER_HOME / '.local/state/dotfiles/review' / profile['platform']
+    review.mkdir(parents=True, mode=0o700, exist_ok=True)
+    review.chmod(0o700)
+    preview = review / 'preview.toml'
+    base = [chezmoi, '--source', ROOT, '--config', preview, '--no-tty', '--no-pager']
+    rendered = run(base + ['--override-data-file', profile_path, 'execute-template',
+                           '--init', '--file', ROOT / 'home/.chezmoi.toml.tmpl'], capture=True)
+    if not matches_profile(tomllib.loads(rendered)['data'], profile):
+        raise ValueError('Generated machine config does not match the explicit profile.')
+    preview.write_text(rendered)
+    preview.chmod(0o600)
+    managed = set(run(base + ['managed', '--include=files,symlinks', '--path-style=relative'], capture=True).splitlines())
+    required = ['.zshrc', '.gitconfig', '.config/gh/config.yml', '.config/mise/config.toml',
+                '.config/mise/miserc.toml', '.tmux.conf', '.tmux.conf.local', '.config/nvim/init.lua']
+    if host.system == 'linux':
+        required.append('.bashrc')
+    for target in required:
+        if target not in managed:
+            raise ValueError(f'Empty or incomplete deployment: {target} is not managed.')
+    diff = run(base + ['diff'], capture=True)
+    # Keep the complete private review, without dumping thousands of vendor files.
+    (review / 'config.diff').write_text(diff)
+    (review / 'config.diff').chmod(0o600)
+    print(f'Fresh diff: {review / "config.diff"}', flush=True)
+    changed = [line.removeprefix('diff --git ') for line in diff.splitlines() if line.startswith('diff --git ')]
+    print(f'{len(changed)} changed files; configuration targets:', flush=True)
+    own_targets = [USER_HOME / target for target in managed
+                   if not target.startswith(('.oh-my-zsh/', '.tmux/', '.local/share/tmux/'))]
+    print(run(base + ['diff', *sorted(own_targets)], capture=True), flush=True)
+    extras = {'.config/chezmoi/chezmoi.toml', '.grok/config.toml'}
+    if host.system == 'macos':
+        extras.update({'.zprofile', '.bashrc', '.bash_profile'})
+    backup = backup_targets(USER_HOME, managed | extras, diff, profile['platform'])
+    print(f'Private targeted backup: {backup}', flush=True)
+    config.parent.mkdir(parents=True, exist_ok=True)
+    if config.exists():
+        # Keep machine-specific data from the reviewed matching selection.
+        actual = [chezmoi, '--source', ROOT, '--config', config, '--no-tty', '--no-pager']
+    else:
+        shutil.copy2(preview, config)
+        config.chmod(0o600)
+        actual = [chezmoi, '--source', ROOT, '--config', config, '--no-tty', '--no-pager']
+    run(actual + ['init', '--config-path', config])
+    selected = json.loads(run(actual + ['data', '--format=json'], capture=True))
     if not matches_profile(selected, profile):
         raise ValueError('Persisted selection differs from the explicit profile.')
-    managed = set(run(base + ['managed', '--include=files,symlinks', '--path-style=relative'], capture=True).splitlines())
-    for required in ['.zshrc', '.bashrc', '.gitconfig', '.config/gh/config.yml', '.config/mise/config.toml',
-                     '.config/mise/miserc.toml', '.tmux.conf', '.tmux.conf.local', '.config/nvim/init.lua']:
-        if required not in managed:
-            raise ValueError(f'Empty or incomplete deployment: {required} is not managed.')
-    # Materialize the single tool inventory first; shell configs wait for installed tools.
-    run(base + ['apply', USER_HOME / '.config/mise'])
-    print('Install tools selected by the rendered global mise config', flush=True)
+    run(actual + ['--force', 'apply', USER_HOME / '.config/mise'])
+    # Run from the real home, never inherit repository-only installer Python as a global CLI.
     run([mise, 'install', '--yes'])
-    print('Apply configuration and pinned external plugins', flush=True)
-    run(base + ['apply'])
-    run(base + ['verify'])
-    if profile['features'].get('desktop', False):
+    if host.system == 'macos':
+        install_native_cli()
+        if profile['features'].get('desktop', False):
+            install_apps()
+    elif profile['features'].get('desktop', False):
         install_desktop()
-    print(f"{profile['platform']} reviewed CLI profile applied; authentication and login shell were not configured.", flush=True)
+    final_diff = run(actual + ['diff'], capture=True)
+    (backup / 'after-install.diff').write_text(final_diff)
+    (backup / 'after-install.diff').chmod(0o600)
+    run(actual + ['--force', 'apply'])
+    run(actual + ['verify'])
+    if run(actual + ['diff'], capture=True).strip():
+        raise ValueError('Configuration still differs after installation.')
+    if host.system == 'macos':
+        evidence = verify_tools(mise)
+        (review / 'cli-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
+        (review / 'cli-verification.json').chmod(0o600)
+    print(f"{profile['platform']} configuration and tools applied. Authentication and desktop verification remain separate.", flush=True)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@
 - `scripts/desktop-release.json`: Orca 공식 릴리스 자산과 검증할 SHA-256의 단일 소유자다. Ubuntu/Fedora 패키지와 Arch/openSUSE 공용 AppImage는 1.4.224로 고정한다. macOS는 공식 Homebrew cask, Windows는 공식 설치 프로그램을 사용한다.
 - `home/dot_config/mise/config.ai-managed.toml`: 추가 AI CLI 7개의 버전·공급자 단일 소유자다. 기존 shared OpenCode는 `config.ai.toml`에 그대로 둔다. CLI 버전을 별도 설치 목록에 중복 선언하지 않는다.
 
-새 `managed_ai`·`desktop` 선택은 기본 false다. Ubuntu·Arch·openSUSE full profile만 켠다. Fedora 기존 34개 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 실제 config 배포는 계속 Fedora/Ubuntu/Arch/openSUSE만 지원한다. macOS/Windows native 앱의 계획·분기는 재사용하지만 이 기기에서 실행하지 않았다. Kiro mise archive는 현재 Linux x64/arm64만 구현되어 있으므로 전체 Windows/macOS AI 배포 완료로 표시하지 않는다.
+새 `managed_ai`·`desktop` 선택은 기본 false다. Ubuntu·Arch·openSUSE full profile만 켠다. Fedora 기존 34개 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 이 표의 AI mise archive는 Linux용이다. Windows는 native provider 계약과 실제 적용 기록을, Mac은 Mac 전용 mise/Homebrew/공식 설치기 계약을 따른다. 서로의 provider를 일괄 배포하지 않는다. [최초 설치 계약](install.md), [Windows](windows-application.md), [Mac](macos-application.md)을 확인한다.
 
 ## 공식 공급자 판단
 
@@ -39,7 +39,7 @@ sh install.sh --apply --profile tests/profiles/ubuntu-full.json
 
 GUI 앱에는 OS 패키지 관리자 권한이 필요하다. 사용자 설정·mise 설치는 일반 사용자로 실행한다. 운영자가 시스템 패키지와 사용자 단계를 나눠 실행하려면 `sh install.sh --desktop-only`를 별도로 사용한다. 이 명령은 홈 설정을 배포하지 않는다. Ubuntu에서는 Ghostty 공식 패키지와 공식 Orca .deb만 설치하며 apt의 --no-remove로 기존 패키지 제거를 막는다.
 
-PowerShell은 `./install.ps1 -Mode DesktopPlan` / `DesktopApply`로 동일한 Python helper를 호출한다. Python 3.11+가 필요하고 WSL은 필요하지 않다. Windows Orca는 미검증 silent flag를 넣지 않아 공식 installer의 사용자 UI가 남는다. Windows Ghostty는 지원 불가를 명시하고 다른 앱을 임의 설치하지 않는다.
+Windows의 `./install.ps1 -Mode DesktopPlan` / `DesktopApply`는 native PowerShell 구현을 사용하며 Python이나 WSL이 필요하지 않다. Linux/Mac 전체 설치기의 Python은 mise가 준비한다. Windows Orca는 미검증 silent flag를 넣지 않아 공식 installer의 사용자 UI가 남는다. Windows Ghostty는 지원 불가를 명시하고 다른 앱을 임의 설치하지 않는다.
 
 Fedora Ghostty 설정에는 활성 옵션이 없고 주석만 있었다. 따라서 내용 없는 Ghostty config를 새로 배포하지 않고 Ubuntu도 기본값을 사용한다. 설치 뒤 사용자 설정이나 로그인 데이터를 저장소에 자동 수집하지 않는다.
 
@@ -48,3 +48,5 @@ Fedora Ghostty 설정에는 활성 옵션이 없고 주석만 있었다. 따라�
 오프라인 계약 검사는 OS 분기·프로필 경계·기존 설치 보존·다운로드 체크섬·공백 경로·기존 파일 보존을 확인한다. hosted Installation checks에는 기존 Fedora 13개 / Ubuntu 15개 외에 Ubuntu·Arch·openSUSE full 22개 CLI + Ghostty·Orca 패키지/AppImage의 cold install·실행·반복 적용을 추가했다. GUI 창·인증·모든 OS의 실제 실행은 CI 성공으로 주장하지 않는다.
 
 openSUSE는 기존 OSS 저장소의 Ghostty를 사용한다. Orca의 공식 AppImage를 사용자 경로에 풀어 실행하는 구현과 체크섬 메타데이터는 Arch와 공유한다. 새 설정 배포·기본값 활성화·서명 예외는 앱 설치에 포함하지 않는다. Zypper 단계는 기존 패키지·vendor를 유지하는 순수 추가 계획만 허용한다.
+
+공통 필수 패키지는 `scripts/lib/packages.py`, 대상별 개인 백업은 `scripts/lib/backup.py`, Mac native provider는 `scripts/lib/macos.py`와 `scripts/macos-providers.json`이 담당한다. 저장소 `mise.toml`의 Python은 설치기용이며 global CLI inventory에 중복 선언하지 않는다.

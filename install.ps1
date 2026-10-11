@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
   [ValidateSet('Plan', 'Check', 'Bootstrap', 'Diff', 'Apply', 'Verify', 'DesktopPlan', 'DesktopApply')]
@@ -9,6 +9,35 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
+$isNativeWindows = $env:OS -eq 'Windows_NT'
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+  if ($Mode -in @('Plan','Check','DesktopPlan')) {
+    Write-Output 'PowerShell 5.1 entry point: Apply/Bootstrap prepares PowerShell 7 through WinGet, then continues.'
+    return
+  }
+  if (-not $isNativeWindows) { throw 'PowerShell 7 is required on non-Windows platforms.' }
+  $pwsh = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue
+  if (-not $pwsh) {
+    if (-not (Get-Command winget -CommandType Application -ErrorAction SilentlyContinue)) {
+      throw 'Install or update Microsoft App Installer to enable WinGet, then repeat this command.'
+    }
+    $catalog = (Get-Content -LiteralPath (Join-Path $repoRoot 'home/.chezmoidata/windows.json') -Raw | ConvertFrom-Json).windows
+    $package = $catalog.bootstrap | Where-Object command -eq 'pwsh'
+    & winget install --id $package.id --exact --version $package.version --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
+    if ($LASTEXITCODE -ne 0) { throw "PowerShell installation failed: $LASTEXITCODE" }
+    $env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'))
+    $pwsh = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+      $candidate = Join-Path $env:ProgramFiles 'PowerShell/7/pwsh.exe'
+      if (-not (Test-Path -LiteralPath $candidate)) { throw 'PowerShell 7 command is unavailable after installation.' }
+      $pwsh = @{Source=$candidate}
+    }
+  }
+  $arguments = @('-NoProfile','-File',(Join-Path $repoRoot 'install.ps1'),'-Mode',$Mode)
+  if ($ProfilePath) { $arguments += @('-ProfilePath',$ProfilePath) }
+  & $pwsh.Source @arguments
+  exit $LASTEXITCODE
+}
 
 if ($IsWindows -and $Mode -ne 'Check') {
   & (Join-Path $repoRoot 'scripts/windows/install.ps1') -Mode $Mode -ProfilePath $ProfilePath

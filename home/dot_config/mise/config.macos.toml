@@ -1,0 +1,7 @@
+# macOS-only tools. Native AI providers are declared in scripts/macos-providers.json.
+[tools]
+node = "24.21.0"
+pnpm = "12.9.1"
+tmux = "3.7c"
+"npm:@earendil-works/pi-coding-agent" = { version = "1.1.0", allow_builds = false }
+"pipx:aider-chat" = { version = "0.86.2", uvx = true, uvx_args = "--python 3.12" }

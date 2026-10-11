@@ -6,13 +6,13 @@ case "${1:---plan}" in
   --plan)
     [ "$#" -le 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
     printf '%s\n' \
-      'dotfiles: reviewed Fedora/Ubuntu/Arch CLI installer; deployment disabled by default' \
+      'dotfiles: Linux/macOS explicit installer; deployment disabled by default' \
       "Repository: $repo_root" \
       '1. Review platform, current configuration and installation ownership.' \
-      '2. Prepare Git, mise and chezmoi in a separately authorized bootstrap.' \
-      '3. Initialize machine data and review a configuration diff.' \
-      '4. Prepare selected tool prerequisites, then apply only the separately reviewed migration.' \
-      'Use --apply --profile FILE only for a separately reviewed Fedora common or Ubuntu/Arch desktop CLI installation.'
+      '2. Prepare OS prerequisites and mise-managed Python automatically during --apply.' \
+      '3. Review a fresh configuration diff and create a private targeted backup.' \
+      '4. Install missing CLI/apps, apply configuration and verify actual execution.' \
+      'Use --apply --profile FILE for the reviewed platform profile; existing providers are preserved.'
     ;;
   --check)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
@@ -20,10 +20,18 @@ case "${1:---plan}" in
     ;;
   --apply)
     [ "$#" -eq 3 ] && [ "$2" = '--profile' ] || { printf '%s\n' 'Usage: sh install.sh --apply --profile FILE' >&2; exit 2; }
-    command -v python3 >/dev/null 2>&1 || { printf '%s\n' 'Python 3.11+ is required for explicit installation.' >&2; exit 1; }
-    exec python3 "$repo_root/scripts/unix/install.py" --profile "$3"
+    [ -f "$3" ] || { printf '%s\n' 'Profile file not found.' >&2; exit 2; }
+    . "$repo_root/scripts/unix/bootstrap.sh"
+    bootstrap_runtime "$repo_root"
+    exec "$bootstrap_mise" -C "$repo_root" exec -- python "$repo_root/scripts/unix/install.py" --profile "$3"
     ;;
-  --desktop-plan|--desktop-only)
+  --desktop-only)
+    [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
+    . "$repo_root/scripts/unix/bootstrap.sh"
+    bootstrap_runtime "$repo_root"
+    exec "$bootstrap_mise" -C "$repo_root" exec -- python "$repo_root/scripts/unix/install.py" --desktop-only
+    ;;
+  --desktop-plan)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
     exec python3 "$repo_root/scripts/unix/install.py" "$1"
     ;;

@@ -1,5 +1,5 @@
 # Reviewed Fedora/Ubuntu sources. Explicit opt-in is required even for preview.
-{{ if or (not .deployment.enabled) (and (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) (not (and (eq .platform "windows") (dig "features" "windows_native" false .)))) }}
+{{ if or (not .deployment.enabled) (and (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) (not (and (eq .platform "windows") (dig "features" "windows_native" false .))) (not (and (eq .platform "macos") (dig "features" "macos_native" false .)))) }}
 **
 {{ else if eq .platform "windows" }}
 # Native Windows has its own paths and providers; never deploy Unix shell files.
@@ -38,8 +38,14 @@ Documents/**
 {{ end }}
 README.md
 **/README.md
+{{ if ne .platform "macos" }}
+.config/mise/config.macos.toml
+.zprofile
 .config/ghostty
 .config/ghostty/**
+{{ else }}
+.bashrc
+{{ end }}
 .config/powershell
 .config/powershell/**
 {{ if not .features.personal_fedora }}
@@ -63,7 +69,7 @@ README.md
 {{ end }}
 {{ end }}
 
-{{ if not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed")) }}
+{{ if not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos")) }}
 .config/shell
 .config/shell/**
 {{ end }}
@@ -74,4 +80,12 @@ README.md
 
 {{ if or (not (has .platform (list "arch" "opensuse-tumbleweed"))) (not .features.editor_web) }}
 .config/mise/config.editor-web.toml
+{{ end }}
+
+{{ if eq .platform "macos" }}
+.config/shell/bashrc.bash
+{{ end }}
+{{ if eq .platform "windows" }}
+.zprofile
+.config/mise/config.macos.toml
 {{ end }}

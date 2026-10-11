@@ -3,9 +3,9 @@ name: Installation checks
 on:
   push:
     branches: [main]
-    paths: ['home/**', '.chezmoiroot', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+    paths: ['home/**', '.chezmoiroot', 'install.sh', 'install.ps1', 'mise.toml', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
   pull_request:
-    paths: ['home/**', '.chezmoiroot', 'install.sh', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
+    paths: ['home/**', '.chezmoiroot', 'install.sh', 'install.ps1', 'mise.toml', 'scripts/**', 'tests/**', '.dockerignore', '.github/workflows/install.yml']
   workflow_dispatch:
 
 permissions:
@@ -50,3 +50,32 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: docker run --rm --env GITHUB_TOKEN dotfiles-install-test
+
+  windows:
+    name: Windows / native CLI install from PowerShell 5.1
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          path: dotfiles source
+      - name: Install and verify twice in the real disposable runner home
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: '& "./dotfiles source/tests/windows-install.ps1"'
+
+  macos:
+    name: macOS ARM64 / actual installation
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          path: dotfiles source
+      - name: Install and verify twice in the real disposable runner home
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: sh "./dotfiles source/tests/macos-install.sh"

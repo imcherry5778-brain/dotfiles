@@ -1,6 +1,8 @@
 {{ if eq .platform "windows" -}}
 # Windows common CLI and runtimes; native AI installers have separate ownership.
 env = ["windows"]
+{{ else if eq .platform "macos" -}}
+env = ["ai", "macos"]
 {{ else -}}
 {{- $envs := list -}}
 {{- if .features.ai -}}{{- $envs = append $envs "ai" -}}{{- end -}}

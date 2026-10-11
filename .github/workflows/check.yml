@@ -59,3 +59,7 @@ jobs:
           python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform arch
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform opensuse-tumbleweed
+
+      - name: Verify Mac configuration in an isolated destination
+        if: runner.os != 'Windows'
+        run: python3 ./tests/verify-macos.py --chezmoi $env:CHEZMOI_BIN
