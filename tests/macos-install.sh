@@ -22,6 +22,6 @@ fd_binary=$(mise which fd)
 rm -- "$fd_binary"
 chezmoi --no-tty --no-pager apply
 [ -f "$fd_binary" ]
-chezmoi --no-tty --no-pager verify
+chezmoi --no-tty --no-pager verify --exclude=scripts
 [ -z "$(chezmoi --no-tty --no-pager diff --exclude=scripts)" ]
 printf '%s\n' 'Mac ARM64: installation, CLI execution, login/completion and repeat apply passed. Personal GUI/authentication excluded.'

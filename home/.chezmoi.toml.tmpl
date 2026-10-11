@@ -33,16 +33,16 @@
 {{- end -}}
 {{- /* init without --apply remains a configuration-only preview. On a fresh
        native init --apply, select the portable full profile automatically.
-       Existing machine selections remain unchanged and automation stays opt-in. */ -}}
+       Active machine selections remain unchanged; a disabled preview can opt in. */ -}}
 {{- $initialized := and (hasKey . "initialized") .initialized -}}
-{{- $install := and (eq .chezmoi.command "init") (has "--apply" .chezmoi.args) (not $initialized) -}}
+{{- $install := and (eq .chezmoi.command "init") (has "--apply" .chezmoi.args) (not (and $initialized .deployment.enabled)) -}}
 {{- $automation := or (dig "automation" "enabled" false .) $install -}}
 {{- if and $install (not .deployment.enabled) -}}
 {{- $profile := include (joinPath .chezmoi.workingTree "tests" "profiles" (printf "%s-full.json" $platform)) | fromJson -}}
 {{- $_ := mergeOverwrite . $profile -}}
 {{- end -}}
 {{- /* Reject explicit profile replacement before init can overwrite machine data. */ -}}
-{{- if $initialized -}}
+{{- if and $initialized .chezmoi.config.data.deployment.enabled -}}
 {{- $existing := .chezmoi.config.data -}}
 {{- range $section := list "platform" "features" "deployment" -}}
 {{- if ne (get $existing $section | toJson) (get $ $section | toJson) -}}

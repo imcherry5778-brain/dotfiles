@@ -2,7 +2,7 @@
 
 `imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를 관리한다. 공통 CLI는 mise로 관리하고, Windows의 PowerShell·Git·mise·chezmoi는 WinGet으로 준비한다. AI CLI는 도구별 공식 설치 경로를 사용한다.
 
-**현재 단계: Mac ARM64 적용과 전체 hosted CI 보완 완료.** Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. Windows 실제 결과는 별도 문서에 기록되어 있다. Mac의 24개 CLI·Ghostty·Orca·셸·편집기·클립보드·재실행 결과와 개인 백업은 [Mac 적용 기록](docs/macos-application.md)에 기록했다.
+**현재 단계: chezmoi 중심 설치 흐름 개편과 hosted CI 검증.** 기존 OS 적용 결과는 다음과 같다. Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. Windows 실제 결과는 별도 문서에 기록되어 있다. Mac의 24개 CLI·Ghostty·Orca·셸·편집기·클립보드·재실행 결과와 개인 백업은 [Mac 적용 기록](docs/macos-application.md)에 기록했다.
 
 ## 위치와 구조
 
@@ -24,7 +24,7 @@ dotfiles/
 └── .github/workflows/        # 3개 OS 기반 검증 + Linux/Windows/Mac 설치 검증
 ```
 
-`chezmoi init`만 실행하면 배포가 비활성인 검토용 설정을 만든다. 새 기기의 `chezmoi init --apply`는 해당 OS의 portable full 프로필과 설치 자동화를 선택한다. 기존 기기의 선택은 그대로 유지하며 자동화를 암묵적으로 활성화하지 않는다. 개인 Fedora·Ubuntu·Arch·openSUSE에서는 각 OS의 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
+`chezmoi init`만 실행하면 배포가 비활성인 검토용 설정을 만든다. 새 기기의 `chezmoi init --apply`는 해당 OS의 portable full 프로필과 설치 자동화를 선택한다. 이미 배포가 활성화된 기기의 선택과 자동화 상태는 유지한다. 비활성 검토 설정에서 명시적으로 `init --apply`를 실행하면 full 설치로 전환한다. 개인 Fedora·Ubuntu·Arch·openSUSE에서는 각 OS의 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
 
 ## 지금 실행할 수 있는 것
 

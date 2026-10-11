@@ -62,7 +62,7 @@ class InstallerContracts(unittest.TestCase):
             self.assertEqual((home / 'vendor-auth-fixture').read_text(), 'retained fixture')
 
     def test_ai_provider_conflicts_preserve_native_and_accept_mise_shims(self):
-        home = Path('/reviewed-home')
+        home = Path(tempfile.gettempdir()).resolve() / 'reviewed-home'
         with patch.object(installer.shutil, 'which', return_value='/usr/bin/native-ai'):
             with self.assertRaisesRegex(ValueError, 'no automatic migration'):
                 installer.assert_ai_providers(home)

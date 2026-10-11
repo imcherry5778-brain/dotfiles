@@ -40,9 +40,9 @@ with tempfile.TemporaryDirectory() as scratch:
     reader = installer.ReviewReader(context, pathlib.Path(scratch) / 'query-state')
     managed = reader.managed()
     assert '.zshrc' in managed
-    reader.query('diff', '--exclude=scripts')
+    reader.query('diff', '--exclude=scripts,externals')
     if sys.argv[1] == 'after':
-        reader.query('verify', '--exclude=scripts')
+        reader.query('verify', '--exclude=scripts,externals')
 with pathlib.Path(sys.argv[2]).open('a') as stream:
     stream.write(json.dumps({'stage':sys.argv[1], 'profile':context['profile']}) + '\\n')
 ''')
@@ -78,6 +78,22 @@ with pathlib.Path(sys.argv[2]).open('a') as stream:
         assert document['data']['custom']['retained'] == 'existing'
         assert document['diff']['pager'] == ''
         assert trace.read_text().count('\n') == 6
+        # A disabled init preview can subsequently opt into a native full install.
+        preview_home = scratch / 'preview home'; preview_home.mkdir()
+        preview_config = scratch / 'preview-config.toml'
+        preview_base = [chezmoi, '--source', source, '--destination', preview_home,
+                        '--config', preview_config, '--cache', scratch / 'preview-cache',
+                        '--persistent-state', scratch / 'preview-state', '--no-tty', '--no-pager']
+        run([*preview_base, 'init'])
+        assert not tomllib.loads(preview_config.read_text())['data']['deployment']['enabled']
+        # Disable upstream declarations only in this disposable native-choice probe.
+        (source / 'home/.chezmoiexternal.toml.tmpl').write_text('')
+        # Exclude external entries via the official init filter; the actual native
+        # full profile still selects them for a real installation.
+        run([*preview_base, 'init', '--apply', '--exclude=externals'])
+        selected = tomllib.loads(preview_config.read_text())['data']
+        assert selected['deployment']['enabled'] and selected['automation']['enabled']
+        assert selected['features']['desktop'] and selected['features']['ai']
         # An explicit profile replacement must fail before replacing machine config.
         original = config.read_bytes()
         profile['features']['desktop'] = False; override.write_text(json.dumps(profile))

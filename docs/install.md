@@ -25,7 +25,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Appl
 
 Unix bootstrap은 기존 모듈로 mise·고정 설치기 Python·chezmoi를 준비한다. Mac은 Homebrew를 유지한다. Windows 진입점은 PowerShell 5.1에서 7을 준비하고 WinGet bootstrap을 재사용한다. 기존 설치 출처를 자동 이전하거나 전체 업그레이드하지 않는다.
 
-`init`만 실행하면 비활성 검토 설정을 만든다. fresh `init --apply`는 해당 OS `tests/profiles/*-full.json`의 portable full 선택을 저장하고 `automation.enabled=true`로 기록한다. 이전에 초기화된 기기는 프로필과 자동화 선택을 보존한다. 기존 개인 Fedora를 새 full 프로필로 바꾸려 하면 실패한다. 명시적 CLI-only/공통 프로필을 사용하려면 호환 진입점의 `--profile FILE` / `-ProfilePath FILE`을 사용한다. OS 자동 감지와 source-root 계산은 chezmoi 초기화가 담당한다.
+`init`만 실행하면 비활성 검토 설정을 만든다. fresh `init --apply`는 해당 OS `tests/profiles/*-full.json`의 portable full 선택을 저장하고 `automation.enabled=true`로 기록한다. 이미 배포가 활성화된 기기는 프로필과 자동화 선택을 보존한다. `init`으로 만든 비활성 검토 설정은 이후 명시적인 `init --apply`에서 full 설치로 전환할 수 있다. 기존 개인 Fedora를 새 full 프로필로 바꾸려 하면 실패한다. 명시적 CLI-only/공통 프로필을 사용하려면 호환 진입점의 `--profile FILE` / `-ProfilePath FILE`을 사용한다. OS 자동 감지와 source-root 계산은 chezmoi 초기화가 담당한다.
 
 ## 적용 순서
 
