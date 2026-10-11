@@ -1,3 +1,18 @@
+{{- /* init does not include source/override data by default. Read persisted
+       machine data explicitly; honour the reviewed override file for init too. */ -}}
+{{- if eq .chezmoi.command "init" -}}
+{{- $defaults := include (joinPath .chezmoi.sourceDir ".chezmoidata.toml") | fromToml -}}
+{{- $_ := mergeOverwrite . $defaults .chezmoi.config.data -}}
+{{- range $index, $argument := .chezmoi.args -}}
+{{- if eq $argument "--override-data-file" -}}
+{{- $selection := include (index $.chezmoi.args (add1 $index)) | fromJson -}}
+{{- $_ := mergeOverwrite $ $selection -}}
+{{- else if hasPrefix "--override-data-file=" $argument -}}
+{{- $selection := include (trimPrefix "--override-data-file=" $argument) | fromJson -}}
+{{- $_ := mergeOverwrite $ $selection -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
 {{- $platform := .chezmoi.os -}}
 {{- if eq .chezmoi.os "linux" -}}
 {{-   $platform = .chezmoi.osRelease.id -}}
@@ -16,59 +31,37 @@
 {{- if ne $family .chezmoi.os -}}
 {{-   fail "Configured platform does not match the current operating system." -}}
 {{- end -}}
-sourceDir = {{ .chezmoi.workingTree | quote }}
-{{ if has $platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos") -}}
-# Keep {{ get (dict "ubuntu" "Ubuntu" "arch" "Arch" "opensuse-tumbleweed" "openSUSE") $platform }} user configuration directories private; this is chezmoi-only.
-umask = 0o077
-{{ end -}}
-
-[data]
-platform = {{ $platform | quote }}
-initialized = true
-{{- $personal := dig "features" "personal_fedora" false . -}}
-{{- $conda := dig "features" "conda" false . -}}
-{{- $agent := dig "features" "bitwarden_agent" false . -}}
-{{- $editorWeb := dig "features" "editor_web" false . -}}
-{{- $prefix := "" -}}
-{{- $socket := "" -}}
-{{- if $personal -}}
-{{- $prefix = joinPath .chezmoi.homeDir "miniforge3" -}}
-{{- $socket = joinPath .chezmoi.homeDir ".var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock" -}}
+{{- /* init without --apply remains a configuration-only preview. On a fresh
+       native init --apply, select the portable full profile automatically.
+       Existing machine selections remain unchanged and automation stays opt-in. */ -}}
+{{- $initialized := and (hasKey . "initialized") .initialized -}}
+{{- $install := and (eq .chezmoi.command "init") (has "--apply" .chezmoi.args) (not $initialized) -}}
+{{- $automation := or (dig "automation" "enabled" false .) $install -}}
+{{- if and $install (not .deployment.enabled) -}}
+{{- $profile := include (joinPath .chezmoi.workingTree "tests" "profiles" (printf "%s-full.json" $platform)) | fromJson -}}
+{{- $_ := mergeOverwrite . $profile -}}
 {{- end -}}
-{{- if eq $platform "macos" -}}
-{{- $socket = joinPath .chezmoi.homeDir ".bitwarden-ssh-agent.sock" -}}
+{{- /* Reject explicit profile replacement before init can overwrite machine data. */ -}}
+{{- if $initialized -}}
+{{- $existing := .chezmoi.config.data -}}
+{{- range $section := list "platform" "features" "deployment" -}}
+{{- if ne (get $existing $section | toJson) (get $ $section | toJson) -}}
+{{- fail (printf "Existing %s selection differs; review migration instead of replacing it." $section) -}}
 {{- end -}}
-{{- if and (hasKey . "initialized") .initialized -}}
-{{- $personal = .features.personal_fedora -}}
-{{- $conda = .features.conda -}}
-{{- $agent = .features.bitwarden_agent -}}
-{{- $editorWeb = dig "features" "editor_web" $personal . -}}
-{{- $prefix = .machine.conda_prefix -}}
-{{- $socket = .machine.ssh_agent_socket -}}
-{{- end }}
-
-[data.deployment]
-enabled = {{ dig "deployment" "enabled" false . }}
-externals = {{ dig "deployment" "externals" false . }}
-
-[data.features]
-personal_fedora = {{ $personal }}
-conda = {{ $conda }}
-bitwarden_agent = {{ $agent }}
-ai = {{ dig "features" "ai" true . }}
-managed_ai = {{ dig "features" "managed_ai" false . }}
-desktop = {{ dig "features" "desktop" false . }}
-delta = {{ dig "features" "delta" false . }}
-editor_web = {{ $editorWeb }}
-{{ if eq $platform "windows" -}}
-windows_native = {{ dig "features" "windows_native" false . }}
-{{ end -}}
-
-{{ if eq $platform "macos" -}}
-macos_native = {{ dig "features" "macos_native" false . }}
-{{ end -}}
-
-[data.machine]
-conda_prefix = {{ $prefix | quote }}
-ssh_agent_socket = {{ $socket | quote }}
-mise_data_dir = {{ dig "machine" "mise_data_dir" "" . | quote }}
+{{- end -}}
+{{- end -}}
+{{- $_ := set . "platform" $platform -}}
+{{- $_ := set . "automation" (dict "enabled" $automation) -}}
+{{- $document := dict -}}
+{{- if stat .chezmoi.configFile -}}
+{{- $document = include .chezmoi.configFile | fromToml -}}
+{{- end -}}
+{{- $desired := includeTemplate "install/machine.toml.tmpl" . | fromToml -}}
+{{- if and $automation (eq .chezmoi.command "init") (not .chezmoi.flags.dryRun) (eq .chezmoi.destDir .chezmoi.homeDir) (stat .chezmoi.configFile) -}}
+{{- if eq .chezmoi.os "windows" -}}
+{{- $_ := output "powershell.exe" "-NoProfile" "-ExecutionPolicy" "Bypass" "-File" (joinPath .chezmoi.workingTree "scripts/windows/backup-init.ps1") .chezmoi.configFile -}}
+{{- else -}}
+{{- $_ := output "sh" (joinPath .chezmoi.workingTree "scripts/unix/backup-init.sh") .chezmoi.configFile -}}
+{{- end -}}
+{{- end -}}
+{{- mergeOverwrite $document $desired | toToml -}}

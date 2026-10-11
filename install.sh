@@ -19,11 +19,15 @@ case "${1:---plan}" in
     exec sh "$repo_root/scripts/unix/check.sh"
     ;;
   --apply)
-    [ "$#" -eq 3 ] && [ "$2" = '--profile' ] || { printf '%s\n' 'Usage: sh install.sh --apply --profile FILE' >&2; exit 2; }
-    [ -f "$3" ] || { printf '%s\n' 'Profile file not found.' >&2; exit 2; }
+    [ "$#" -eq 1 ] || { [ "$#" -eq 3 ] && [ "$2" = '--profile' ]; } || { printf '%s\n' 'Usage: sh install.sh --apply --profile FILE' >&2; exit 2; }
+    [ "$#" -eq 1 ] || [ -f "$3" ] || { printf '%s\n' 'Profile file not found.' >&2; exit 2; }
     . "$repo_root/scripts/unix/bootstrap.sh"
     bootstrap_runtime "$repo_root"
-    exec "$bootstrap_mise" -C "$repo_root/scripts/unix" exec -- python "$repo_root/scripts/unix/install.py" --profile "$3"
+    bootstrap_chezmoi=$("$bootstrap_mise" -C "$repo_root/scripts/unix" exec -- python "$repo_root/scripts/unix/install.py" --bootstrap-chezmoi)
+    if [ "$#" -eq 3 ]; then
+      exec "$bootstrap_chezmoi" --source "$repo_root" --override-data-file "$3" init --apply
+    fi
+    exec "$bootstrap_chezmoi" --source "$repo_root" init --apply
     ;;
   --desktop-only)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }

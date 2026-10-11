@@ -1,11 +1,11 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- if has .platform (list "ubuntu" "arch" "opensuse-tumbleweed") -}}
+{{- if or (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed")) (and (eq .platform "fedora") (dig "features" "managed_ai" false .)) -}}
 {{- $text := .chezmoi.stdin -}}
 {{- $line := `[[ -r "$HOME/.config/shell/bashrc.bash" ]] && source "$HOME/.config/shell/bashrc.bash"` -}}
 {{- if has $line (splitList "\n" $text) -}}
 {{- $text -}}
 {{- else -}}
-{{- printf "%s\n\n# Shared CLI settings; preserve %s's existing Bash configuration above.\n%s\n" (trimSuffix "\n" $text) (get (dict "ubuntu" "Ubuntu" "arch" "Arch" "opensuse-tumbleweed" "openSUSE") .platform) $line -}}
+{{- printf "%s\n\n# Shared CLI settings; preserve %s's existing Bash configuration above.\n%s\n" (trimSuffix "\n" $text) (get (dict "fedora" "Fedora" "ubuntu" "Ubuntu" "arch" "Arch" "opensuse-tumbleweed" "openSUSE") .platform) $line -}}
 {{- end -}}
 {{- else -}}
 {{ includeTemplate "shell/fedora.bashrc.tmpl" . }}

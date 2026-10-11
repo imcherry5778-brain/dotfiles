@@ -9,7 +9,7 @@ env = ["ai", "macos"]
 {{- if dig "features" "managed_ai" false . -}}{{- $envs = append $envs "ai-managed" -}}{{- end -}}
 {{- if .features.personal_fedora -}}{{- $envs = append $envs "personal-fedora" -}}{{- end -}}
 {{- if and (eq .platform "ubuntu") .features.editor_web -}}{{- $envs = append $envs "editor-ubuntu" -}}{{- end -}}
-{{- if and (has .platform (list "arch" "opensuse-tumbleweed")) .features.editor_web -}}{{- $envs = append $envs "editor-web" -}}{{- end -}}
+{{- if and (or (has .platform (list "arch" "opensuse-tumbleweed")) (and (eq .platform "fedora") (dig "features" "managed_ai" false .))) .features.editor_web -}}{{- $envs = append $envs "editor-web" -}}{{- end -}}
 # Machine selection. Presence of config.<environment>.toml alone does not select it.
 env = [{{ range $index, $value := $envs }}{{ if $index }}, {{ end }}{{ $value | quote }}{{ end }}]
 {{ end -}}

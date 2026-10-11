@@ -1,0 +1,66 @@
+{{- $platform := .platform -}}
+sourceDir = {{ .chezmoi.workingTree | quote }}
+{{ if has $platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos") -}}
+# Keep {{ get (dict "ubuntu" "Ubuntu" "arch" "Arch" "opensuse-tumbleweed" "openSUSE") $platform }} user configuration directories private; this is chezmoi-only.
+umask = 0o077
+{{ end -}}
+
+[data]
+platform = {{ $platform | quote }}
+initialized = true
+{{- $personal := dig "features" "personal_fedora" false . -}}
+{{- $conda := dig "features" "conda" false . -}}
+{{- $agent := dig "features" "bitwarden_agent" false . -}}
+{{- $editorWeb := dig "features" "editor_web" false . -}}
+{{- $prefix := "" -}}
+{{- $socket := "" -}}
+{{- if $personal -}}
+{{- $prefix = joinPath .chezmoi.homeDir "miniforge3" -}}
+{{- $socket = joinPath .chezmoi.homeDir ".var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock" -}}
+{{- end -}}
+{{- if eq $platform "macos" -}}
+{{- $socket = joinPath .chezmoi.homeDir ".bitwarden-ssh-agent.sock" -}}
+{{- end -}}
+{{- if and (hasKey . "initialized") .initialized -}}
+{{- $personal = .features.personal_fedora -}}
+{{- $conda = .features.conda -}}
+{{- $agent = .features.bitwarden_agent -}}
+{{- $editorWeb = dig "features" "editor_web" $personal . -}}
+{{- $prefix = .machine.conda_prefix -}}
+{{- $socket = .machine.ssh_agent_socket -}}
+{{- end }}
+
+[data.deployment]
+enabled = {{ dig "deployment" "enabled" false . }}
+externals = {{ dig "deployment" "externals" false . }}
+
+[data.features]
+personal_fedora = {{ $personal }}
+conda = {{ $conda }}
+bitwarden_agent = {{ $agent }}
+ai = {{ dig "features" "ai" true . }}
+managed_ai = {{ dig "features" "managed_ai" false . }}
+desktop = {{ dig "features" "desktop" false . }}
+delta = {{ dig "features" "delta" false . }}
+editor_web = {{ $editorWeb }}
+{{ if eq $platform "windows" -}}
+windows_native = {{ dig "features" "windows_native" false . }}
+{{ end -}}
+
+{{ if eq $platform "macos" -}}
+macos_native = {{ dig "features" "macos_native" false . }}
+{{ end -}}
+
+[data.machine]
+conda_prefix = {{ $prefix | quote }}
+ssh_agent_socket = {{ $socket | quote }}
+mise_data_dir = {{ dig "machine" "mise_data_dir" "" . | quote }}
+
+[data.automation]
+# Opt-in is persisted. Existing deployed profiles never acquire install hooks silently.
+enabled = {{ .automation.enabled }}
+{{ if and .automation.enabled (eq $platform "windows") }}
+[interpreters.ps1]
+command = "powershell.exe"
+args = ["-NoProfile", "-ExecutionPolicy", "Bypass"]
+{{ end }}

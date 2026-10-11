@@ -89,3 +89,7 @@ profile. Orca's interactive GUI and authentication remain outside this CI profil
 actual hosted Mac home. Both scripts refuse non-hosted environments. Neither is a
 remote deployment workflow or a self-hosted runner. Personal Mac GUI/clipboard checks
 are recorded separately in docs/macos-application.md.
+
+## chezmoi 중심 개편 검증
+
+`verify-automation.py --chezmoi /path/to/chezmoi`는 실제 init --apply와 apply를 격리 대상으로 실행한다. provider runner만 테스트 관찰기로 대체하고 production 전후 템플릿을 그대로 사용해 실행 순서, 반복 실행, diff/dry-run의 비실행, 부모 DB 잠금 중 별도 읽기 state 조회, 초기화 프로필 충돌 거부를 확인한다. hosted 설치 테스트는 production provider를 실제 실행하고 fd 실행 파일을 삭제한 뒤 일반 apply로 복구되는지 확인한다. Fedora full은 22개 CLI와 Ghostty·Orca를 포함하며 개인 Fedora 프로필과 분리한다. 설정 diff는 `--exclude=scripts`로 비교한다.

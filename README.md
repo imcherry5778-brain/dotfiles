@@ -10,9 +10,10 @@
 
 ```text
 dotfiles/
-├── install.sh / install.ps1   # 기본 계획·검사, 명시적 플랫폼 설치
+├── install.sh / install.ps1   # 최소 bootstrap → chezmoi init --apply
 ├── mise.toml                 # 읽기 전용 저장소 작업
 ├── home/                     # chezmoi 소스: 기기 데이터·선택할 설정
+│   ├── .chezmoiscripts/     # 설치 전 백업·검사, 설치 후 누락 복구·검증
 │   ├── .chezmoitemplates/    # 재사용 조각
 │   └── dot_config/           # 검토한 앱별 설정 원본
 ├── scripts/lib/              # OS 판별·검증 다운로드·native 앱 설치 공통 구현
@@ -23,7 +24,7 @@ dotfiles/
 └── .github/workflows/        # 3개 OS 기반 검증 + Linux/Windows/Mac 설치 검증
 ```
 
-`deployment.enabled=false`가 기본값이라 모든 배포 대상이 제외된다. 새 기기에서는 명시적인 선택이 필요하다. 개인 Fedora·Ubuntu·Arch·openSUSE에서는 각 OS의 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
+`chezmoi init`만 실행하면 배포가 비활성인 검토용 설정을 만든다. 새 기기의 `chezmoi init --apply`는 해당 OS의 portable full 프로필과 설치 자동화를 선택한다. 기존 기기의 선택은 그대로 유지하며 자동화를 암묵적으로 활성화하지 않는다. 개인 Fedora·Ubuntu·Arch·openSUSE에서는 각 OS의 로컬 기기 데이터로 배포를 활성화했다. 업스트림 다운로드도 별도 비활성 기본값이다. 문서용 README와 빈 설정을 홈으로 배포하지 않는다.
 
 ## 지금 실행할 수 있는 것
 
@@ -43,9 +44,21 @@ PowerShell 5.1 또는 7:
 
 mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run plan` / `mise run check`로 같은 동작을 호출할 수 있다. 기본 plan/check는 도구를 설치하지 않는다.
 
-기본 plan/check는 설치하지 않는다. 지원 OS에서 명시적 적용 명령 하나가 필수 패키지·mise Python·diff·개인 백업·CLI/앱·설정·검증을 이어 실행한다. 프로필별 명령과 관리자/인증 전제는 [설치 계약](docs/install.md)을 따른다. Fedora common은 CI용 기본 구성이며 기존 개인 Fedora의 34개 도구 선택을 대체하지 않는다.
+기본 plan/check는 설치하지 않는다. 지원 OS에서 명시적 적용 명령 하나가 필수 패키지·mise Python·diff·개인 백업·CLI/앱·설정·검증을 이어 실행한다. 프로필별 명령과 관리자/인증 전제는 [설치 계약](docs/install.md)을 따른다. Fedora common과 portable full을 별도로 검사하며, full은 AI 8개·Node·Ghostty·Orca를 포함한다. 기존 개인 Fedora의 34개 도구 선택과 설치 출처를 대체하지 않는다.
 
 Self-hosted runner는 사용하지 않는다. CI는 임시 GitHub-hosted 환경에 설치하며 사용자 PC로 설정을 배포하지 않는다. 서비스 로그인·GUI 권한·실제 데스크톱 검증은 별도다.
+
+chezmoi가 이미 있으면 clone한 저장소에서 다음 명령을 실행한다. chezmoi가 없으면 Linux/Mac은 `sh install.sh --apply`, Windows는 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Apply`로 bootstrap과 같은 초기화를 이어 실행한다.
+
+```sh
+chezmoi init --apply --source "$PWD"
+# 이후 설정 반영과 삭제된 선택 도구 복구
+chezmoi apply
+# 설치 스크립트를 제외한 순수 설정 차이
+chezmoi diff --exclude=scripts
+```
+
+개편의 실행 순서·백업·충돌 방지·검증 범위는 [설치 계약](docs/install.md)을 따른다. 이번 개편은 실제 개인 OS에 적용하지 않고 hosted CI에서 검증한다.
 
 ## 상세 문서
 

@@ -17,8 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from lib.desktop import desktop_plan, install_ghostty, install_orca, install_opensuse_packages
 from lib.runtime import Host, download_verified
-from lib.backup import backup_targets
+from lib.backup import backup_targets, preserve_installer_loaders
 from lib.packages import prepare_packages
+from lib.tools import reconcile_mise_tools
 from lib.macos import install_cask, install_native_cli, inspect_ghostty_configuration
 from lib.appimage import install_orca_appimage, desktop_quote
 
@@ -28,6 +29,50 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_missing_binary_repairs_only_selected_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
+            (config / 'miserc.toml').write_text('env = []\n')
+            (config / 'config.toml').write_text('[tools]\nfd = "10.4.2"\n')
+            def command(arguments, **options):
+                if arguments[1] == 'ls':
+                    return json.dumps({'fd': [{'version': '10.4.2', 'installed': True}, {'version':'10.3.0','installed':True}]})
+                if arguments[1] == 'which':
+                    return str(home / 'missing-fd')
+                return ''
+            with patch('lib.tools.Path.home', return_value=home), patch('lib.tools.run', side_effect=command) as execute:
+                reconcile_mise_tools('mise')
+            commands = [call.args[0] for call in execute.call_args_list]
+            self.assertIn(['mise','uninstall','--yes','fd@10.4.2'], commands)
+            self.assertNotIn(['mise','uninstall','--yes','fd@10.3.0'], commands)
+            self.assertEqual(commands[-1], ['mise','install','--yes'])
+
+    @unittest.skipIf(os.name == 'nt', 'Windows uses native ACL loader protection.')
+    def test_vendor_failure_restores_managed_loader_but_keeps_vendor_data(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); loader = home / '.zshrc'
+            loader.write_text('existing user hooks\n'); loader.chmod(0o600)
+            with self.assertRaisesRegex(RuntimeError, 'publisher failure'):
+                with preserve_installer_loaders(home, {'.zshrc'}):
+                    loader.write_text('vendor changed loader\n'); loader.chmod(0o644)
+                    (home / 'vendor-auth-fixture').write_text('retained fixture')
+                    raise RuntimeError('publisher failure')
+            self.assertEqual(loader.read_text(), 'existing user hooks\n')
+            self.assertEqual(loader.stat().st_mode & 0o777, 0o600)
+            self.assertEqual((home / 'vendor-auth-fixture').read_text(), 'retained fixture')
+
+    def test_reader_rejects_recursive_apply(self):
+        reader = installer.ReviewReader({'chezmoi':'chezmoi','config':'config'}, 'separate-state')
+        for operation in ['apply', 'init', 'update', 'state']:
+            with self.assertRaisesRegex(ValueError, 'read-only'):
+                reader.query(operation)
+
+    def test_fedora_full_is_portable_and_not_personal(self):
+        profile = installer.validate_profile(ROOT / 'tests/profiles/fedora-full.json')
+        self.assertTrue(profile['features']['managed_ai'])
+        self.assertTrue(profile['features']['desktop'])
+        self.assertFalse(profile['features']['personal_fedora'])
+
     def test_installer_python_is_not_a_windows_or_plan_dependency(self):
         root = tomllib.loads((ROOT / 'mise.toml').read_text())
         runtime = tomllib.loads((ROOT / 'scripts/unix/mise.toml').read_text())

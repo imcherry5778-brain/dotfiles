@@ -30,10 +30,10 @@ Documents
 Documents/**
 .config/powershell/**
 .config/mise/config.windows.toml
-{{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed"))) (not .features.ai)) }}
-{{ fail "managed_ai requires the reviewed Ubuntu/Arch/openSUSE AI profile; preserve existing Fedora providers." }}
+{{ if and (dig "features" "managed_ai" false .) (or (not (has .platform (list "fedora" "ubuntu" "arch" "opensuse-tumbleweed"))) (not .features.ai)) }}
+{{ fail "managed_ai requires a portable full AI profile." }}
 {{ end }}
-{{ if and (ne .platform "fedora") .features.personal_fedora }}
+{{ if and .features.personal_fedora (or (ne .platform "fedora") (dig "features" "managed_ai" false .)) }}
 {{ fail "personal_fedora is Fedora-only; review other OS tools separately." }}
 {{ end }}
 README.md
@@ -69,7 +69,7 @@ README.md
 {{ end }}
 {{ end }}
 
-{{ if not (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos")) }}
+{{ if not (or (has .platform (list "ubuntu" "arch" "opensuse-tumbleweed" "macos")) (and (eq .platform "fedora") (dig "features" "managed_ai" false .))) }}
 .config/shell
 .config/shell/**
 {{ end }}
@@ -78,7 +78,7 @@ README.md
 .config/mise/config.editor-ubuntu.toml
 {{ end }}
 
-{{ if or (not (has .platform (list "arch" "opensuse-tumbleweed"))) (not .features.editor_web) }}
+{{ if or (not (or (has .platform (list "arch" "opensuse-tumbleweed")) (and (eq .platform "fedora") (dig "features" "managed_ai" false .)))) (not .features.editor_web) }}
 .config/mise/config.editor-web.toml
 {{ end }}
 

@@ -51,3 +51,33 @@ def backup_targets(home, targets, diff, platform, *, directories=()):
     (destination / 'RESTORE.md').write_text('Restore only paths listed in manifest.json from files/, preserving permissions and symlinks. Directory entries record permissions only, never their full contents. Paths with exists=false were newly created; remove only those managed files and empty managed directories. This restores configuration, not installed binaries.\n')
     (destination / 'RESTORE.md').chmod(0o600)
     return destination
+
+
+from contextlib import contextmanager
+import tempfile
+
+
+@contextmanager
+def preserve_installer_loaders(home, managed):
+    """Guard only managed shell loaders around vendor installers, even on failure."""
+    loaders = {'.bashrc', '.bash_profile', '.zshrc', '.zprofile',
+               'Documents/PowerShell/profile.ps1',
+               'Documents/PowerShell/Microsoft.PowerShell_profile.ps1'}
+    with tempfile.TemporaryDirectory(prefix='dotfiles-loader-guard-') as temporary:
+        saved = Path(temporary)
+        for relative in managed & loaders:
+            original = home / relative
+            if original.is_symlink():
+                raise ValueError(f'Vendor installer loader is a symlink: {relative}')
+            if original.is_file():
+                target = saved / relative; target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(original, target)
+        try:
+            yield
+        finally:
+            for target in saved.rglob('*'):
+                if target.is_file():
+                    original = home / target.relative_to(saved)
+                    if original.is_symlink():
+                        original.unlink()
+                    shutil.copy2(target, original)

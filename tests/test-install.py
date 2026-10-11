@@ -93,8 +93,8 @@ done
 [[ $(printf '%s\n' $path | sort | uniq -d) == '' ]]
 print 'ZSH_RUNTIME_OK'
 """
-    code = code.replace('EXPECTED_PLUGINS', '11' if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else '10')
-    if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
+    code = code.replace('EXPECTED_PLUGINS', '11' if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else '10')
+    if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
         code += r'''
 (( $+functions[_sc_carapace_base] ))
 [[ $(command -v node) == $HOME/.local/share/mise/installs/* ]]
@@ -172,7 +172,7 @@ def main():
     # Only the repository Python exists; OS shell/compiler dependencies were not baked into the image.
     spec = importlib.util.spec_from_file_location('installer_packages', ROOT / 'scripts/unix/install.py')
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    module.prepare_packages(module.Host.detect(), desktop=TARGET != 'fedora')
+    module.prepare_packages(module.Host.detect(), desktop=TARGET != 'fedora' or FULL)
     verify_guards()
     original_shell = pwd.getpwuid(os.getuid()).pw_shell
     native_original = None
@@ -207,13 +207,14 @@ def main():
     editor_env = 'editor-ubuntu' if TARGET == 'ubuntu' else 'editor-web'
     expected_env = ['ai', 'ai-managed', editor_env] if FULL else ['ai', editor_env] if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'} else []
     require(tomllib.loads((USER_HOME / '.config/mise/miserc.toml').read_text())['env'] == expected_env, 'Wrong mise environments selected.')
-    if TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
+    if FULL or TARGET in {'ubuntu', 'arch', 'opensuse-tumbleweed'}:
         for name in [environment for environment in expected_env if environment != 'personal-fedora']:
             extras = tomllib.loads((USER_HOME / f'.config/mise/config.{name}.toml').read_text())['tools']
             require(not set(extras) & set(tools), 'Duplicate tool owners.')
             tools.update(extras)
         require(len(tools) == (22 if FULL else 15), 'Wrong desktop tool inventory.')
-        verify_native_bash(native, native_original)
+        if native_original:
+            verify_native_bash(native, native_original)
     installed = json.loads(run([mise, 'ls', '--current', '--json']))
     require(set(installed) == set(tools), 'Installed tool selection differs from the single config inventory.')
     commands = {'ripgrep': 'rg', 'neovim': 'nvim', 'npm:@earendil-works/pi-coding-agent': 'pi',
@@ -230,7 +231,9 @@ def main():
         versions[tool] = version
     if FULL:
         run(['ghostty', '--version'], timeout=30)
-        if TARGET == 'ubuntu':
+        if TARGET == 'fedora':
+            run(['rpm', '-q', 'orca-ide'])
+        elif TARGET == 'ubuntu':
             require(run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'orca-ide']).strip() == 'installed', 'Orca native package missing.')
         else:
             output = run([USER_HOME / '.local/bin/orca-ide', '--version'], timeout=30)
@@ -247,10 +250,16 @@ def main():
         run([mise, 'exec', '--', 'nvim', '--headless', '-u', 'NONE', '-i', 'NONE',
              '-c', 'lua if not loadfile(' + json.dumps(str(lua)) + ') then vim.cmd("cquit 1") end', '-c', 'qa'], env=runtime_env, timeout=30)
     require(snapshot(base) == before_runtime, 'Reading/starting shells altered managed configuration.')
-    run(command, capture=False)
+    run(base + ['apply'], capture=False)
     require(snapshot(base) == before_runtime, 'Second installation changed managed file contents, links or modes.')
-    run(base + ['verify'])
-    require(not run(base + ['diff']).strip(), 'Second installation still has a configuration diff.')
+    # A damaged installed version is repaired, not merely a missing version directory.
+    fd = Path(run([mise, 'which', 'fd']).strip())
+    fd.unlink()
+    run(base + ['apply'], capture=False)
+    require(fd.is_file(), 'apply did not restore a deleted selected CLI binary.')
+    require(snapshot(base) == before_runtime, 'Repair altered managed configuration.')
+    run(base + ['verify', '--exclude=scripts'])
+    require(not run(base + ['diff', '--exclude=scripts']).strip(), 'Second installation still has a configuration diff.')
     for key, expected in [('user.name', 'CI Existing User'), ('user.email', 'ci@example.invalid'), ('commit.gpgsign', 'false'), ('acceptance.keep', 'existing')]:
         require(run(['git', 'config', '--get', key]).strip() == expected, f'Existing Git setting lost: {key}')
     require('retained: repo view' in gh_config.read_text() and '# retained comment' in gh_config.read_text(), 'Unmanaged gh settings lost.')

@@ -13,6 +13,7 @@ BASE = {
     'opensuse-tumbleweed': ['git-core', 'zsh', 'tmux', 'tar', 'gzip', 'unzip', 'xz', 'bzip2', 'perl', 'gawk', 'util-linux', 'ncurses-utils', 'bash-completion'],
 }
 DESKTOP = {
+    'fedora': ['wl-clipboard', 'gcc', 'gcc-c++', 'make', 'bash-completion', 'dnf5-plugins'],
     'ubuntu': ['wl-clipboard', 'build-essential'],
     'arch': ['wl-clipboard', 'base-devel'],
     'opensuse-tumbleweed': ['wl-clipboard', 'gcc', 'gcc-c++', 'make'],

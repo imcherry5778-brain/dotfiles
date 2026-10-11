@@ -69,3 +69,7 @@ jobs:
       - name: Verify Mac configuration in an isolated destination
         if: runner.os != 'Windows'
         run: python3 ./tests/verify-macos.py --chezmoi $env:CHEZMOI_BIN
+
+      - name: Verify chezmoi orchestration, dry-run and read-only state isolation
+        if: runner.os != 'Windows'
+        run: python3 ./tests/verify-automation.py --chezmoi $env:CHEZMOI_BIN
