@@ -16,7 +16,7 @@
 - .bashrc의 기존 본문에 공통 모듈 로드 한 줄만 추가했다. .profile/.bash_logout, 기존 APT jq와 system Python, .config/.local/.local/share의 700 권한은 보존했다. .bashrc는 644에서 600으로 제한했다.
 - Fedora 추가 도구·Conda·Bitwarden 설정은 선택하지 않았다. delta는 설치했지만 Git pager 기능은 끈 상태다. Git identity와 서비스 인증은 새로 설정하거나 다른 OS에서 복사하지 않았다.
 
-Ubuntu checkout은 `~/projects/imcherry5778-brain/dotfiles`이며 chezmoi sourceDir가 이 저장소를 가리킨다. 로컬 프로필은 deployment.enabled/external=true, ai/editor_web=true, personal_fedora/conda/bitwarden_agent/delta=false다. AI 실행 파일 설치는 OpenCode만 포함한다. 나머지 7개 AI CLI·Ghostty·서비스 로그인은 이번 범위에 포함하지 않았다.
+Ubuntu checkout은 `~/projects/imcherry5778-brain/dotfiles`이며 chezmoi sourceDir가 이 저장소를 가리킨다. 로컬 프로필은 deployment.enabled=true·deployment.externals=true, ai/editor_web=true, personal_fedora/conda/bitwarden_agent/delta=false다. AI 실행 파일 설치는 OpenCode만 포함한다. 나머지 7개 AI CLI·Ghostty·서비스 로그인은 이번 범위에 포함하지 않았다.
 
 ## 실행한 검증
 
