@@ -239,7 +239,8 @@ class InstallerContracts(unittest.TestCase):
                 backup_targets(home, ['../outside'], '', 'macos')
 
     def test_apt_inventory_is_standalone_and_no_upgrade(self):
-        with patch('lib.packages.administrative_command', side_effect=lambda args: args), patch('lib.packages.run') as execute:
+        with patch('lib.packages.subprocess.run', return_value=subprocess.CompletedProcess([], 1, stdout='')), \
+             patch('lib.packages.administrative_command', side_effect=lambda args: args), patch('lib.packages.run') as execute:
             prepare_packages(Host('linux', 'x64', 'ubuntu'), desktop=True)
             commands = [call.args[0] for call in execute.call_args_list]
             self.assertTrue(any(command[-3:] == ['bootstrap', 'packages', 'apply'] for command in commands))
