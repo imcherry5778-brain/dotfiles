@@ -16,8 +16,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fedora:
-    name: Fedora 44 / common baseline / cold install
+  install:
+    name: ${{ matrix.name }} / cold install
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: fedora
+            name: Fedora 44 / common baseline
+          - platform: ubuntu
+            name: Ubuntu 26.04 / desktop CLI profile
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -25,8 +33,8 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Build clean Fedora user environment
-        run: docker build --pull --file tests/containers/fedora.Dockerfile --tag dotfiles-install-test .
+      - name: Build clean distribution user environment
+        run: docker build --pull --file tests/containers/${{ matrix.platform }}.Dockerfile --tag dotfiles-install-test .
       - name: Install, apply, run applications and repeat
         env:
           GITHUB_TOKEN: ${{ github.token }}

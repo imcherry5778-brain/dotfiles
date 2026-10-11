@@ -4,22 +4,22 @@
 
 config sourceDir는 Git checkout 루트인 .chezmoi.workingTree에서 유도한다. .chezmoiroot 적용 후 템플릿 .chezmoi.sourceDir는 home 하위 디렉터리다. config를 --source 없이 다시 읽는 검사로 둘을 구분한다.
 
-## 기본값과 Fedora 선택
+## 기본값과 플랫폼 선택
 
 배포 enabled/externals는 모두 false다. Conda·Bitwarden·개인 Fedora 도구·웹 편집기 구성도 기본 false다. OS가 Fedora이거나 도구가 설치되어 있다는 이유로 개인 기능을 자동 선택하지 않는다. 플랫폼만 초기화한 것은 Fedora 설정을 적용한 것이 아니다.
 
 기존 Fedora 선택의 비밀정보 없는 예는 [기기 데이터 예시](fedora-machine.example.toml)에 있다. 실제 적용 전 단계에서 선택한다. prefix/socket은 정상적인 홈 하위 기본 경로를 유도하고 다른 위치를 쓰면 기기 데이터로 지정한다. 초기화 템플릿은 기존 선택을 반복 초기화에서 보존한다.
 
-`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. enabled=true라도 Fedora 외에는 제외한다. Fedora에서는 README·빈 Ghostty/PowerShell 예약 경로·선택하지 않은 기능을 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 개인 Fedora는 enabled=true, externals=false로 적용했다. 기존 OMZ/tmux 플러그인과 로컬 패치를 유지하며 archive를 덮어쓰지 않았다.
+`.chezmoiignore`는 enabled=false일 때 모든 대상을 제외한다. enabled=true라도 Fedora/Ubuntu 외에는 제외한다. personal_fedora=true인 Ubuntu는 오류로 거부한다. 두 플랫폼에서는 README·빈 Ghostty/PowerShell 예약 경로·선택하지 않은 기능을 제외한다. `.chezmoiexternal`은 enabled와 externals를 모두 명시적으로 켤 때만 선언을 생성한다. 개인 Fedora는 enabled=true, externals=false로 적용했다. 기존 OMZ/tmux 플러그인과 로컬 패치를 유지하며 archive를 덮어쓰지 않았다.
 
 ## 실제 source
 
 | 소스 | 대상/역할 |
 |---|---|
-| dot_zshrc.tmpl, dot_bashrc.tmpl | Zsh와 Fedora 보조 Bash |
+| dot_zshrc.tmpl, modify_dot_bashrc | Zsh·Fedora 보조 Bash·Ubuntu Bash 보존 |
 | modify_dot_gitconfig + dot_config/git/config.tmpl | identity 보존 + 공통 Git 동작 |
 | dot_config/private_gh/modify_private_config.yml | gh의 검토한 키만 갱신 |
-| dot_config/mise/config*.toml + miserc.toml.tmpl | 공통·AI·Fedora 개인 도구와 기기 선택 |
+| dot_config/mise/config*.toml + miserc.toml.tmpl | 공통·AI·Fedora 개인 도구·Ubuntu 편집기 런타임과 기기 선택 |
 | dot_tmux.conf.local + symlink_dot_tmux.conf.tmpl | 기존 Oh My Tmux 사용자 설정과 링크 |
 | dot_config/nvim | LazyVim 사용자 설정·잠금·선택적 웹 기능 |
 | dot_config/shell-completion, dot_config/carapace, dot_local | 기존 Fedora completion 구현·정책·어댑터 |
@@ -38,3 +38,11 @@ Git identity와 signing key는 실제 .gitconfig에 남긴다. Git helper만 안
 - `.claude`·`.codex` 디렉터리도 사용자 전용 700이며 Claude settings 파일은 600이다. 이 권한 변경도 개인 Fedora에 적용했고 원래 권한은 비공개 복구본에 기록했다.
 
 `dot_local/bin/symlink_carapace.tmpl`는 기존 ~/.local/bin/carapace 진입점을 유지하면서 mise shim으로 연결한다. 수동 실행 파일은 Fedora 이전 시 비공개 복구본에 보존한다. Zsh의 mise activation을 거치지 않은 Bash/기존 스크립트도 같은 고정 버전으로 연결되며 install inventory는 mise 한 곳에만 둔다.
+
+## Ubuntu 차이
+
+Ubuntu의 modify_dot_bashrc는 기존 .bashrc 끝에 공통 모듈 로드 한 줄만 추가하며 반복 적용 시 중복하지 않는다. .profile과 .bash_logout은 관리하지 않는다. Fedora의 기존 Bash 출력은 .chezmoitemplates/shell/fedora.bashrc.tmpl로 옮겼으며 렌더링 결과는 유지한다.
+
+Ubuntu의 .config/shell/bashrc.bash는 mise·fzf 단축키·zoxide와 선택적 carapace 공급자를 초기화한다. fzf --bash 초기화 전 native completion 등록을 저장하고 복원하여 Ubuntu의 Tab 공급자를 유지한다. Zsh도 OMZ/기본 공급자가 없을 때만 선택한 CLI의 carapace 공급자를 연결한다. Fedora RPM completion·native adapter·spec 복사본은 Ubuntu에 배포하지 않는다. 공유 carapace 본문은 template 한 곳에서 소유한다.
+
+Ubuntu 기기 초기화 config에는 chezmoi 전용 umask=0o077을 지정한다. 기존 .config/.local/.local/share의 700을 유지하고 관리 일반 파일은 600으로 만든다. 기존 .bashrc의 644→600도 의도한 변화다. OS/셸 umask는 변경하지 않는다. Fedora config에는 이 전역 정책을 추가하지 않는다.

@@ -1,0 +1,51 @@
+# Common interactive CLI additions. Ubuntu's original ~/.bashrc remains intact.
+[[ $- == *i* ]] || return
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+# Full activation removes shims; restore them until the first prompt hook runs.
+# This makes fzf/zoxide/Neovim available during Bash initialization.
+for _df_directory in "${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims" "$HOME/.local/bin"; do
+  case ":$PATH:" in
+    *":$_df_directory:"*) ;;
+    *) PATH="$_df_directory:$PATH" ;;
+  esac
+done
+unset _df_directory
+export PATH
+if command -v nvim >/dev/null 2>&1; then
+  alias vi=nvim vim=nvim
+  export EDITOR=nvim VISUAL=nvim
+  SUDO_EDITOR=$(mise which nvim 2>/dev/null) || SUDO_EDITOR=$(command -v nvim)
+  export SUDO_EDITOR
+fi
+command -v yazi >/dev/null 2>&1 && alias y=yazi
+alias ssh='TERM=xterm-256color ssh'
+if command -v fzf >/dev/null 2>&1; then
+  # Enable Ctrl-R/Ctrl-T/Alt-C, while keeping Ubuntu's native Tab providers.
+  _df_bash_completions=$(complete -p)
+  source <(fzf --bash)
+  complete -r
+  eval "$_df_bash_completions"
+  unset _df_bash_completions
+fi
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
+[[ -t 0 ]] && export GPG_TTY=$(tty)
+{{ if .features.ai -}}
+# Same Antigravity workaround as Fedora, when running inside tmux.
+[[ -n ${TMUX-} ]] && alias agy='env -u TMUX TERM_PROGRAM=alacritty TERM=xterm-256color agy'
+{{ end -}}
+if command -v carapace >/dev/null 2>&1; then
+{{ template "shell/carapace-bash.tmpl" . }}
+  for _df_command in rg fd bat jq carapace delta lazygit yazi uv uvx agy claude codex aider opencode pi kiro-cli grok; do
+    command -v "$_df_command" >/dev/null 2>&1 || continue
+    # Prefer installed bash-completion handlers, including lazy-loaded ones.
+    declare -F _comp_load >/dev/null && _comp_load "$_df_command" 2>/dev/null
+    complete -p "$_df_command" >/dev/null 2>&1 || complete -o default -F _sc_carapace_bash "$_df_command"
+  done
+  unset _df_command
+fi

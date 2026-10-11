@@ -11,3 +11,5 @@
 SDK·클라우드·Conda는 다른 OS의 기본 설치로 확대하지 않는다. Fedora 개인 기능 선택도 명시적이며 새 Fedora에 자동 활성화하지 않는다. Git·mise·chezmoi·셸·tmux 등 기반 패키지는 OS 공급자의 책임이다. root mise.toml은 plan/check 작업만 가지며 global tool inventory를 중복하지 않는다.
 
 Windows는 PowerShell 7 + Windows Terminal, Unix는 Zsh + Oh My Zsh와 Ghostty를 계획한다. Windows에 WSL을 필수로 설치하지 않는다. 실제 Windows/macOS 프로필과 앱 설정 이전은 아직 수행하지 않았다.
+
+Ubuntu는 ai/editor-ubuntu 환경을 명시적으로 선택한다. config.editor-ubuntu.toml은 선택한 LazyVim 웹 기능에 필요한 Node/npm만 소유한다. Fedora의 Node는 기존 personal-fedora inventory에 남으며 Ubuntu 전용 파일은 Fedora에서 제외된다. Ubuntu 전체 선택은 공통 13개 + OpenCode + Node = 15개다. 다른 7개 AI CLI 설치와 Ghostty는 아직 이 진입점에 구현하지 않았다.

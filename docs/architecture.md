@@ -9,7 +9,7 @@
 | home + chezmoi | 개인 설정 파일, 공유 기본값, 기기 차이 |
 | home/dot_config/mise | 전역 CLI 버전·설치 선언 |
 | 루트 mise.toml | 저장소 운영 작업. 현재 plan/check만 |
-| install.sh / install.ps1 | 최초 진입점. 기본 계획·검사, install.sh의 명시적 Fedora baseline 설치 |
+| install.sh / install.ps1 | 최초 진입점. 기본 계획·검사, install.sh의 명시적 Fedora/Ubuntu 프로필 설치 |
 | scripts/unix, scripts/windows | 해당 셸 문법의 실제 구현 |
 | docs | 정책·절차·확인한 근거 |
 | tests | 임시 홈에서 실행하는 검증과 fixture |

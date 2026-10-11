@@ -42,3 +42,6 @@ jobs:
       - name: Verify proposed Fedora configuration in an isolated destination
         if: runner.os == 'Linux'
         run: python3 ./tests/verify-fedora.py --chezmoi $env:CHEZMOI_BIN --gh (Get-Command gh).Source
+      - name: Verify Ubuntu configuration in an isolated destination
+        if: runner.os == 'Linux'
+        run: python3 ./tests/verify-ubuntu.py --chezmoi $env:CHEZMOI_BIN

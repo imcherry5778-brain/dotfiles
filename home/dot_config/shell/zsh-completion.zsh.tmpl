@@ -1,0 +1,9 @@
+# OMZ/Ubuntu native providers keep priority over the carapace fallback.
+(( $+commands[carapace] )) || return
+{{ template "shell/carapace-zsh.tmpl" . }}
+typeset -gA _SC_CARAPACE_BACKEND
+for _df_command in rg fd bat jq carapace delta lazygit yazi uv uvx agy claude codex aider opencode pi kiro-cli grok; do
+  (( $+commands[$_df_command] )) || continue
+  (( ${+_comps[$_df_command]} )) || compdef _sc_carapace_base "$_df_command"
+done
+unset _df_command

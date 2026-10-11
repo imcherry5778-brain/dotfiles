@@ -1,7 +1,10 @@
-# Fedora draft only. Explicit data opt-in is required even for a preview.
-{{ if or (not .deployment.enabled) (ne .platform "fedora") }}
+# Reviewed Fedora/Ubuntu sources. Explicit opt-in is required even for preview.
+{{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu"))) }}
 **
 {{ else }}
+{{ if and (eq .platform "ubuntu") .features.personal_fedora }}
+{{ fail "personal_fedora is Fedora-only; review Ubuntu tools separately." }}
+{{ end }}
 README.md
 **/README.md
 .config/ghostty
@@ -24,4 +27,13 @@ README.md
 {{ if not .features.editor_web }}
 .config/nvim/lua/plugins/web_and_python.lua
 {{ end }}
+{{ end }}
+
+{{ if ne .platform "ubuntu" }}
+.config/shell
+.config/shell/**
+{{ end }}
+
+{{ if or (ne .platform "ubuntu") (not .features.editor_web) }}
+.config/mise/config.editor-ubuntu.toml
 {{ end }}

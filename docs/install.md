@@ -1,6 +1,6 @@
 # 최초 설치와 현재 진입점
 
-기본 동작은 계획 출력이고 Check 동작도 읽기 전용이다. install.sh의 `--apply --profile FILE`은 Fedora x86_64 common baseline 설치만 지원한다. install.ps1의 Windows 설치는 아직 구현하지 않았다.
+기본 동작은 계획 출력이고 Check 동작도 읽기 전용이다. install.sh의 `--apply --profile FILE`은 Fedora x86_64 common baseline과 Ubuntu 26.04 x86_64 desktop CLI profile을 지원한다. install.ps1의 Windows 설치는 아직 구현하지 않았다.
 
 ## checkout 위치
 
@@ -21,7 +21,7 @@ git clone https://github.com/imcherry5778-brain/dotfiles.git $destination
 
 기존 경로가 있으면 새 clone으로 덮어쓰지 않고 해당 checkout을 확인한다. Git 인증 방식은 기기 설정을 사용하며 전역 인증 공급자를 이 프로젝트가 자동 변경하지 않는다.
 
-## 명시적 Fedora baseline 설치의 계약
+## 명시적 프로필 설치의 계약
 
 Git·mise·chezmoi·사용할 셸의 현재 설치를 확인하고 필요한 최소 도구만 확보한다. 그다음 sourceDir를 현재 checkout으로 연결하고 기기 데이터를 초기화한다. sourceDir는 /home 등의 문자열을 하드코딩하지 않고 현재 위치를 사용한다.
 
@@ -37,17 +37,27 @@ Git·mise·chezmoi·사용할 셸의 현재 설치를 확인하고 필요한 최
 sh install.sh --apply --profile tests/profiles/fedora-common.json
 ```
 
+Ubuntu 선택은 tests/profiles/ubuntu-desktop.json에 있다. ai/editor_web=true, 나머지 기능=false이며 공통 13개·OpenCode·Node를 설치한다. 대상 Ubuntu의 OS 패키지는 먼저 준비해야 한다.
+
+```sh
+# Ubuntu 26.04에서, diff·백업 검토 후에만 실제 홈에 적용한다.
+sudo apt-get install git curl zsh tmux wl-clipboard build-essential bash-completion
+sh install.sh --apply --profile tests/profiles/ubuntu-desktop.json
+```
+
+기반 Python 3.11+, tar/gzip/unzip·CA 인증서도 필요하다. 진입점은 sudo/패키지 관리자나 chsh를 호출하지 않는다. 설치 후 기본 셸 전환·GUI 클립보드·LazyVim 플러그인 실행은 실제 기기 검증 단계다. 기존 다른 chezmoi 선택이나 Ubuntu 권한 정책은 자동 대체하지 않는다.
+
 설치 순서:
 
-1. 일반 사용자·실제 로그인 홈·Fedora x86_64·기본 config/data 위치와 OS 의존성을 검사한다. Git, Python 3.11+, Zsh, tmux, tar, gzip, unzip은 OS가 제공해야 한다. sudo/dnf는 이 진입점에서 실행하지 않는다.
+1. 일반 사용자·실제 로그인 홈·프로필과 일치하는 Fedora/Ubuntu x86_64·기본 config/data 위치와 OS 의존성을 검사한다. Git, Python 3.11+, Zsh, tmux, tar, gzip, unzip은 OS가 제공해야 한다. sudo/dnf/apt는 이 진입점에서 실행하지 않는다.
 2. mise 2026.10.3과 chezmoi 2.73.0이 없으면 공식 실행 파일을 SHA-256 검증 후 ~/.local/bin에 설치한다. 기존 다른 버전이나 충돌 파일은 덮어쓰지 않고 중단한다.
 3. 선택 자료로 chezmoi config를 초기화하고 필수 배포 대상이 실제 존재하는지 확인한다. 기존 다른 기기 profile은 자동 변경하지 않는다.
-4. global mise 설정을 먼저 적용하고 실제 홈에서 mise install을 실행한다. 도구 목록과 버전은 home/dot_config/mise/config.toml만 소유한다.
+4. global mise 설정을 먼저 적용하고 실제 홈에서 mise install을 실행한다. 공통 버전은 home/dot_config/mise/config.toml, 선택 환경의 추가 버전은 각 config.<environment>.toml이 중복 없이 소유한다.
 5. 셸·Git·gh·tmux·Neovim 설정과 고정 external 소스를 적용하고 chezmoi verify를 실행한다.
 
-기존 개인 환경의 이전·백업·복구나 RPM 제거를 자동 수행하지 않는다. 네트워크 또는 설치 오류는 즉시 실패하며 원자적 rollback을 제공하지 않는다. 인증·SSH/GPG 키·GUI·AI CLI·Conda는 이 baseline 밖이다. Neovim 플러그인 설치/업데이트는 별도 앱 동작이며 설치 CI에서 완료로 표시하지 않는다.
+기존 개인 환경의 이전·백업·복구나 RPM 제거를 자동 수행하지 않는다. 네트워크 또는 설치 오류는 즉시 실패하며 원자적 rollback을 제공하지 않는다. 인증·SSH/GPG 키·GUI·Conda는 설치 범위 밖이다. Ubuntu profile의 OpenCode 외 AI CLI 설치는 구현하지 않았다. Neovim 플러그인 설치/업데이트는 별도 앱 동작이며 설치 CI에서 완료로 표시하지 않는다.
 
-GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora 44 컨테이너를 생성한다. OS 의존성만 root 단계에서 준비하고 실제 설치와 테스트는 dotfiles-test 일반 사용자의 원래 홈에서 실행한다. HOME/XDG를 바꿔 성공시키지 않는다. 공백 경로의 checkout, 빈 tool cache, 실제 CLI 경로, 셸·tmux, 기존 Git/gh 설정 보존, 두 번째 설치의 내용·링크·권한 안정성을 검사한다. 컨테이너를 종료하면 설치 환경은 폐기된다. 사용자 PC에 원격 적용하는 workflow가 아니다.
+GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora 44·Ubuntu 26.04 컨테이너를 별도 job으로 생성한다. OS 의존성만 root 단계에서 준비하고 실제 설치와 테스트는 dotfiles-test 일반 사용자의 원래 홈에서 실행한다. HOME/XDG를 바꿔 성공시키지 않는다. 공백 경로의 checkout, 빈 tool cache, 실제 CLI 경로, 셸·tmux, 기존 Git/gh 설정 보존, 두 번째 설치의 내용·링크·권한 안정성을 검사한다. 컨테이너를 종료하면 설치 환경은 폐기된다. 사용자 PC에 원격 적용하는 workflow가 아니다.
 
 
 ## 확인한 실행 결과

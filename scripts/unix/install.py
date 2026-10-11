@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Explicit Fedora baseline installer; never invoked by shell startup or apply hooks."""
+"""Explicit reviewed Fedora/Ubuntu installer; never invoked by shell startup or apply hooks."""
 import argparse
 import hashlib
 import json
@@ -25,14 +25,16 @@ def run(argv, *, capture=False, cwd=None):
 
 def validate_profile(path):
     profile = json.loads(path.read_text())
-    if profile.get('platform') != 'fedora' or profile.get('deployment') != {'enabled': True, 'externals': True}:
-        raise ValueError('Explicit Fedora enabled/externals profile required.')
+    target = profile.get('platform')
+    if target not in {'fedora', 'ubuntu'} or profile.get('deployment') != {'enabled': True, 'externals': True}:
+        raise ValueError('Explicit reviewed Fedora/Ubuntu enabled/externals profile required.')
     features = profile.get('features', {})
     required = {'ai', 'personal_fedora', 'conda', 'bitwarden_agent', 'delta', 'editor_web'}
-    if set(features) != required or any(value is not False for value in features.values()):
-        raise ValueError('Only the Fedora common baseline is installable; personal and AI migrations need separate preparation.')
+    expected = {key: target == 'ubuntu' and key in {'ai', 'editor_web'} for key in required}
+    if features != expected or any(type(value) is not bool for value in features.values()):
+        raise ValueError('Only the Fedora common or Ubuntu desktop CLI profile is installable; review other selections separately.')
     if set(profile) != {'platform', 'deployment', 'features'}:
-        raise ValueError('Baseline profile may not override machine paths or chezmoi runtime data.')
+        raise ValueError('Installation profile may not override machine paths or chezmoi runtime data.')
     return profile
 
 
@@ -41,20 +43,31 @@ def preflight(profile_path):
     if os.geteuid() == 0 or USER_HOME != Path(pwd.getpwuid(os.getuid()).pw_dir):
         raise ValueError('Run as a regular user with their actual login home.')
     if platform.system() != 'Linux' or platform.machine() != 'x86_64':
-        raise ValueError('Installation currently supports Fedora x86_64 only.')
+        raise ValueError('Installation currently supports reviewed Fedora/Ubuntu x86_64 profiles only.')
     release = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
-    if release.get('ID', '').strip('"') != 'fedora':
-        raise ValueError('Installation currently supports Fedora only.')
+    if release.get('ID', '').strip('"') != profile['platform']:
+        raise ValueError('Installation profile must match the actual OS.')
+    if profile['platform'] == 'ubuntu' and release.get('VERSION_ID', '').strip('"') != '26.04':
+        raise ValueError('Ubuntu installation is reviewed for 26.04 only.')
     if any(os.environ.get(key) for key in ['MISE_ENV', 'MISE_CONFIG_DIR', 'MISE_GLOBAL_CONFIG_FILE',
                                           'MISE_DATA_DIR', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME']):
         raise ValueError('Baseline installer requires default user config/data locations; do not redirect HOME or XDG.')
     for binary in ['git', 'zsh', 'tmux', 'tar', 'gzip', 'unzip']:
         if not shutil.which(binary):
             raise ValueError(f'Missing OS prerequisite: {binary}. Installer does not run sudo or dnf.')
+    if profile['platform'] == 'ubuntu':
+        for binary in ['curl', 'wl-copy', 'gcc', 'make']:
+            if not shutil.which(binary):
+                raise ValueError(f'Missing Ubuntu OS prerequisite: {binary}. Prepare OS packages separately.')
+        if not Path('/usr/share/bash-completion/bash_completion').is_file():
+            raise ValueError('Ubuntu bash-completion is required to preserve native providers.')
     # An existing personal environment must not be downgraded into this baseline.
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     if config.exists():
-        data = tomllib.loads(config.read_text()).get('data', {})
+        document = tomllib.loads(config.read_text())
+        if profile['platform'] == 'ubuntu' and document.get('umask') != 0o077:
+            raise ValueError('Existing Ubuntu chezmoi permissions policy differs; review it before installation.')
+        data = document.get('data', {})
         for key in profile:
             if data.get(key) != profile[key]:
                 raise ValueError('Existing chezmoi machine selection differs; review the migration instead of replacing it.')
@@ -129,7 +142,7 @@ def install(profile_path):
     print('Apply configuration and pinned external plugins', flush=True)
     run(base + ['apply'])
     run(base + ['verify'])
-    print('Fedora common baseline applied; authentication and personal profile were not configured.', flush=True)
+    print(f"{profile['platform']} reviewed CLI profile applied; authentication, login shell and OS packages were not configured.", flush=True)
 
 
 if __name__ == '__main__':
