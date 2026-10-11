@@ -27,6 +27,15 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_existing_bootstrap_versions_accept_publisher_v_prefix(self):
+        with patch.object(installer.shutil, 'which', return_value='/existing/chezmoi'), \
+             patch.object(installer, 'run', return_value='chezmoi version v2.73.0, built at upstream'):
+            self.assertEqual(installer.pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi'), Path('/existing/chezmoi'))
+        with patch.object(installer.shutil, 'which', return_value='/existing/chezmoi'), \
+             patch.object(installer, 'run', return_value='chezmoi version v2.72.0'):
+            with self.assertRaisesRegex(ValueError, 'current provider'):
+                installer.pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
+
     def test_mac_existing_provider_is_never_replaced(self):
         with patch('lib.macos.shutil.which', return_value='/existing/claude'), patch('lib.macos.run') as execute:
             install_cask('claude-code', command='claude')
@@ -51,6 +60,7 @@ class InstallerContracts(unittest.TestCase):
         self.assertFalse(profile['features']['managed_ai'])
         self.assertTrue(installer.matches_profile(profile, profile))
 
+    @unittest.skipIf(os.name == "nt", "Unix mode/symlink backups; Windows uses its native ACL implementation.")
     def test_backup_preserves_file_modes_symlinks_and_absence(self):
         with tempfile.TemporaryDirectory(prefix='backup with spaces ') as temporary:
             home = Path(temporary)

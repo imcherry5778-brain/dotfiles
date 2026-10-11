@@ -97,7 +97,7 @@ def pinned_binary(name, metadata_path, repository):
     if existing:
         output = run([existing, '--version'], capture=True)
         import re
-        match = re.search(r'\b(\d+\.\d+\.\d+)\b', output)
+        match = re.search(r'(?<![0-9])(\d+\.\d+\.\d+)(?![0-9])', output)
         if not match or tuple(map(int, match[1].split('.'))) < tuple(map(int, expected.split('.'))):
             raise ValueError(f'Existing {name} is below {expected}; update through its current provider.')
         return Path(existing)

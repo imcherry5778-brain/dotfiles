@@ -1,6 +1,15 @@
 #!/bin/sh
 # Runtime bootstrap only; sourced by the explicit installer and disposable CI.
 # Never source user shell startup files to discover tools.
+bootstrap_at_least() {
+  # Numeric comparison: lexicographic sort would treat 2026.9 as newer than 2026.10.
+  awk -v actual="$1" -v required="$2" 'BEGIN {
+    split(actual, a, "."); split(required, b, ".")
+    for (i=1; i<=3; i++) { if (a[i]+0 > b[i]+0) exit 0; if (a[i]+0 < b[i]+0) exit 1 }
+    exit 0
+  }'
+}
+
 bootstrap_runtime() {
   bootstrap_repo=$1
   [ "$(id -u)" -ne 0 ] || { printf '%s\n' 'Run the installer as your regular desktop user.' >&2; return 1; }
@@ -22,11 +31,22 @@ bootstrap_runtime() {
       }
       PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.local/bin:$PATH"
       export PATH
-      if ! command -v mise >/dev/null 2>&1; then brew install mise; fi
-      # Preserve installation ownership; update only an incompatible bootstrap.
-      bootstrap_version=$(mise --version | awk '{print $1}')
-      if [ "$(printf '%s\n' 2026.10.3 "$bootstrap_version" | sort | head -n 1)" != 2026.10.3 ]; then brew upgrade mise; fi
-      if ! command -v chezmoi >/dev/null 2>&1; then brew install chezmoi; fi
+      bootstrap_refresh=0
+      bootstrap_version=$(cd "$HOME" && mise --version 2>/dev/null | awk '{print $1}') || bootstrap_version=0.0.0
+      bootstrap_chezmoi_version=$(chezmoi --version 2>/dev/null | sed -n 's/.*version v*\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p') || bootstrap_chezmoi_version=0.0.0
+      if ! bootstrap_at_least "${bootstrap_version:-0.0.0}" 2026.10.3; then bootstrap_refresh=1; fi
+      if ! bootstrap_at_least "${bootstrap_chezmoi_version:-0.0.0}" 2.73.0; then bootstrap_refresh=1; fi
+      # Hosted images can disable auto-update. Refresh metadata, not installed packages.
+      if [ "$bootstrap_refresh" -eq 1 ]; then brew update; fi
+      for bootstrap_tool in mise chezmoi; do
+        if ! command -v "$bootstrap_tool" >/dev/null 2>&1; then
+          brew install "$bootstrap_tool"
+        elif [ "$bootstrap_tool" = mise ] && ! bootstrap_at_least "${bootstrap_version:-0.0.0}" 2026.10.3; then
+          brew upgrade mise
+        elif [ "$bootstrap_tool" = chezmoi ] && ! bootstrap_at_least "${bootstrap_chezmoi_version:-0.0.0}" 2.73.0; then
+          brew upgrade chezmoi
+        fi
+      done
       ;;
     Linux:x86_64)
       . /etc/os-release

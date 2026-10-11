@@ -33,7 +33,11 @@ case "${1:---plan}" in
     ;;
   --desktop-plan)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
-    exec python3 "$repo_root/scripts/unix/install.py" "$1"
+    if [ "$(uname -s)" = Darwin ]; then
+      printf '%s\n' '{"ghostty":"Homebrew cask; existing app preserved","orca":"stablyai/orca/orca Homebrew cask"}'
+    else
+      exec python3 "$repo_root/scripts/unix/install.py" "$1"
+    fi
     ;;
   --help|-h)
     printf '%s\n' 'Usage: sh install.sh [--plan|--check|--help] | --apply --profile FILE | --desktop-plan | --desktop-only'

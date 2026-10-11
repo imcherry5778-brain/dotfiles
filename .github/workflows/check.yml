@@ -60,6 +60,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python3 ./tests/verify-desktop.py --chezmoi $env:CHEZMOI_BIN --platform opensuse-tumbleweed
 
+      - name: Verify existing five-profile render and provider regression
+        if: runner.os != 'Windows'
+        run: python3 ./tests/verify-regression.py --chezmoi $env:CHEZMOI_BIN
+
       - name: Verify Mac configuration in an isolated destination
         if: runner.os != 'Windows'
         run: python3 ./tests/verify-macos.py --chezmoi $env:CHEZMOI_BIN
