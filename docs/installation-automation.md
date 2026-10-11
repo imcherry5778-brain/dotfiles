@@ -7,10 +7,10 @@
 - `scripts/unix/install.py`: 기존 명시적 진입점의 프로필 검증·사용자 설정·mise 설치 순서. 기본 계획과 설치 동작을 분리한다.
 - `scripts/lib/runtime.py`: OS/CPU 판별, 셸을 거치지 않는 명령 실행, 스트리밍 다운로드와 SHA-256 검증, 필요한 패키지 명령의 권한 처리. Linux/macOS/Windows에서 재사용한다.
 - `scripts/lib/desktop.py`: OS별 Ghostty·Orca 설치만 담당한다. 기존 설치는 공급자·버전·설정을 유지하며 업그레이드하지 않는다. 설정·인증은 다루지 않는다.
-- `scripts/desktop-release.json`: Orca 공식 릴리스 자산과 검증할 SHA-256의 단일 소유자다. Ubuntu/Fedora 패키지는 1.4.224로 고정한다. macOS는 공식 Homebrew cask, Windows는 공식 설치 프로그램을 사용한다.
+- `scripts/desktop-release.json`: Orca 공식 릴리스 자산과 검증할 SHA-256의 단일 소유자다. Ubuntu/Fedora 패키지와 Arch/openSUSE 공용 AppImage는 1.4.224로 고정한다. macOS는 공식 Homebrew cask, Windows는 공식 설치 프로그램을 사용한다.
 - `home/dot_config/mise/config.ai-managed.toml`: 추가 AI CLI 7개의 버전·공급자 단일 소유자다. 기존 shared OpenCode는 `config.ai.toml`에 그대로 둔다. CLI 버전을 별도 설치 목록에 중복 선언하지 않는다.
 
-새 `managed_ai`·`desktop` 선택은 기본 false다. Ubuntu·Arch full profile만 켠다. Fedora 기존 34개 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 실제 config 배포는 계속 Fedora/Ubuntu/Arch만 지원한다. macOS/Windows native 앱의 계획·분기는 재사용하지만 이 기기에서 실행하지 않았다. Kiro mise archive는 현재 Linux x64/arm64만 구현되어 있으므로 전체 Windows/macOS AI 배포 완료로 표시하지 않는다.
+새 `managed_ai`·`desktop` 선택은 기본 false다. Ubuntu·Arch·openSUSE full profile만 켠다. Fedora 기존 34개 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 실제 config 배포는 계속 Fedora/Ubuntu/Arch/openSUSE만 지원한다. macOS/Windows native 앱의 계획·분기는 재사용하지만 이 기기에서 실행하지 않았다. Kiro mise archive는 현재 Linux x64/arm64만 구현되어 있으므로 전체 Windows/macOS AI 배포 완료로 표시하지 않는다.
 
 ## 공식 공급자 판단
 
@@ -23,7 +23,7 @@
 | Pi | mise npm 공식 @earendil-works/pi-coding-agent, 1.1.0 | [Pi 공식 설치](https://pi.dev/); install scripts 비활성 옵션을 유지한다 |
 | Kiro | mise HTTP 공식 headless archive, 2.29.1 | [공식 설치 안내](https://kiro.dev/docs/getting-started/installation/), [공식 checksum manifest](https://prod.download.cli.kiro.dev/stable/latest/manifest.json); setup·로그인은 실행하지 않는다 |
 | Grok | mise registry의 xAI 공식 native artifact, 1.0.50 | [xAI CLI](https://x.ai/cli), [공식 CLI 참조](https://docs.x.ai/build/cli/reference); 다른 npm Grok 프로젝트와 구분한다 |
-| Ghostty | Ubuntu 공식 APT / Arch extra / Fedora COPR / macOS Homebrew | [공식 패키지 안내](https://ghostty.org/docs/install/binary); native Windows 배포는 지원하지 않는다 |
+| Ghostty | Ubuntu 공식 APT / Arch extra / openSUSE OSS / Fedora COPR / macOS Homebrew | [공식 패키지 안내](https://ghostty.org/docs/install/binary); native Windows 배포는 지원하지 않는다 |
 | Orca | Stably 공식 desktop 배포 | [공식 설치](https://www.onorca.dev/docs/install); Linux CLI는 orca-ide로 GNOME 스크린리더와 구분한다 |
 
 mise는 배포물 다운로드·CLI 설치 경로·버전을 관리하고 chezmoi는 위 선택과 설정을 배포한다. [mise HTTP backend](https://mise.jdx.dev/dev-tools/backends/http.html)와 [uv/PyPI backend](https://mise.jdx.dev/dev-tools/backends/pypi.html)의 기능을 사용한다. chezmoi apply hook과 셸 시작에서 앱 설치나 sudo를 실행하지 않는다. 설치된 버전과 공급업체의 자체 업데이트 정책은 별개이며 자동 로그인이나 업데이트 정책 변경은 하지 않는다.
@@ -45,4 +45,6 @@ Fedora Ghostty 설정에는 활성 옵션이 없고 주석만 있었다. 따라�
 
 ## 검증
 
-오프라인 계약 검사는 OS 분기·프로필 경계·기존 설치 보존·다운로드 체크섬·공백 경로·기존 파일 보존을 확인한다. hosted Installation checks에는 기존 Fedora 13개 / Ubuntu 15개 외에 Ubuntu·Arch full 22개 CLI + Ghostty·Orca 패키지/AppImage의 cold install·실행·반복 적용을 추가했다. GUI 창·인증·모든 OS의 실제 실행은 CI 성공으로 주장하지 않는다.
+오프라인 계약 검사는 OS 분기·프로필 경계·기존 설치 보존·다운로드 체크섬·공백 경로·기존 파일 보존을 확인한다. hosted Installation checks에는 기존 Fedora 13개 / Ubuntu 15개 외에 Ubuntu·Arch·openSUSE full 22개 CLI + Ghostty·Orca 패키지/AppImage의 cold install·실행·반복 적용을 추가했다. GUI 창·인증·모든 OS의 실제 실행은 CI 성공으로 주장하지 않는다.
+
+openSUSE는 기존 OSS 저장소의 Ghostty를 사용한다. Orca의 공식 AppImage를 사용자 경로에 풀어 실행하는 구현과 체크섬 메타데이터는 Arch와 공유한다. 새 설정 배포·기본값 활성화·서명 예외는 앱 설치에 포함하지 않는다. Zypper 단계는 기존 패키지·vendor를 유지하는 순수 추가 계획만 허용한다.
