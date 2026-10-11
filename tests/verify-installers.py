@@ -61,11 +61,28 @@ class InstallerContracts(unittest.TestCase):
             self.assertEqual(loader.stat().st_mode & 0o777, 0o600)
             self.assertEqual((home / 'vendor-auth-fixture').read_text(), 'retained fixture')
 
+    def test_ai_provider_conflicts_preserve_native_and_accept_mise_shims(self):
+        home = Path('/reviewed-home')
+        with patch.object(installer.shutil, 'which', return_value='/usr/bin/native-ai'):
+            with self.assertRaisesRegex(ValueError, 'no automatic migration'):
+                installer.assert_ai_providers(home)
+        with patch.object(installer.shutil, 'which', return_value=str(home / '.local/share/mise/shims/claude')):
+            installer.assert_ai_providers(home)
+
     def test_reader_rejects_recursive_apply(self):
         reader = installer.ReviewReader({'chezmoi':'chezmoi','config':'config'}, 'separate-state')
         for operation in ['apply', 'init', 'update', 'state']:
             with self.assertRaisesRegex(ValueError, 'read-only'):
                 reader.query(operation)
+
+    def test_full_profiles_reject_numeric_booleans(self):
+        for name in ['fedora-full', 'macos-full']:
+            with tempfile.TemporaryDirectory() as scratch:
+                profile = json.loads((ROOT / f'tests/profiles/{name}.json').read_text())
+                profile['features']['delta'] = 0
+                path = Path(scratch) / 'profile.json'; path.write_text(json.dumps(profile))
+                with self.assertRaisesRegex(ValueError, 'Booleans'):
+                    installer.validate_profile(path)
 
     def test_fedora_full_is_portable_and_not_personal(self):
         profile = installer.validate_profile(ROOT / 'tests/profiles/fedora-full.json')

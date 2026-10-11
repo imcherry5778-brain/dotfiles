@@ -70,6 +70,14 @@ with pathlib.Path(sys.argv[2]).open('a') as stream:
         assert trace.read_text().count('\n') == 4, 'Plain apply skipped reconciliation.'
         run([*base,'verify','--exclude=scripts'])
         assert not run([*base,'diff','--exclude=scripts']).strip()
+        # Same init --apply must preserve unmanaged chezmoi options and custom data.
+        with config.open('a') as stream:
+            stream.write('\n[diff]\npager = ""\n[data.custom]\nretained = "existing"\n')
+        run([*base,'init','--apply'])
+        document = tomllib.loads(config.read_text())
+        assert document['data']['custom']['retained'] == 'existing'
+        assert document['diff']['pager'] == ''
+        assert trace.read_text().count('\n') == 6
         # An explicit profile replacement must fail before replacing machine config.
         original = config.read_bytes()
         profile['features']['desktop'] = False; override.write_text(json.dumps(profile))

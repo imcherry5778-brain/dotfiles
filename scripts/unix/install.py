@@ -29,6 +29,8 @@ from lib.tools import verify_mise_tools
 def validate_profile(path):
     profile = json.loads(path.read_text())
     target = profile.get('platform')
+    if any(type(value) is not bool for value in profile.get('features', {}).values()) or any(type(value) is not bool for value in profile.get('deployment', {}).values()):
+        raise ValueError('Feature and deployment flags must be Booleans.')
     if target not in REVIEWED_PLATFORMS or profile.get('deployment') != {'enabled': True, 'externals': True}:
         raise ValueError('Explicit reviewed Fedora/Ubuntu/Arch/openSUSE enabled/externals profile required.')
     if target == 'fedora' and profile == json.loads((ROOT / 'tests/profiles/fedora-full.json').read_text()):
@@ -171,7 +173,7 @@ def assert_ai_providers(home):
     """Portable full profiles never take over an existing native AI provider."""
     for command in ['agy', 'claude', 'codex', 'pi', 'kiro-cli', 'grok', 'aider']:
         existing = shutil.which(command)
-        if existing and not Path(existing).resolve().is_relative_to(home / '.local/share/mise'):
+        if existing and not Path(existing).absolute().is_relative_to(home / '.local/share/mise'):
             raise ValueError(f'Existing {command} provider needs review; no automatic migration to mise.')
 
 

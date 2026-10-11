@@ -98,6 +98,7 @@ function Assert-ExistingSelection {
         $wanted = $Requested.$section.PSObject.Properties
         if (@($actual).Count -ne @($wanted).Count) { throw "Existing $section selection differs; no replacement performed." }
         foreach ($property in $wanted) {
+            if ($section -eq 'features' -and $Existing.features.($property.Name) -isnot [bool]) { throw 'Feature flags must be Booleans.' }
             if ($property.Name -notin $actual.Name -or $Existing.$section.($property.Name) -ne $property.Value) {
                 throw "Existing $section selection differs; no replacement performed."
             }
@@ -171,9 +172,9 @@ function Read-Review {
     return ($output -join "`n")
 }
 function New-ConfigurationBackup {
-    param($Managed, [string] $Review)
+    param($Managed, [string] $Review, [string] $UserHome = $HOME)
 # Capture only managed destinations plus the registry values changed by this workflow.
-$backup = New-PrivateDirectory (Join-Path $HOME ('.local/state/dotfiles/backups/' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffffffZ') + '-windows'))
+$backup = New-PrivateDirectory (Join-Path $UserHome ('.local/state/dotfiles/backups/' + (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffffffZ') + '-windows'))
 $manifest = @()
 $extraBackups = @('.config/chezmoi/chezmoi.toml',
     'Documents/PowerShell/Microsoft.PowerShell_profile.ps1',
@@ -182,8 +183,8 @@ $extraBackups = @('.config/chezmoi/chezmoi.toml',
     'Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1',
     '.pi/agent/settings.json', '.grok/config.toml')
 foreach ($relative in @($managed + $extraBackups | Select-Object -Unique)) {
-    $target = [IO.Path]::GetFullPath((Join-Path $HOME $relative))
-    if (-not $target.StartsWith($HOME + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw "Target outside actual home: $relative" }
+    $target = [IO.Path]::GetFullPath((Join-Path $UserHome $relative))
+    if (-not $target.StartsWith($UserHome + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw "Target outside actual home: $relative" }
     $entry = @{path=$relative;exists=(Test-Path -LiteralPath $target -PathType Leaf)}
     if ($entry.exists) {
         $destination = Join-Path $backup ('files/' + $relative)
@@ -196,7 +197,7 @@ foreach ($relative in @($managed + $extraBackups | Select-Object -Unique)) {
 }
 @{files=$manifest;userPath=[Environment]::GetEnvironmentVariable('Path','User');policy=[Environment]::GetEnvironmentVariable('PSExecutionPolicyPreference');currentUserPolicy=(Get-ExecutionPolicy -Scope CurrentUser).ToString()} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $backup 'manifest.json') -Encoding utf8NoBOM
 Copy-Item -LiteralPath (Join-Path $review 'config.diff') -Destination (Join-Path $backup 'before.diff')
-Write-Output "Private targeted backup: $backup"
+Write-Host "Private targeted backup: $backup"
 return $backup
 }
 function Enable-ProfilePolicy {
