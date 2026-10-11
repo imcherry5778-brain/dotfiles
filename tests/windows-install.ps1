@@ -29,6 +29,7 @@ if ($existingPwsh) {
 $profile = Join-Path $repo 'tests/profiles/windows-cli.json'
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
 if ($LASTEXITCODE -ne 0) { throw 'First native install failed.' }
+$env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'))
 # Query a new native PowerShell 7 process, without an inherited process Bypass.
 $processPolicy = $env:PSExecutionPolicyPreference
 try {
@@ -37,7 +38,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Future native PowerShell 7 profiles remain blocked.' }
 } finally { $env:PSExecutionPolicyPreference = $processPolicy }
 if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'Restricted') { throw 'Windows PowerShell 5.1 policy was changed.' }
-$env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'))
 $before = & chezmoi --no-tty --no-pager diff | Out-String
 if ($LASTEXITCODE -ne 0 -or $before.Trim()) { throw 'Unexpected diff after first installation.' }
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
