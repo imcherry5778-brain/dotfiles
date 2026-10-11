@@ -56,7 +56,7 @@ def main():
         # Existing shell checkouts are a prerequisite, not part of migration.
         seed = json.loads(override.read_text()); seed['deployment']['externals'] = True
         upstream = scratch / 'existing-shell.json'; upstream.write_text(json.dumps(seed))
-        run(chezmoi, '--override-data-file', upstream, 'apply', '--include=externals')
+        run(chezmoi, '--override-data-file', upstream, 'apply', '--include=dirs,externals')
         marker = HOME / '.oh-my-zsh/custom/retained-user-plugin.txt'; marker.write_text('preserved\n')
         run(chezmoi, 'apply')  # legacy configuration, automation disabled
         assert not tomllib.loads((HOME / '.config/chezmoi/chezmoi.toml').read_text())['data']['automation']['enabled']
