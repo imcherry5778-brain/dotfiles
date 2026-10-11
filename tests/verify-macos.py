@@ -18,7 +18,7 @@ def run(arguments):
 
 
 def verify(chezmoi):
-    with tempfile.TemporaryDirectory(prefix='mac configuration with spaces ') as temporary:
+    with tempfile.TemporaryDirectory(prefix='mac configuration with spaces ', dir='/tmp') as temporary:
         scratch = Path(temporary)
         home = scratch / 'home'; home.mkdir()
         source = scratch / 'source with spaces'
