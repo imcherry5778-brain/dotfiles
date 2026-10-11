@@ -30,7 +30,7 @@ Fedora common은 공통 13개 CLI만 선택한다. 기존 개인 Fedora의 AI/Co
 ## 실행 순서와 소유권
 
 1. 실제 일반 사용자 홈·OS/architecture·프로필·기존 선택·기본 config 경로를 확인한다. HOME/XDG를 임의로 바꿔 적용하지 않는다.
-2. 필수 도구를 준비한다. Linux/Mac 설치기 Python 3.12.15는 저장소 mise 설정으로 설치해 `mise exec`로 실행한다. 시스템 Python을 교체하지 않는다. Windows 5.1 진입점은 필요한 PowerShell 7을 WinGet으로 준비한 뒤 같은 인자로 이어 실행한다.
+2. 필수 도구를 준비한다. Linux/Mac 설치기 Python 3.12.15는 `scripts/unix/mise.toml`로 설치해 `mise exec`로 실행한다. 시스템 Python을 교체하지 않는다. Windows 5.1 진입점은 필요한 PowerShell 7을 WinGet으로 준비한 뒤 같은 인자로 이어 실행한다.
 3. OS 필수 패키지를 설치한다. Ubuntu/Fedora는 standalone mise bootstrap packages로 누락분만 추가한다. Arch는 기존 sync DB를 쓰고 단독 `-Sy`를 호출하지 않는다. DB가 없으면 전체 `pacman -Syu` 준비를 안내하고 중단한다. openSUSE는 기존 solver를 검사해 추가만 허용한다. Mac은 Homebrew를 직접 사용한다.
 4. 현재 설정을 다시 읽고 fresh diff를 출력한다. 변경 대상만 개인 백업한다. Unix 백업은 `~/.local/state/dotfiles/backups/<timestamp>-<platform>`이며 파일 권한·symlink·원래 없던 경로를 기록한다. Windows는 같은 위치에 대상 파일과 사용자 PATH/정책 값을 기록한다.
 5. 선택한 CLI와 앱을 설치한다. chezmoi는 설정, mise는 CLI 버전, 각 OS provider는 필수 패키지/GUI를 소유한다. 기존 native 앱/provider를 자동 이전하거나 업그레이드하지 않는다. Mac의 bootstrap mise가 최소 버전 미만이면 기존 Homebrew owner로 해당 도구만 갱신한다.

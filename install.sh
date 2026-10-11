@@ -23,13 +23,13 @@ case "${1:---plan}" in
     [ -f "$3" ] || { printf '%s\n' 'Profile file not found.' >&2; exit 2; }
     . "$repo_root/scripts/unix/bootstrap.sh"
     bootstrap_runtime "$repo_root"
-    exec "$bootstrap_mise" -C "$repo_root" exec -- python "$repo_root/scripts/unix/install.py" --profile "$3"
+    exec "$bootstrap_mise" -C "$repo_root/scripts/unix" exec -- python "$repo_root/scripts/unix/install.py" --profile "$3"
     ;;
   --desktop-only)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
     . "$repo_root/scripts/unix/bootstrap.sh"
     bootstrap_runtime "$repo_root"
-    exec "$bootstrap_mise" -C "$repo_root" exec -- python "$repo_root/scripts/unix/install.py" --desktop-only
+    exec "$bootstrap_mise" -C "$repo_root/scripts/unix" exec -- python "$repo_root/scripts/unix/install.py" --desktop-only
     ;;
   --desktop-plan)
     [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }

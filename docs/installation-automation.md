@@ -49,4 +49,4 @@ Fedora Ghostty 설정에는 활성 옵션이 없고 주석만 있었다. 따라�
 
 openSUSE는 기존 OSS 저장소의 Ghostty를 사용한다. Orca의 공식 AppImage를 사용자 경로에 풀어 실행하는 구현과 체크섬 메타데이터는 Arch와 공유한다. 새 설정 배포·기본값 활성화·서명 예외는 앱 설치에 포함하지 않는다. Zypper 단계는 기존 패키지·vendor를 유지하는 순수 추가 계획만 허용한다.
 
-공통 필수 패키지는 `scripts/lib/packages.py`, 대상별 개인 백업은 `scripts/lib/backup.py`, Mac native provider는 `scripts/lib/macos.py`와 `scripts/macos-providers.json`이 담당한다. 저장소 `mise.toml`의 Python은 설치기용이며 global CLI inventory에 중복 선언하지 않는다.
+공통 필수 패키지는 `scripts/lib/packages.py`, 대상별 개인 백업은 `scripts/lib/backup.py`, Mac native provider는 `scripts/lib/macos.py`와 `scripts/macos-providers.json`이 담당한다. `scripts/unix/mise.toml`의 Python은 설치기용이며 global CLI inventory에 중복 선언하지 않는다.

@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import tomllib
 import urllib.error
 from unittest.mock import patch
 
@@ -27,6 +28,13 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_installer_python_is_not_a_windows_or_plan_dependency(self):
+        root = tomllib.loads((ROOT / 'mise.toml').read_text())
+        runtime = tomllib.loads((ROOT / 'scripts/unix/mise.toml').read_text())
+        self.assertNotIn('tools', root)
+        self.assertFalse(root['settings']['auto_install'])
+        self.assertEqual(runtime['tools'], {'python': '3.12.15'})
+
     def test_mac_checks_both_ghostty_locations(self):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)

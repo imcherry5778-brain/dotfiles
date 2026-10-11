@@ -1,0 +1,5 @@
+# Installer runtime only. Never applied to the global user CLI inventory.
+min_version = "2026.10.3"
+
+[tools]
+python = "3.12.15"

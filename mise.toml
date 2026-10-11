@@ -1,8 +1,8 @@
 min_version = "2026.9.18"
 
-# Repository runtime and operations. Global CLI inventory belongs to home/dot_config/mise.
-[tools]
-python = "3.12.15"
+# Read-only repository tasks must not install tools implicitly.
+[settings]
+auto_install = false
 [tasks.plan]
 description = "Show the setup plan without installing or applying anything"
 run = "sh install.sh --plan"

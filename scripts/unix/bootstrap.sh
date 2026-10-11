@@ -82,5 +82,6 @@ bootstrap_runtime() {
   esac
   bootstrap_mise=$(command -v mise)
   "$bootstrap_mise" trust "$bootstrap_repo/mise.toml"
-  "$bootstrap_mise" -C "$bootstrap_repo" install python --yes
+  "$bootstrap_mise" trust "$bootstrap_repo/scripts/unix/mise.toml"
+  "$bootstrap_mise" -C "$bootstrap_repo/scripts/unix" install python --yes
 }

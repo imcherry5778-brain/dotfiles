@@ -11,7 +11,7 @@
 ```text
 dotfiles/
 ├── install.sh / install.ps1   # 기본 계획·검사, 명시적 플랫폼 설치
-├── mise.toml                 # 저장소 작업·설치기 Python
+├── mise.toml                 # 읽기 전용 저장소 작업
 ├── home/                     # chezmoi 소스: 기기 데이터·선택할 설정
 │   ├── .chezmoitemplates/    # 재사용 조각
 │   └── dot_config/           # 검토한 앱별 설정 원본
