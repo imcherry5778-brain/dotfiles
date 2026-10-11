@@ -5,6 +5,8 @@ name = "dotfiles"
 # Shared choices only; no tool inventory or machine credentials here.
 [features]
 ai = true
+managed_ai = false
+desktop = false
 conda = false
 personal_fedora = false
 bitwarden_agent = false

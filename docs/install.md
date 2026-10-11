@@ -67,3 +67,7 @@ GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora
 같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 당시 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다. 이후 개인 홈 적용 기록은 [Fedora 실제 적용 결과](fedora-application.md)에서 구분한다.
 
 2026-10-11, Ubuntu 지원 코드 commit `55f5402`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38140944752)는 Ubuntu 26.04의 15개 도구와 Fedora 44의 13개 도구를 각각 새로 설치해 두 번 적용했다. 두 환경 모두 실행 경로/버전·Zsh/tmux·기존 설정 보존·반복 적용·빈 diff를 통과했다. 관리 경로는 external을 포함하여 Ubuntu 1,944개·Fedora 1,903개다. 실제 Ubuntu 사용자 홈은 여전히 미적용이다.
+
+## AI·데스크톱 전체 프로필
+
+기존 Fedora common / Ubuntu desktop CLI profile의 범위는 유지한다. 명시적 Ubuntu full 선택과 OS native 앱 단계는 [AI·데스크톱 설치 자동화](installation-automation.md)에 기록했다. desktop=true인 full profile은 OS 패키지를 설치하므로 sudo가 필요할 수 있다. 설정 적용과 CLI 설치는 계속 일반 사용자로 실행한다.

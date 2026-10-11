@@ -2,6 +2,9 @@
 {{ if or (not .deployment.enabled) (not (has .platform (list "fedora" "ubuntu"))) }}
 **
 {{ else }}
+{{ if and (dig "features" "managed_ai" false .) (or (ne .platform "ubuntu") (not .features.ai)) }}
+{{ fail "managed_ai requires the reviewed Ubuntu AI profile; preserve existing Fedora providers." }}
+{{ end }}
 {{ if and (eq .platform "ubuntu") .features.personal_fedora }}
 {{ fail "personal_fedora is Fedora-only; review Ubuntu tools separately." }}
 {{ end }}
@@ -17,6 +20,9 @@ README.md
 .config/carapace/**
 .local/bin/refresh-completions
 .local/share/shell-completion/**
+{{ end }}
+{{ if not (dig "features" "managed_ai" false .) }}
+.config/mise/config.ai-managed.toml
 {{ end }}
 {{ if not .features.ai }}
 .claude/**

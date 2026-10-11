@@ -1,13 +1,21 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-  [ValidateSet('Plan', 'Check')]
+  [ValidateSet('Plan', 'Check', 'DesktopPlan', 'DesktopApply')]
   [string] $Mode = 'Plan'
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = $PSScriptRoot
+
+if ($Mode -in @('DesktopPlan', 'DesktopApply')) {
+  $python = Get-Command python3, python -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $python) { throw 'Python 3.11+ is required for native application installation.' }
+  $stage = if ($Mode -eq 'DesktopPlan') { '--desktop-plan' } else { '--desktop-only' }
+  & $python.Source (Join-Path $repoRoot 'scripts/unix/install.py') $stage
+  exit $LASTEXITCODE
+}
 
 if ($Mode -eq 'Check') {
   & (Join-Path $repoRoot 'scripts/windows/check.ps1')

@@ -95,7 +95,36 @@ def verify(chezmoi):
         installer = importlib.util.module_from_spec(spec); spec.loader.exec_module(installer)
         installer.validate_profile(ROOT / 'tests/profiles/ubuntu-desktop.json')
         installer.validate_profile(ROOT / 'tests/profiles/fedora-common.json')
-    print('Ubuntu source: persisted profile, 15 unique tools, Bash preservation, private modes, repeated apply and guards passed.')
+    # Full AI profile is opt-in; its tool ownership must not leak into Fedora/baseline.
+    with tempfile.TemporaryDirectory(prefix='ubuntu-full-source-') as temporary:
+        scratch = Path(temporary)
+        source, home = scratch / 'source with spaces', scratch / 'home with spaces'
+        shutil.copytree(ROOT, source, ignore=shutil.ignore_patterns('.git', '__pycache__', '.artifacts'))
+        home.mkdir()
+        run(['git', '-c', 'init.templateDir=', 'init', '--quiet', source])
+        profile = json.loads((ROOT / 'tests/profiles/ubuntu-full.json').read_text())
+        profile['deployment']['externals'] = False
+        profile['chezmoi'] = {'os': 'linux', 'osRelease': {'id': 'ubuntu'}}
+        override = scratch / 'profile.json'
+        override.write_text(json.dumps(profile))
+        config = scratch / 'chezmoi.toml'
+        base = [chezmoi, '--source', source, '--destination', home, '--config', config,
+                '--cache', scratch / 'cache', '--persistent-state', scratch / 'state',
+                '--override-data-file', override, '--no-tty', '--no-pager']
+        config.write_text(run(base + ['execute-template', '--init', '--file', source / 'home/.chezmoi.toml.tmpl']))
+        run(base + ['apply'])
+        inventory = {}
+        for name in ['config.toml', 'config.ai.toml', 'config.ai-managed.toml', 'config.editor-ubuntu.toml']:
+            tools = tomllib.loads((home / '.config/mise' / name).read_text())['tools']
+            assert not set(tools) & set(inventory), 'Duplicate tool owners in full profile'
+            inventory.update(tools)
+        assert len(inventory) == 22
+        assert tomllib.loads((home / '.config/mise/miserc.toml').read_text())['env'] == ['ai', 'ai-managed', 'editor-ubuntu']
+        before = state(home)
+        run(base + ['apply'])
+        assert state(home) == before and not run(base + ['diff']).strip()
+        assert not (home / '.config/ghostty/config').exists(), 'Default-only Ghostty config must not be generated'
+    print('Ubuntu source: persisted profile, 15/22 unique tools, explicit AI opt-in, Bash preservation, private modes, repeated apply and guards passed.')
 
 
 if __name__ == '__main__':

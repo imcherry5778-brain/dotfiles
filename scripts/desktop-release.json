@@ -1,0 +1,33 @@
+{
+  "orca": {
+    "version": "1.4.224",
+    "source": "https://www.onorca.dev/docs/install",
+    "assets": {
+      "ubuntu-x64": {
+        "name": "orca-ide_1.4.224_amd64.deb",
+        "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-ide_1.4.224_amd64.deb",
+        "sha256": "f03a25ca5f5d1dce4d979b823865debc40b48a4198b1ba806d1f4ab576076c0a"
+      },
+      "ubuntu-arm64": {
+        "name": "orca-ide_1.4.224_arm64.deb",
+        "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-ide_1.4.224_arm64.deb",
+        "sha256": "f3d06a083490689cd3ca66881ed2707c78f63134d2a6d939284aee005a2ffcd1"
+      },
+      "fedora-x64": {
+        "name": "orca-ide-1.4.224.x86_64.rpm",
+        "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-ide-1.4.224.x86_64.rpm",
+        "sha256": "af583eb5ae139b27240e68e9ec5f849b7d6063a4786cc63071b4ff82b60008de"
+      },
+      "fedora-arm64": {
+        "name": "orca-ide-1.4.224.aarch64.rpm",
+        "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-ide-1.4.224.aarch64.rpm",
+        "sha256": "e344b2f8928ea3f6163716e5d910068b1d71ba9781bfcbc87672531dc9aeb07c"
+      },
+      "windows-x64": {
+        "name": "orca-windows-setup.exe",
+        "url": "https://github.com/stablyai/orca/releases/download/v1.4.224/orca-windows-setup.exe",
+        "sha256": "d192a7f1142b58a8c9bc855275fb37cd41dff7f152fd3cbac3acdd96331ec849"
+      }
+    }
+  }
+}

@@ -32,6 +32,10 @@ jobs:
           "CHEZMOI_BIN=$binary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Verify native scripts and isolated initialization
         run: ./tests/verify.ps1
+      - name: Verify shared installer contracts without downloads
+        run: python3 ./tests/verify-installers.py
+      - name: Verify native desktop plan without installation
+        run: ./install.ps1 -Mode DesktopPlan
       - name: Prepare Fedora source-test shell on the disposable runner
         if: runner.os == 'Linux'
         shell: bash

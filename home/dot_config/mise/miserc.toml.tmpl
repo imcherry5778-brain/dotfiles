@@ -1,5 +1,6 @@
 {{- $envs := list -}}
 {{- if .features.ai -}}{{- $envs = append $envs "ai" -}}{{- end -}}
+{{- if dig "features" "managed_ai" false . -}}{{- $envs = append $envs "ai-managed" -}}{{- end -}}
 {{- if .features.personal_fedora -}}{{- $envs = append $envs "personal-fedora" -}}{{- end -}}
 {{- if and (eq .platform "ubuntu") .features.editor_web -}}{{- $envs = append $envs "editor-ubuntu" -}}{{- end -}}
 # Machine selection. Presence of config.<environment>.toml alone does not select it.

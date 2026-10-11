@@ -53,6 +53,8 @@ personal_fedora = {{ $personal }}
 conda = {{ $conda }}
 bitwarden_agent = {{ $agent }}
 ai = {{ dig "features" "ai" true . }}
+managed_ai = {{ dig "features" "managed_ai" false . }}
+desktop = {{ dig "features" "desktop" false . }}
 delta = {{ dig "features" "delta" false . }}
 editor_web = {{ $editorWeb }}
 

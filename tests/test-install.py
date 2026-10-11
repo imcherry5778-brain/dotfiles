@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 USER_HOME = Path.home()
 RELEASE = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
 TARGET = RELEASE.get('ID', '').strip('"')
-PROFILE = ROOT / 'tests/profiles' / ('ubuntu-desktop.json' if TARGET == 'ubuntu' else 'fedora-common.json')
+FULL = os.environ.get('DOTFILES_FULL_INSTALL') == '1'
+PROFILE = ROOT / 'tests/profiles' / ('ubuntu-full.json' if FULL else 'ubuntu-desktop.json' if TARGET == 'ubuntu' else 'fedora-common.json')
 
 
 def run(argv, *, capture=True, timeout=900, env=None):
@@ -195,20 +196,22 @@ def main():
     mise = USER_HOME / '.local/bin/mise'
     tools = tomllib.loads((USER_HOME / '.config/mise/config.toml').read_text())['tools']
     require(len(tools) == 13, 'Expected the common 13-tool inventory, not a personal environment.')
-    expected_env = ['ai', 'editor-ubuntu'] if TARGET == 'ubuntu' else []
+    expected_env = ['ai', 'ai-managed', 'editor-ubuntu'] if FULL else ['ai', 'editor-ubuntu'] if TARGET == 'ubuntu' else []
     require(tomllib.loads((USER_HOME / '.config/mise/miserc.toml').read_text())['env'] == expected_env, 'Wrong mise environments selected.')
     if TARGET == 'ubuntu':
-        for name in ['ai', 'editor-ubuntu']:
+        for name in [environment for environment in expected_env if environment != 'personal-fedora']:
             extras = tomllib.loads((USER_HOME / f'.config/mise/config.{name}.toml').read_text())['tools']
             require(not set(extras) & set(tools), 'Duplicate tool owners.')
             tools.update(extras)
-        require(len(tools) == 15, 'Expected exactly 15 Ubuntu tools.')
+        require(len(tools) == (22 if FULL else 15), 'Wrong Ubuntu tool inventory.')
         verify_ubuntu_bash(native, ubuntu_original)
     installed = json.loads(run([mise, 'ls', '--current', '--json']))
     require(set(installed) == set(tools), 'Installed tool selection differs from the single config inventory.')
-    commands = {'ripgrep': 'rg', 'neovim': 'nvim'}
+    commands = {'ripgrep': 'rg', 'neovim': 'nvim', 'npm:@earendil-works/pi-coding-agent': 'pi',
+                'pipx:aider-chat': 'aider', 'http:kiro-cli': 'kiro-cli'}
     versions = {}
-    for tool, version in tools.items():
+    for tool, specification in tools.items():
+        version = specification['version'] if isinstance(specification, dict) else specification
         require(any(item['version'] == version and item['installed'] for item in installed[tool]), f'{tool} was not installed at its declared version.')
         binary = commands.get(tool, tool)
         resolved = Path(run([mise, 'which', binary]).strip())
@@ -216,6 +219,9 @@ def main():
         output = run([mise, 'exec', '--', binary, '--version'], timeout=60)
         require(version in output, f'{tool} version output does not match {version}.')
         versions[tool] = version
+    if FULL:
+        run(['ghostty', '--version'], timeout=30)
+        require(run(['dpkg-query', '-W', '-f=${db:Status-Status}', 'orca-ide']).strip() == 'installed', 'Orca native package missing.')
     # CLI installation may need the read-only job token; runtime checks do not.
     runtime_env = dict(os.environ)
     runtime_env.pop('GITHUB_TOKEN', None)
@@ -245,7 +251,7 @@ def main():
                       'result': 'passed', 'platform': TARGET + RELEASE['VERSION_ID'].strip(chr(34)), 'tools': versions,
                       'managed_paths': len(before_runtime), 'installs': 2,
                       'runtime': ['interactive-zsh', 'tmux-and-plugins', f'{len(tools)}-cli-version-commands', 'neovim-lua-syntax'],
-                      'excluded': ['authentication', 'gui', 'neovim-plugin-installation', 'personal-fedora-tools-and-other-ai-installers']}, indent=2), flush=True)
+                      'excluded': ['authentication', 'gui', 'neovim-plugin-installation', 'personal-fedora-tools']}, indent=2), flush=True)
 
 
 if __name__ == '__main__':

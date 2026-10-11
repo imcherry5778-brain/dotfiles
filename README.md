@@ -55,6 +55,7 @@ mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run pla
 - [설정과 기기 데이터](docs/configuration.md)
 - [CLI·프로필 범위](docs/tools.md)
 - [AI CLI와 Orca](docs/ai.md)
+- [AI·Ghostty·Orca 설치 자동화](docs/installation-automation.md)
 - [업데이트](docs/update.md), [복구](docs/restore.md)
 - [플랫폼별 검증 수준](docs/platforms.md)
 - [검증 실행](tests/README.md)

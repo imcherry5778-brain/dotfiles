@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 """Explicit reviewed Fedora/Ubuntu installer; never invoked by shell startup or apply hooks."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
 import platform
-import pwd
+import sys
 import shutil
 import subprocess
 import tempfile
 import tomllib
-import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 USER_HOME = Path.home()
-
-
-def run(argv, *, capture=False, cwd=None):
-    return subprocess.run([str(x) for x in argv], check=True, text=True,
-                          stdout=subprocess.PIPE if capture else None,
-                          cwd=cwd or USER_HOME, timeout=900).stdout
+sys.path.insert(0, str(ROOT / "scripts"))
+from lib.runtime import Host, download_verified, run
+from lib.desktop import desktop_plan, install_desktop
 
 
 def validate_profile(path):
@@ -31,15 +26,36 @@ def validate_profile(path):
     features = profile.get('features', {})
     required = {'ai', 'personal_fedora', 'conda', 'bitwarden_agent', 'delta', 'editor_web'}
     expected = {key: target == 'ubuntu' and key in {'ai', 'editor_web'} for key in required}
+    optional = {key: features.get(key, False) for key in ['managed_ai', 'desktop']}
+    expected.update({key: value for key, value in optional.items() if key in features})
     if features != expected or any(type(value) is not bool for value in features.values()):
         raise ValueError('Only the Fedora common or Ubuntu desktop CLI profile is installable; review other selections separately.')
+    if optional['managed_ai'] and (target != 'ubuntu' or not features['ai']):
+        raise ValueError('Managed AI migration is currently reviewed for Ubuntu only; preserve Fedora providers.')
+    if optional['desktop'] and target != 'ubuntu':
+        raise ValueError('Desktop profile installation is reviewed for Ubuntu only.')
     if set(profile) != {'platform', 'deployment', 'features'}:
         raise ValueError('Installation profile may not override machine paths or chezmoi runtime data.')
     return profile
 
 
+def matches_profile(data, profile):
+    """Absent optional flags mean false, so existing baseline selections remain valid."""
+    if any(data.get(key) != profile[key] for key in ['platform', 'deployment']):
+        return False
+    requested = dict(profile['features'])
+    actual = dict(data.get('features', {}))
+    for key in ['managed_ai', 'desktop']:
+        requested.setdefault(key, False)
+        actual.setdefault(key, False)
+    return requested == actual
+
+
 def preflight(profile_path):
     profile = validate_profile(profile_path)
+    if platform.system() != 'Linux':
+        raise ValueError('Real configuration installation is currently reviewed for Linux only.')
+    import pwd
     if os.geteuid() == 0 or USER_HOME != Path(pwd.getpwuid(os.getuid()).pw_dir):
         raise ValueError('Run as a regular user with their actual login home.')
     if platform.system() != 'Linux' or platform.machine() != 'x86_64':
@@ -68,9 +84,8 @@ def preflight(profile_path):
         if profile['platform'] == 'ubuntu' and document.get('umask') != 0o077:
             raise ValueError('Existing Ubuntu chezmoi permissions policy differs; review it before installation.')
         data = document.get('data', {})
-        for key in profile:
-            if data.get(key) != profile[key]:
-                raise ValueError('Existing chezmoi machine selection differs; review the migration instead of replacing it.')
+        if not matches_profile(data, profile):
+            raise ValueError('Existing chezmoi machine selection differs; review the migration instead of replacing it.')
     return profile
 
 
@@ -94,10 +109,7 @@ def pinned_binary(name, metadata_path, repository):
     url = f"https://github.com/{repository}/releases/download/v{expected}/{asset['name']}"
     with tempfile.TemporaryDirectory(prefix='dotfiles-download-') as temporary:
         download = Path(temporary) / name
-        with urllib.request.urlopen(url, timeout=120) as response, download.open('wb') as target:
-            shutil.copyfileobj(response, target)
-        if hashlib.sha256(download.read_bytes()).hexdigest() != asset['sha256']:
-            raise ValueError(f'{name} checksum mismatch; downloaded binary was not executed.')
+        download_verified(url, download, asset['sha256'])
         download.chmod(0o755)
         shutil.copy2(download, destination)
     print(f'Installed checksum-verified {name} {expected}', flush=True)
@@ -118,7 +130,7 @@ def install(profile_path):
         rendered = run(base + ['--override-data-file', profile_path, 'execute-template',
                                '--init', '--file', ROOT / 'home/.chezmoi.toml.tmpl'], capture=True)
         selected = tomllib.loads(rendered)['data']
-        if any(selected.get(key) != value for key, value in profile.items()):
+        if not matches_profile(selected, profile):
             raise ValueError('Generated machine config does not match the explicit profile.')
         config.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(mode='w', dir=config.parent, delete=False) as target:
@@ -128,7 +140,7 @@ def install(profile_path):
         temporary_config.replace(config)
     run(base + ['init', '--config-path', config])
     selected = json.loads(run(base + ['data', '--format=json'], capture=True))
-    if any(selected.get(key) != value for key, value in profile.items()):
+    if not matches_profile(selected, profile):
         raise ValueError('Persisted selection differs from the explicit profile.')
     managed = set(run(base + ['managed', '--include=files,symlinks', '--path-style=relative'], capture=True).splitlines())
     for required in ['.zshrc', '.bashrc', '.gitconfig', '.config/gh/config.yml', '.config/mise/config.toml',
@@ -142,14 +154,26 @@ def install(profile_path):
     print('Apply configuration and pinned external plugins', flush=True)
     run(base + ['apply'])
     run(base + ['verify'])
-    print(f"{profile['platform']} reviewed CLI profile applied; authentication, login shell and OS packages were not configured.", flush=True)
+    if profile['features'].get('desktop', False):
+        install_desktop()
+    print(f"{profile['platform']} reviewed CLI profile applied; authentication and login shell were not configured.", flush=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--profile', type=Path, required=True)
+    parser.add_argument('--profile', type=Path)
+    stages = parser.add_mutually_exclusive_group()
+    stages.add_argument('--desktop-plan', action='store_true', help='Show native application suppliers without installing.')
+    stages.add_argument('--desktop-only', action='store_true', help='Explicit native application stage; no user config is touched.')
     args = parser.parse_args()
     try:
-        install(args.profile.resolve(strict=True))
+        if args.desktop_plan:
+            print(json.dumps(desktop_plan(Host.detect()), ensure_ascii=False, indent=2))
+        elif args.desktop_only:
+            install_desktop()
+        elif args.profile:
+            install(args.profile.resolve(strict=True))
+        else:
+            parser.error('--profile is required for user configuration installation.')
     except (ValueError, OSError, subprocess.SubprocessError) as error:
         raise SystemExit(f'Installation stopped: {error}')

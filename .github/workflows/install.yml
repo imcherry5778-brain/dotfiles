@@ -24,8 +24,13 @@ jobs:
         include:
           - platform: fedora
             name: Fedora 44 / common baseline
+            full: "0"
           - platform: ubuntu
             name: Ubuntu 26.04 / desktop CLI profile
+            full: "0"
+          - platform: ubuntu
+            name: Ubuntu 26.04 / AI and native desktop apps
+            full: "1"
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -34,7 +39,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build clean distribution user environment
-        run: docker build --pull --file tests/containers/${{ matrix.platform }}.Dockerfile --tag dotfiles-install-test .
+        run: docker build --pull --build-arg FULL_INSTALL=${{ matrix.full }} --file tests/containers/${{ matrix.platform }}.Dockerfile --tag dotfiles-install-test .
       - name: Install, apply, run applications and repeat
         env:
           GITHUB_TOKEN: ${{ github.token }}

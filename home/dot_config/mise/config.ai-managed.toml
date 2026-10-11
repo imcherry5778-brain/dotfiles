@@ -1,0 +1,20 @@
+# Opt-in only. Existing Fedora vendor/uv installations keep their ownership.
+# Registry recipes download publishers' artifacts; no third-party Grok CLI is used.
+[tools]
+agy = "1.3.3"
+claude = "2.1.296"
+codex = "0.162.1"
+"npm:@earendil-works/pi-coding-agent" = { version = "1.1.0", install_env = { npm_config_ignore_scripts = "true" } }
+grok = "1.0.50"
+"pipx:aider-chat" = { version = "0.86.2", uvx = true, uvx_args = "--python 3.12" }
+
+# Official headless archive, verified against the publisher's stable manifest.
+# Linux archives contain kirocli/bin; do not run setup or copy authentication.
+[tools."http:kiro-cli"]
+version = "2.29.1"
+strip_components = 0
+bin_path = "kirocli/bin"
+
+[tools."http:kiro-cli".platforms]
+linux-x64 = { url = "https://prod.download.cli.kiro.dev/stable/2.29.1/kirocli-x86_64-linux.tar.xz", checksum = "sha256:edd84abcb3c31da13bc6f9bf61e3b09aaaf8eba96e2b91d787f00b0f824a883f" }
+linux-arm64 = { url = "https://prod.download.cli.kiro.dev/stable/2.29.1/kirocli-aarch64-linux.tar.xz", checksum = "sha256:e94c76d63f9308521d3d21daa3734f5769d79b93638745a7c916fbf36cff4e81" }

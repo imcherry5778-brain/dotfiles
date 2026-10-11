@@ -23,8 +23,12 @@ case "${1:---plan}" in
     command -v python3 >/dev/null 2>&1 || { printf '%s\n' 'Python 3.11+ is required for explicit installation.' >&2; exit 1; }
     exec python3 "$repo_root/scripts/unix/install.py" --profile "$3"
     ;;
+  --desktop-plan|--desktop-only)
+    [ "$#" -eq 1 ] || { printf '%s\n' 'Unexpected arguments.' >&2; exit 2; }
+    exec python3 "$repo_root/scripts/unix/install.py" "$1"
+    ;;
   --help|-h)
-    printf '%s\n' 'Usage: sh install.sh [--plan|--check|--help] | --apply --profile FILE'
+    printf '%s\n' 'Usage: sh install.sh [--plan|--check|--help] | --apply --profile FILE | --desktop-plan | --desktop-only'
     ;;
   *)
     printf '%s\n' 'Unsupported operation. No installation or deployment was performed.' >&2
