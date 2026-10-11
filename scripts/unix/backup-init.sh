@@ -10,5 +10,10 @@ parent="$HOME/.local/state/dotfiles/init-backups"
 mkdir -p "$parent"
 chmod 700 "$parent"
 backup=$(mktemp -d "$parent/init-XXXXXXXX")
+case "$(uname -s)" in
+  Darwin) stat -f %Lp "$1" > "$backup/mode.txt" ;;
+  Linux) stat -c %a "$1" > "$backup/mode.txt" ;;
+  *) printf '%s\n' 'Unsupported config backup platform.' >&2; exit 1 ;;
+esac
 cp -p -- "$1" "$backup/chezmoi.toml"
 chmod 600 "$backup/chezmoi.toml"

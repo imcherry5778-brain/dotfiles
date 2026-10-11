@@ -214,7 +214,6 @@ def apply_stage(stage, context):
         from lib.tools import reconcile_mise_tools
         from lib.backup import preserve_installer_loaders
         reconcile_mise_tools(mise)
-        backup = Path((review / 'last-backup.txt').read_text())
         # Native installers may append shell loaders. Keep the already-applied
         # managed shell byte-for-byte, including user customizations. Their PATH
         # additions and vendor-owned completions/authentication remain intact.

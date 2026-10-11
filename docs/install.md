@@ -55,7 +55,7 @@ chezmoi diff --exclude=scripts
 
 일반 diff에는 앞으로 실행할 설치 스크립트도 표시된다. 따라서 빈 설정 diff 판단에는 `--exclude=scripts`를 사용한다. diff/dry-run은 설치 단계를 실행하지 않는다. 기존 설치 명령의 기본 Plan/Check도 변경하지 않는다.
 
-개인 설정 백업: `~/.local/state/dotfiles/backups/`. manifest와 RESTORE.md로 변경 파일만 복구한다. Unix는 파일 mode·심볼릭 링크·변경 디렉터리 mode를 기록한다. Windows는 파일 ACL·User PATH·실행 정책을 기록한다. 초기화 전 chezmoi config는 `~/.local/state/dotfiles/init-backups/`의 가장 최근 해당 기록에서 복구한다. 디렉터리 전체나 모든 홈/인증을 수집하지 않는다. 설치된 바이너리의 제거는 설정 복구와 별개다.
+개인 설정 백업: `~/.local/state/dotfiles/backups/`. manifest와 RESTORE.md로 변경 파일만 복구한다. Unix는 파일 mode·심볼릭 링크·변경 디렉터리 mode를 기록한다. Windows는 파일 ACL·User PATH·실행 정책을 기록한다. 초기화 전 chezmoi config는 `~/.local/state/dotfiles/init-backups/`의 가장 최근 해당 기록에서 복구한다. Unix의 `mode.txt`와 Windows의 `acl.txt`는 초기화 전 config의 원래 권한을 기록한다. 디렉터리 전체나 모든 홈/인증을 수집하지 않는다. 설치된 바이너리의 제거는 설정 복구와 별개다.
 
 ## Fedora full과 개인 환경
 

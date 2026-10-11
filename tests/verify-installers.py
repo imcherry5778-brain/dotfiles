@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 import tomllib
@@ -29,6 +30,23 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Unix initial config permissions; Windows records ACLs.')
+    def test_initial_config_backup_is_private_and_records_original_mode(self):
+        with tempfile.TemporaryDirectory(prefix='initial config with spaces ') as temporary:
+            home = Path(temporary); config = home / 'chezmoi.toml'
+            config.write_text('[data]\nretained = true\n'); config.chmod(0o640)
+            environment = dict(os.environ, HOME=str(home))
+            subprocess.run(['sh', ROOT / 'scripts/unix/backup-init.sh', config],
+                           check=True, env=environment)
+            backups = list((home / '.local/state/dotfiles/init-backups').glob('init-*'))
+            self.assertEqual(len(backups), 1)
+            backup = backups[0]
+            self.assertEqual((backup / 'chezmoi.toml').read_bytes(), config.read_bytes())
+            self.assertEqual((backup / 'chezmoi.toml').stat().st_mode & 0o777, 0o600)
+            self.assertEqual((backup / 'mode.txt').read_text().strip(), '640')
+            self.assertEqual(backup.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(config.stat().st_mode & 0o777, 0o640)
+
     def test_missing_binary_repairs_only_selected_version(self):
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
