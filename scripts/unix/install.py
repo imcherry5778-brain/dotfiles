@@ -72,7 +72,7 @@ def preflight(profile_path):
     if any(os.environ.get(key) for key in ['MISE_ENV', 'MISE_CONFIG_DIR', 'MISE_GLOBAL_CONFIG_FILE',
                                           'MISE_DATA_DIR', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME']):
         raise ValueError('Baseline installer requires default user config/data locations; do not redirect HOME or XDG.')
-    for binary in ['git', 'zsh', 'tmux', 'tar', 'gzip', 'unzip']:
+    for binary in ['git', 'zsh', 'tmux', 'tar', 'gzip', 'unzip', 'perl', 'sed', 'awk']:
         if not shutil.which(binary):
             raise ValueError(f'Missing OS prerequisite: {binary}. Installer does not run sudo or dnf.')
     if profile['platform'] in DESKTOP_PLATFORMS:
