@@ -60,3 +60,5 @@ Git 사용자 identity와 서명 정책은 유지한다. signing key의 UID/emai
 배포는 기본 비활성이고 Fedora만 preview 대상으로 구현했다. 설치 전 파일별 diff·복구본, mise shim 존재, Conda prefix·SSH socket, tmux upstream/플러그인·completion 의존성, 실제 앱 동작을 확인해야 한다. 이번에 Windows/macOS용 실사용 설정까지 완료한 것으로 표시하지 않는다.
 
 실행한 검증은 [테스트 문서](../tests/README.md)를 따른다. 반복 적용·부분 갱신·미관리 키 보존·34개 도구 선택·셸 문법을 검사했다. Fedora에서는 기존 OMZ 복사본과 모형 CLI를 네트워크 차단·읽기 전용 host·임시 home mount로 실행하여 14개 플러그인 순서, 단일 activation, PATH 재로딩, OMZ 누락 시 fallback을 확인했다. 실제 CLI·인증·전수 Tab 검증과 구분한다.
+
+실제 Claude/Codex/OpenCode config에 대해서도 read-only cat 결과를 메모리에서 파싱해 비교했다. 선택한 선호 값 외 모든 기존 값이 유지됨을 확인했으며 결과 config를 저장하거나 적용하지 않았다. Neovim Lua는 -u NONE으로 플러그인 없이 구문만 컴파일했다. stylua.toml과 lazyvim.json의 source에는 마지막 줄바꿈만 정규화했다.

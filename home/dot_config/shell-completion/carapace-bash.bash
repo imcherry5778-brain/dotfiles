@@ -24,4 +24,3 @@ _sc_carapace_bash() {
   local IFS=$'\n'
   [[ "${COMPREPLY[*]}" == "" ]] && COMPREPLY=() # fix for mapfile creating a non-empty array from empty command output
 }
-

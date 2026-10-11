@@ -53,4 +53,3 @@ function _sc_carapace_base {
     [[ ${#valuesArr[@]} -gt 1 ]] && _describe -t "${tag}" "${tag}" displaysArr valuesArr -Q -S ''
   done <<<"${data}"
 }
-
