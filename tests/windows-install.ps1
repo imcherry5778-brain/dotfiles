@@ -20,10 +20,23 @@ Add-Content -LiteralPath $gitconfig -Value $identity
 # Fresh personal Windows defaults to Restricted. Test that process-only Bypass
 # does not leave future user profiles blocked; this is the disposable runner only.
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force
+# PowerShell 7 stores its policy separately from Windows PowerShell 5.1.
+$existingPwsh = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue
+if ($existingPwsh) {
+    & $existingPwsh.Source -NoProfile -ExecutionPolicy Bypass -Command 'Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted -Force'
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare the disposable PowerShell 7 policy.' }
+}
 $profile = Join-Path $repo 'tests/profiles/windows-cli.json'
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'install.ps1') -Mode Apply -ProfilePath $profile
 if ($LASTEXITCODE -ne 0) { throw 'First native install failed.' }
-if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') { throw 'Future native PowerShell profiles remain blocked.' }
+# Query a new native PowerShell 7 process, without an inherited process Bypass.
+$processPolicy = $env:PSExecutionPolicyPreference
+try {
+    $env:PSExecutionPolicyPreference = $null
+    & pwsh -Command 'if ((Get-ExecutionPolicy -Scope CurrentUser) -ne "RemoteSigned" -or -not (Get-Command z -ErrorAction SilentlyContinue)) { exit 1 }'
+    if ($LASTEXITCODE -ne 0) { throw 'Future native PowerShell 7 profiles remain blocked.' }
+} finally { $env:PSExecutionPolicyPreference = $processPolicy }
+if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'Restricted') { throw 'Windows PowerShell 5.1 policy was changed.' }
 $env:Path = [Environment]::ExpandEnvironmentVariables([Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'))
 $before = & chezmoi --no-tty --no-pager diff | Out-String
 if ($LASTEXITCODE -ne 0 -or $before.Trim()) { throw 'Unexpected diff after first installation.' }

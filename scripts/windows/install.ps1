@@ -220,6 +220,7 @@ $backup = New-PrivateDirectory (Join-Path $HOME ('.local/state/dotfiles/backups/
 $manifest = @()
 $extraBackups = @('.config/chezmoi/chezmoi.toml',
     'Documents/PowerShell/Microsoft.PowerShell_profile.ps1',
+    'Documents/PowerShell/powershell.config.json',
     'Documents/WindowsPowerShell/profile.ps1',
     'Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1',
     '.pi/agent/settings.json', '.grok/config.toml')
