@@ -92,14 +92,31 @@ def pinned_binary(name, metadata_path, repository):
 
 
 def install(profile_path):
-    preflight(profile_path)
+    profile = preflight(profile_path)
     mise = pinned_binary('mise', ROOT / 'scripts/mise-release.json', 'jdx/mise')
     chezmoi = pinned_binary('chezmoi', ROOT / 'tests/chezmoi-release.json', 'twpayne/chezmoi')
     os.environ['PATH'] = str(USER_HOME / '.local/bin') + os.pathsep + os.environ['PATH']
     config = USER_HOME / '.config/chezmoi/chezmoi.toml'
     base = [chezmoi, '--source', ROOT, '--config', config, '--no-tty', '--no-pager']
     print('Initialize explicit machine selection', flush=True)
-    run(base + ['--override-data-file', profile_path, 'init'])
+    # chezmoi 2.73 init does not consume override-data-file for its config template.
+    # Render with the documented execute-template --init data path, then persist once.
+    if not config.exists():
+        rendered = run(base + ['--override-data-file', profile_path, 'execute-template',
+                               '--init', '--file', ROOT / 'home/.chezmoi.toml.tmpl'], capture=True)
+        selected = tomllib.loads(rendered)['data']
+        if any(selected.get(key) != value for key, value in profile.items()):
+            raise ValueError('Generated machine config does not match the explicit profile.')
+        config.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(mode='w', dir=config.parent, delete=False) as target:
+            target.write(rendered)
+            temporary_config = Path(target.name)
+        temporary_config.chmod(0o600)
+        temporary_config.replace(config)
+    run(base + ['init', '--config-path', config])
+    selected = json.loads(run(base + ['data', '--format=json'], capture=True))
+    if any(selected.get(key) != value for key, value in profile.items()):
+        raise ValueError('Persisted selection differs from the explicit profile.')
     managed = set(run(base + ['managed', '--include=files,symlinks', '--path-style=relative'], capture=True).splitlines())
     for required in ['.zshrc', '.bashrc', '.gitconfig', '.config/gh/config.yml', '.config/mise/config.toml',
                      '.config/mise/miserc.toml', '.tmux.conf', '.tmux.conf.local', '.config/nvim/init.lua']:

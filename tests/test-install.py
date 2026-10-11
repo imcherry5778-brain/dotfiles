@@ -100,12 +100,13 @@ def verify_tmux(env):
         try:
             run(tmux + ['-f', USER_HOME / '.tmux.conf', 'new-session', '-d', '-s', 'acceptance', 'sleep 60'], env=env, timeout=30)
             for _ in range(100):
-                ready = run(tmux + ['show-options', '-gqv', '@tpm-update'], env=env).strip()
+                keys = run(tmux + ['list-keys'], env=env)
+                ready = 'copycat' in keys and 'resurrect' in keys and 'update_plugins' in keys
                 busy = run(tmux + ['show-options', '-sqv', '@__apply_plugins'], env=env).strip()
-                if ready == 'u' and not busy:
+                if ready and not busy:
                     break
                 time.sleep(0.1)
-            require(ready == 'u' and not busy, 'TPM did not initialize.')
+            require(ready and not busy, 'TPM did not initialize its plugin/update key bindings.')
             require(run(tmux + ['show-options', '-gqv', 'prefix'], env=env).strip() == 'C-Space', 'tmux prefix changed.')
             require(run(tmux + ['show-options', '-gqv', 'mouse'], env=env).strip() == 'on', 'tmux mouse disabled.')
             keys = run(tmux + ['list-keys'], env=env)
@@ -130,7 +131,9 @@ def main():
     gh_config.write_text('editor:\nbrowser:\naliases:\n  retained: repo view\n# retained comment\n')
     command = ['sh', ROOT / 'install.sh', '--apply', '--profile', PROFILE]
     run(command, capture=False)
-    base = [USER_HOME / '.local/bin/chezmoi', '--source', ROOT, '--no-tty', '--no-pager']
+    base = [USER_HOME / '.local/bin/chezmoi', '--no-tty', '--no-pager']
+    data = json.loads(run(base + ['data', '--format=json']))
+    require(Path(data['chezmoi']['workingTree']) == ROOT, 'Persisted config does not point to the real checkout.')
     mise = USER_HOME / '.local/bin/mise'
     tools = tomllib.loads((USER_HOME / '.config/mise/config.toml').read_text())['tools']
     require(len(tools) == 13, 'Expected the common 13-tool inventory, not a personal environment.')
