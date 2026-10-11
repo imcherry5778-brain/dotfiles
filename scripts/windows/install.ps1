@@ -19,7 +19,8 @@ function Invoke-Checked {
     if ($LASTEXITCODE -ne 0) { throw "$Command failed (exit $LASTEXITCODE)." }
 }
 function Update-SessionPath {
-    $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
+    $combined = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
+    $env:Path = [Environment]::ExpandEnvironmentVariables($combined)
 }
 function Get-UserPortablePackage {
     param([string] $PackageId)
@@ -134,9 +135,10 @@ function Install-NativeDesktop {
 if ($LibraryOnly) { return }
 if (-not $IsWindows -or [Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') { throw 'Reviewed Windows 11 x64 environment required.' }
 if ($HOME -ne $env:USERPROFILE) { throw 'Run with the actual Windows user home.' }
-foreach ($name in @('XDG_CONFIG_HOME','XDG_DATA_HOME','MISE_ENV','MISE_CONFIG_DIR','MISE_DATA_DIR','MISE_GLOBAL_CONFIG_FILE','GH_CONFIG_DIR')) {
+foreach ($name in @('XDG_CONFIG_HOME','XDG_DATA_HOME','MISE_CONFIG_DIR','MISE_DATA_DIR','MISE_GLOBAL_CONFIG_FILE','GH_CONFIG_DIR')) {
     if ([Environment]::GetEnvironmentVariable($name)) { throw "$name redirects the native environment; review it first." }
 }
+if ($env:MISE_ENV -and $env:MISE_ENV -ne 'windows') { throw 'MISE_ENV selects an unreviewed Windows environment.' }
 if ($Mode -eq 'Plan') {
     Write-Output 'Windows: WinGet bootstrap, mise CLI, official AI installers; deployment remains opt-in.'
     Write-Output 'Bootstrap -> Diff -> Apply -> Verify. Existing providers and authentication are preserved.'
@@ -214,7 +216,8 @@ if (Test-Path -LiteralPath $config) {
 Copy-Item -LiteralPath $previewConfig -Destination $config -Force
 $actual = @('--config',$config,'--no-tty','--no-pager')
 $null = Get-ChezmoiOutput ($actual + @('apply',(Join-Path $HOME '.config/mise')))
-Invoke-Checked 'mise' @('install','--yes')
+Push-Location $HOME
+try { Invoke-Checked 'mise' @('install','--yes') } finally { Pop-Location }
 foreach ($installer in $plan.official) { Install-OfficialCli $installer $backup }
 # Vendor installers can add profile/completion loaders. Review the final diff too.
 $finalDiff = Get-ChezmoiOutput ($actual + @('diff'))

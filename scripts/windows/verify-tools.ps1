@@ -13,8 +13,9 @@ $results = @()
 foreach ($name in $commands | Select-Object -Unique) {
     $command = Get-Command $name -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $command) { throw "Missing command in the native mise environment: $name" }
-    $output = & $command.Source --version 2>&1 | Out-String
-    if ($LASTEXITCODE -ne 0) { throw "$name --version failed (exit $LASTEXITCODE)." }
+    $arguments = if ($name -eq 'zig') { @('version') } else { @('--version') }
+    $output = & $command.Source @arguments 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "$name version check failed (exit $LASTEXITCODE)." }
     $results += @{command=$name;path=$command.Source;version=$output.Trim();exitCode=$LASTEXITCODE}
 }
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ('dotfiles-cli-test-' + [Guid]::NewGuid().ToString('N'))
@@ -43,7 +44,11 @@ try {
     # Avoid user config during this binary/runtime smoke test. LazyVim is checked separately.
     & nvim --headless -u NONE '+lua assert(vim.fn.has("win32") == 1); assert(vim.fn.filereadable(vim.env.VIMRUNTIME .. "/doc/help.txt") == 1)' +qa
     if ($LASTEXITCODE -ne 0) { throw 'Neovim Windows runtime failed.' }
-    & mise exec 'pypi:aider-chat' -- python -c 'import sys; import aider; assert sys.version_info[:2] == (3, 12)'
+    $aiderRoot = (& mise where 'pypi:aider-chat').Trim()
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot locate the mise Aider environment.' }
+    $python = Join-Path $aiderRoot 'aider-chat/Scripts/python.exe'
+    if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Missing isolated Aider interpreter.' }
+    & $python -c 'import sys; import aider; assert sys.version_info[:2] == (3, 12)'
     if ($LASTEXITCODE -ne 0) { throw 'Aider Python 3.12 isolation failed.' }
     @{tools=$results;functionalChecks='rg/fd/jq/bat/fzf/Git/AI help/Neovim runtime/Aider Python';verifiedAt=(Get-Date).ToUniversalTime().ToString('o')} |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ReportPath -Encoding utf8NoBOM

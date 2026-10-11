@@ -21,7 +21,7 @@ WinGet 설치기도 공식 MSI/EXE를 실행할 수 있고 mise도 공식 releas
 
 공식 설치기는 다운로드한 로컬 파일을 해시 검증한 뒤 별도 프로세스로 실행한다. 스크립트 내용이 변경되면 실패하며 검토 후 해시를 갱신해야 한다. 이 해시는 검토한 파일과의 동일성 검사이며 공급사 서명 검증이라고 표현하지 않는다. 공급사 payload의 검증 방식은 각각 설치기에 따른다. 설치기의 pin과 설치되는 제품 버전의 pin도 구분한다.
 
-Claude는 stable 인수를 사용한다. Codex는 공식 latest release 선택과 비대화형 옵션을 사용한다. Pi는 공식 managed install로 의존성을 고정하고, 먼저 mise Node와 Git을 준비해 추가 runtime 설치를 피한다. Grok은 보조 payload까지 공급사 설치기가 처리한다. Kiro는 공식 스크립트의 Windows MSI 설치를 사용한다.
+Claude는 stable 인수를 사용한다. Codex는 공식 latest release 선택과 비대화형 옵션을 사용한다. Pi는 공식 managed install로 의존성을 고정하고, 먼저 mise Node와 Git을 준비해 추가 runtime 설치를 피한다. Grok은 보조 payload까지 공급사 설치기가 처리한다. Kiro는 공식 스크립트의 Windows MSI 설치를 사용하며 실제 사용자별 `LocalAppData/Kiro-Cli` 또는 시스템 `Program Files/Kiro-Cli` 위치를 확인한다.
 
 기존 명령이 있으면 자동 제거·공급자 전환·업데이트를 하지 않는다. 반복 Apply는 설정을 수렴시키고 도구를 검증한다. 이것이 기존 바이너리까지 저장소 버전과 일치함을 보장하지는 않는다. 공급사 자동 업데이트를 허용하는 도구에 대해 OS 간 exact version이 영구히 같다고 주장하지 않는다.
 
@@ -77,3 +77,5 @@ Orca 설치 UI는 공식 설치기의 표시를 따른다. Windows Terminal의 �
 편집기 플러그인·GUI·클립보드 검증과 AI 인증 성공 여부는 기기 기록에서 따로 보고한다. 격리 CI 성공을 실제 제품 설치 성공으로 표현하지 않는다.
 
 공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
+
+Windows WinGet에서 제공되는 mise 2026.9.18로 실제 설치를 검증한다. 저장소 작업의 최소 버전도 이에 맞추며 Linux에 설치된 mise 버전이나 기존 설정은 변경하지 않는다.

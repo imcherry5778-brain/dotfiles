@@ -1,4 +1,4 @@
-min_version = "2026.10.3"
+min_version = "2026.9.18"
 
 # Repository operations only. Global CLI inventory belongs to home/dot_config/mise.
 [tasks.plan]

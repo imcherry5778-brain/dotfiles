@@ -6,6 +6,7 @@ $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $repo 'scripts/windows/install.ps1') -LibraryOnly
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ('provider contracts with spaces ' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $scratch | Out-Null
+$originalProcessPath = $env:Path
 try {
     function Invoke-WebRequest { param($Uri,$OutFile); [IO.File]::WriteAllText($OutFile,'downloaded fixture') }
     $asset = [pscustomobject]@{url='https://publisher.invalid/install.ps1';sha256=('0'*64)}
@@ -21,5 +22,26 @@ try {
     function Receive-VerifiedFile { throw 'An existing CLI must not download.' }
     function Add-UserCommandPath { throw 'An existing provider must not change PATH.' }
     Install-OfficialCli ([pscustomobject]@{tool='codex';command='pwsh';arguments=@()}) $scratch
-    Write-Output 'Publisher checksum failure/cleanup, overwrite refusal and existing-provider preservation: OK'
-} finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
+    $script:publisherBin = Join-Path $scratch 'publisher bin'
+    $script:pathPrepared = $false
+    $script:installCalls = 0
+    function Get-OfficialCommandPath { param($Tool); return $script:publisherBin }
+    function Add-UserCommandPath {
+        param($Directory)
+        $script:pathPrepared = $true
+        if ($Directory -notin ($env:Path -split ';')) { $env:Path = $Directory + ';' + $env:Path }
+    }
+    function Receive-VerifiedFile { param($Asset,$Destination); 'reviewed fixture' | Set-Content $Destination }
+    function Invoke-VendorInstaller {
+        param($Script,$Arguments,$Log)
+        if (-not $script:pathPrepared) { throw 'Pi would prompt for PATH in noninteractive mode.' }
+        $script:installCalls++
+        '@echo off' | Set-Content (Join-Path $script:publisherBin 'fixture-pi-unittest.cmd')
+    }
+    $fixture = [pscustomobject]@{tool='pi';command='fixture-pi-unittest';arguments=@()}
+    Install-OfficialCli $fixture $scratch
+    $firstPath = $env:Path
+    Install-OfficialCli $fixture $scratch
+    if ($script:installCalls -ne 1 -or $env:Path -ne $firstPath) { throw 'Repeat Pi setup downloaded/reinstalled or duplicated PATH.' }
+    Write-Output 'Publisher checksum/overwrite failure, provider preservation and Pi noninteractive PATH/repeat setup: OK'
+} finally { $env:Path = $originalProcessPath; Remove-Item -LiteralPath $scratch -Recurse -Force }

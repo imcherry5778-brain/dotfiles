@@ -1,6 +1,6 @@
 # dotfiles
 
-`imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를 관리한다. Linux는 mise, Windows는 WinGet 우선과 mise fallback으로 CLI 공급자를 구분한다.
+`imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를 관리한다. 공통 CLI는 mise로 관리하고, Windows의 PowerShell·Git·mise·chezmoi는 WinGet으로 준비한다. AI CLI는 도구별 공식 설치 경로를 사용한다.
 
 **현재 단계: 개인 Fedora·Ubuntu·Arch·openSUSE 적용 완료와 GitHub-hosted 설치 검증.** Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. 다른 OS의 실제 적용은 별도 단계다.
 

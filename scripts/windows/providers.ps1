@@ -4,7 +4,7 @@ function Add-UserCommandPath {
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) { throw "Missing command directory: $Directory" }
     $current = [Environment]::GetEnvironmentVariable('Path','User')
     $entries = @($current -split ';' | Where-Object { $_ })
-    if ($Directory.TrimEnd('\','/') -notin @($entries | ForEach-Object { $_.TrimEnd('\','/') })) {
+    if ($Directory.TrimEnd('\','/') -notin @($entries | ForEach-Object { [Environment]::ExpandEnvironmentVariables($_).TrimEnd('\','/') })) {
         [Environment]::SetEnvironmentVariable('Path',(($entries + $Directory) -join ';'),'User')
     }
     Update-SessionPath
@@ -16,7 +16,11 @@ function Get-OfficialCommandPath {
         'claude' { Join-Path $HOME '.local/bin' }
         'codex' { Join-Path $env:LOCALAPPDATA 'Programs/OpenAI/Codex/bin' }
         'pi' { Join-Path $HOME '.pi/agent/bin' }
-        'kiro' { Join-Path $env:ProgramFiles 'Kiro-Cli' }
+        'kiro' {
+            $userDirectory = Join-Path $env:LOCALAPPDATA 'Kiro-Cli'
+            if (Test-Path (Join-Path $userDirectory 'kiro-cli.exe') -PathType Leaf) { $userDirectory }
+            else { Join-Path $env:ProgramFiles 'Kiro-Cli' }
+        }
         'grok' { Join-Path $HOME '.grok/bin' }
         default { throw "Unknown official CLI: $Tool" }
     }
@@ -29,6 +33,7 @@ function Invoke-VendorInstaller {
     # mise exec makes the already-installed Node available without another Node install.
     $start = [Diagnostics.ProcessStartInfo]::new()
     $start.FileName = (Get-Command mise -CommandType Application).Source
+    $start.WorkingDirectory = $HOME
     $start.UseShellExecute = $false
     $start.RedirectStandardInput = $true
     $start.RedirectStandardOutput = $true
@@ -64,7 +69,17 @@ function Install-OfficialCli {
         Receive-VerifiedFile $Installer $script
         # Only the checksum-reviewed local script is unblocked; execution policy stays unchanged.
         Unblock-File -LiteralPath $script
+        if ($Installer.tool -eq 'pi') {
+            # The official installer checks its launcher on PATH at the end.
+            # Register the empty publisher bin directory before installation so
+            # noninteractive setup does not need a Read-Host PATH confirmation.
+            $null = New-Item -ItemType Directory -Path $directory -Force
+            Add-UserCommandPath $directory
+        }
         Invoke-VendorInstaller $script @($Installer.arguments) (Join-Path $Backup ($Installer.tool + '-install.log'))
+        # The Kiro MSI supports a per-user location despite its printed Program Files hint.
+        $directory = Get-OfficialCommandPath $Installer.tool
+        $binary = Join-Path $directory ($Installer.command + $extension)
     }
     if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
         throw "$($Installer.tool) did not produce its official native command: $binary"
@@ -78,7 +93,10 @@ function Install-OfficialCli {
 function Test-WindowsTools {
     param([string] $Review)
     $report = Join-Path $Review 'tool-verification.json'
-    Invoke-Checked 'mise' @('exec','--','pwsh','-NoProfile','-File',(Join-Path $PSScriptRoot 'verify-tools.ps1'),
-        '-PlanPath',(Join-Path $Review 'packages.json'),'-ReportPath',$report)
+    Push-Location $HOME
+    try {
+        Invoke-Checked 'mise' @('exec','--','pwsh','-NoProfile','-File',(Join-Path $PSScriptRoot 'verify-tools.ps1'),
+            '-PlanPath',(Join-Path $Review 'packages.json'),'-ReportPath',$report)
+    } finally { Pop-Location }
     Write-Output "Actual Windows tool verification: $report"
 }

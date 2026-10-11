@@ -87,5 +87,14 @@ try {
         $null=[Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors)
         if ($errors.Count) { throw "Rendered PowerShell syntax is invalid: $file" }
     }
+    $originalMiseEnv = $env:MISE_ENV
+    try {
+        $env:MISE_ENV = 'windows'
+        & pwsh -NoProfile -File (Join-Path $source 'install.ps1') -Mode Plan
+        if ($LASTEXITCODE -ne 0) { throw 'The selected native Windows mise environment was rejected.' }
+        $env:MISE_ENV = 'unreviewed'
+        & pwsh -NoProfile -File (Join-Path $source 'install.ps1') -Mode Plan *> (Join-Path $scratch 'expected-environment-error.txt')
+        if ($LASTEXITCODE -eq 0) { throw 'An unreviewed mise environment was accepted.' }
+    } finally { $env:MISE_ENV = $originalMiseEnv }
     Write-Output 'Native Windows paths, preserved profile/hooks/legacy settings, provider ownership and repeated apply: OK'
 } finally { Remove-Item -LiteralPath $scratch -Recurse -Force }
