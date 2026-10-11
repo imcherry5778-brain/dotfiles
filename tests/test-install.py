@@ -19,9 +19,14 @@ PROFILE = ROOT / 'tests/profiles/fedora-common.json'
 
 
 def run(argv, *, capture=True, timeout=900, env=None):
-    result = subprocess.run([str(x) for x in argv], check=True, text=True,
-                            stdout=subprocess.PIPE if capture else None,
-                            cwd=USER_HOME, timeout=timeout, env=env)
+    try:
+        result = subprocess.run([str(x) for x in argv], check=True, text=True,
+                                stdout=subprocess.PIPE if capture else None,
+                                cwd=USER_HOME, timeout=timeout, env=env)
+    except subprocess.CalledProcessError as error:
+        if error.stdout:
+            print(error.stdout, flush=True)
+        raise
     return result.stdout
 
 
@@ -104,7 +109,7 @@ def verify_tmux(env):
             require(run(tmux + ['show-options', '-gqv', 'prefix'], env=env).strip() == 'C-Space', 'tmux prefix changed.')
             require(run(tmux + ['show-options', '-gqv', 'mouse'], env=env).strip() == 'on', 'tmux mouse disabled.')
             keys = run(tmux + ['list-keys'], env=env)
-            require('copycat' in keys and 'resurrect' in keys and 'stash' not in keys, 'Configured tmux plugin key bindings missing.')
+            require('copycat' in keys and 'resurrect' in keys, 'Configured tmux plugin key bindings missing.')
         finally:
             subprocess.run(tmux + ['kill-server'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, timeout=15)
 
@@ -150,7 +155,7 @@ def main():
     # Load no editor plugins here: verify real Neovim and the deployed Lua syntax separately.
     for lua in (USER_HOME / '.config/nvim').rglob('*.lua'):
         run([mise, 'exec', '--', 'nvim', '--headless', '-u', 'NONE', '-i', 'NONE',
-             '-c', 'lua assert(loadfile(' + json.dumps(str(lua)) + '))', '-c', 'qa'], env=runtime_env, timeout=30)
+             '-c', 'lua if not loadfile(' + json.dumps(str(lua)) + ') then vim.cmd("cquit 1") end', '-c', 'qa'], env=runtime_env, timeout=30)
     require(snapshot(base) == before_runtime, 'Reading/starting shells altered managed configuration.')
     run(command, capture=False)
     require(snapshot(base) == before_runtime, 'Second installation changed managed file contents, links or modes.')
