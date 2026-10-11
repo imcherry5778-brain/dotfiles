@@ -118,7 +118,8 @@ def main():
     require(Path('/.dockerenv').exists() and os.geteuid() != 0, 'Run only in the disposable non-root Docker test user.')
     require(pwd.getpwuid(os.getuid()).pw_name == 'dotfiles-test' and USER_HOME == Path('/home/dotfiles-test'), 'Unexpected test user/home.')
     require(' ' in str(ROOT), 'Checkout path must exercise spaces.')
-    require(not (USER_HOME / '.zshrc').exists() and not (USER_HOME / '.local/share/mise').exists(), 'Cold installation requires empty config and tool caches.')
+    # Fedora useradd may copy OS shell defaults from /etc/skel; those are legitimate inputs.
+    require(not (USER_HOME / '.config/chezmoi').exists() and not (USER_HOME / '.local/share/mise').exists(), 'Cold installation requires no prior dotfiles setup or tool caches.')
     verify_guards()
     run(['git', '-c', 'init.templateDir=', 'init', '--quiet', '--initial-branch=main', ROOT])
     # Ordinary, non-secret pre-existing settings must survive the actual installer.
