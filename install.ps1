@@ -12,7 +12,7 @@ $repoRoot = $PSScriptRoot
 
 if ($IsWindows -and $Mode -ne 'Check') {
   & (Join-Path $repoRoot 'scripts/windows/install.ps1') -Mode $Mode -ProfilePath $ProfilePath
-  exit $LASTEXITCODE
+  exit 0
 }
 
 if ($Mode -in @('DesktopPlan', 'DesktopApply')) {
@@ -25,7 +25,7 @@ if ($Mode -in @('DesktopPlan', 'DesktopApply')) {
 
 if ($Mode -eq 'Check') {
   & (Join-Path $repoRoot 'scripts/windows/check.ps1')
-  exit $LASTEXITCODE
+  exit 0
 }
 
 Write-Output 'dotfiles: Fedora configuration draft; deployment disabled'

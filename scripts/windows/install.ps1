@@ -21,6 +21,11 @@ function Invoke-Checked {
 function Update-SessionPath {
     $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
 }
+function Get-UserPortablePackage {
+    param([string] $PackageId)
+    $directory = Join-Path $env:LOCALAPPDATA 'Microsoft/WinGet/Packages'
+    return @(Get-ChildItem -LiteralPath $directory -Directory -Filter "${PackageId}_*" -ErrorAction SilentlyContinue)
+}
 function Install-WinGetPackage {
     param($Package)
     if (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue) {
@@ -29,8 +34,24 @@ function Install-WinGetPackage {
     }
     $arguments = @('install','--id',$Package.id,'--exact','--version',$Package.version,'--source','winget',
         '--silent','--accept-package-agreements','--accept-source-agreements','--disable-interactivity')
-    Invoke-Checked 'winget' $arguments
-    Update-SessionPath
+    if (@(Get-UserPortablePackage $Package.id).Count -eq 0) {
+        Invoke-Checked 'winget' $arguments
+        Update-SessionPath
+        if (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue) { return }
+    }
+    if (@(Get-UserPortablePackage $Package.id).Count -gt 0) {
+        # WinGet 1.11 cannot create some portable aliases from a normal user shell.
+        # Reinstall through WinGet's normal UAC flow, keeping user scope. No security policy changes.
+        Write-Output "$($Package.id): repair the missing portable command alias through WinGet."
+        $install = @{
+            FilePath = (Get-Command winget -CommandType Application).Source
+            Verb = 'RunAs'; Wait = $true; PassThru = $true
+            ArgumentList = $arguments + @('--force','--scope','user')
+        }
+        $process = Start-Process @install
+        if ($process.ExitCode -ne 0) { throw "$($Package.id) alias repair failed (exit $($process.ExitCode))." }
+        Update-SessionPath
+    }
     if (-not (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue)) {
         throw "$($Package.id) installed without a discoverable $($Package.command) command."
     }

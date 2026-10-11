@@ -13,7 +13,7 @@ Windows 11 x64에서 PowerShell 7과 WinGet을 우선한다. WSL, Zsh, Oh My Zsh
 - Ghostty: 공식 Windows 배포판이 없어 설치 대상에서 제외한다. 기존 Windows Terminal을 사용한다.
 - Git·PowerShell·mise·chezmoi는 WinGet bootstrap, Zig는 Tree-sitter C parser의 Windows 빌드 의존성이다.
 
-설치 시 이미 명령이 있으면 기존 공급자를 유지한다. 이 보존 동작은 기존 바이너리가 저장소 버전과 같다는 의미가 아니다. 업데이트는 별도로 검토한다. WinGet 등록 지연으로 Linux와 다른 버전은 catalog의 `versions`에 명시한다. Grok SHA는 공식 HTTPS 배포 파일에서 계산한 고정값이며 게시자 서명 검증으로 표현하지 않는다.
+설치 시 이미 명령이 있으면 기존 공급자를 유지한다. WinGet 1.11의 일반 사용자 portable alias 제한으로 정상 설치된 파일을 원하는 명령 이름으로 찾지 못하면, 해당 패키지만 WinGet의 정상 UAC 절차로 user scope 재설치해 공식 alias를 복구한다. Developer Mode나 시스템 실행 정책을 변경하지 않는다. 이 보존 동작은 기존 바이너리가 저장소 버전과 같다는 의미가 아니다. 업데이트는 별도로 검토한다. WinGet 등록 지연으로 Linux와 다른 버전은 catalog의 `versions`에 명시한다. Grok SHA는 공식 HTTPS 배포 파일에서 계산한 고정값이며 게시자 서명 검증으로 표현하지 않는다.
 
 ## 경로와 설정
 
