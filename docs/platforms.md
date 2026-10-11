@@ -3,7 +3,7 @@
 | 대상 | OS 판정 값 | 현재 검증 범위 |
 |---|---|---|
 | Fedora | fedora / linux | 개인 홈 적용·verify; 34개 도구 선택, 실제 PTY Zsh/Bash·기존 LazyVim/LSP 시작·native completion 보존; Fedora 44 컨테이너 baseline 설치·Zsh/tmux 반복 검증 |
-| Ubuntu | ubuntu / linux | 격리된 profile·Bash 보존·권한·15개 도구 source 검사; Ubuntu 26.04 컨테이너 설치 검증 구현, 실제 사용자 홈은 미적용 |
+| Ubuntu | ubuntu / linux | 격리된 profile·Bash 보존·권한·15개 도구 source 검사; Ubuntu 26.04 컨테이너에서 실제 15개 CLI 설치·Bash/PTY Zsh·tmux·두 번째 적용 통과, 실제 사용자 홈은 미적용 |
 | Arch | arch / linux | fixture만; pacman·데스크톱 미검증 |
 | openSUSE Tumbleweed | opensuse-tumbleweed / linux | fixture만; Zypper·데스크톱 미검증 |
 | macOS | macos / darwin | fixture와 CI의 기반 검사; 실제 기기 미검증 |

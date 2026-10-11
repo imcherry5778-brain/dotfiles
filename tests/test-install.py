@@ -173,6 +173,8 @@ def main():
             stream.write("\n# User customization retained across installation.\nalias preserved_cli='printf retained'\nexport PRESERVED_CLI=yes\n")
         ubuntu_original['.bashrc'] = (USER_HOME / '.bashrc').read_bytes()
         native = bash_state()
+        native_count = sum(line.startswith('complete ') for line in native.splitlines())
+        require(native_count >= 100, 'Ubuntu native completion baseline is absent; preservation test would be empty.')
     run(['git', '-c', 'init.templateDir=', 'init', '--quiet', '--initial-branch=main', ROOT])
     # Ordinary, non-secret pre-existing settings must survive the actual installer.
     identity = '[user]\n name = CI Existing User\n email = ci@example.invalid\n[commit]\n gpgsign = false\n[acceptance]\n keep = existing\n'
@@ -239,7 +241,8 @@ def main():
         for relative in ['.config', '.local', '.local/share']:
             require(stat.S_IMODE((USER_HOME / relative).stat().st_mode) == 0o700, f'Ubuntu private directory changed: {relative}')
         require(pwd.getpwuid(os.getuid()).pw_shell == '/bin/bash', 'Installer silently changed the login shell.')
-    print(json.dumps({'result': 'passed', 'platform': TARGET + RELEASE['VERSION_ID'].strip(chr(34)), 'tools': versions,
+    print(json.dumps({'ubuntu_native_completion_specs': native_count if TARGET == 'ubuntu' else None,
+                      'result': 'passed', 'platform': TARGET + RELEASE['VERSION_ID'].strip(chr(34)), 'tools': versions,
                       'managed_paths': len(before_runtime), 'installs': 2,
                       'runtime': ['interactive-zsh', 'tmux-and-plugins', f'{len(tools)}-cli-version-commands', 'neovim-lua-syntax'],
                       'excluded': ['authentication', 'gui', 'neovim-plugin-installation', 'personal-fedora-tools-and-other-ai-installers']}, indent=2), flush=True)

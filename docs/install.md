@@ -65,3 +65,5 @@ GitHub Actions의 Installation checks는 GitHub-hosted ubuntu-24.04에서 Fedora
 2026-10-11, 코드 commit `c566f13`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704512)가 통과했다. Fedora 44 일반 사용자에서 13개 CLI를 새로 설치하고 모든 실행 파일의 실제 경로·버전을 확인했다. Zsh/tmux runtime와 Neovim Lua 구문 검사 후 같은 진입점을 재실행했고, external 파일을 포함한 managed 경로 1,902개의 내용·링크·권한이 동일하며 chezmoi diff가 비어 있음을 확인했다.
 
 같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38137704539)도 Linux·Windows·macOS에서 통과했다. Windows/macOS의 실제 도구 설치 성공을 의미하지 않는다. 당시 실제 Fedora 사용자 홈의 검토 기준 476개 경로와 기존 파일 449개는 변경되지 않았다. 이후 개인 홈 적용 기록은 [Fedora 실제 적용 결과](fedora-application.md)에서 구분한다.
+
+2026-10-11, Ubuntu 지원 코드 commit `55f5402`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38140944752)는 Ubuntu 26.04의 15개 도구와 Fedora 44의 13개 도구를 각각 새로 설치해 두 번 적용했다. 두 환경 모두 실행 경로/버전·Zsh/tmux·기존 설정 보존·반복 적용·빈 diff를 통과했다. 관리 경로는 external을 포함하여 Ubuntu 1,944개·Fedora 1,903개다. 실제 Ubuntu 사용자 홈은 여전히 미적용이다.

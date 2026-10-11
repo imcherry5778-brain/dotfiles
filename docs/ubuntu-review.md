@@ -14,7 +14,7 @@ AI 세 도구의 선호 설정과 해당 실행 파일 설치는 별개다. 이 
 
 ## 검증과 적용 경계
 
-격리 source 검사와 hosted Ubuntu 26.04 설치 테스트를 구현했다. hosted 설치 결과는 해당 commit의 Actions로 확인한다. CI는 도구 다운로드·버전/경로·PTY Zsh·Bash 공급자 보존·tmux 플러그인·Neovim Lua 구문·반복 설치를 확인하며, 사용자 PC나 Self-hosted runner를 사용하지 않는다.
+코드 commit `55f5402`의 [Installation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38140944752)가 Ubuntu 26.04·Fedora 44 모두 통과했다. Ubuntu는 15개 CLI를 새로 설치하고 두 번째 설치 후 external을 포함한 1,944개 관리 경로의 내용·링크·권한이 동일하며 diff가 비어 있음을 확인했다. Fedora는 13개 CLI와 1,903개 경로를 반복 검증했다. 같은 commit의 [Foundation checks](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38140944736)도 Linux·Windows·macOS 모두 통과했다. CI는 도구 다운로드·버전/경로·PTY Zsh·Bash 공급자 보존·tmux 플러그인·Neovim Lua 구문·반복 설치를 확인하며, 사용자 PC나 Self-hosted runner를 사용하지 않는다.
 
 실제 적용 전에는 최신 Ubuntu diff와 변경 대상 백업을 다시 확보한다. OS 패키지 준비 → 실제 프로필 초기화 → mise 도구 설치 → external/설정 적용 → Zsh 기본 셸 전환 → 실제 데스크톱/클립보드/LazyVim 실행 순서로 진행한다. CI 성공이 사용자 기기 적용·GUI·플러그인·인증 성공을 뜻하지 않는다.
 
