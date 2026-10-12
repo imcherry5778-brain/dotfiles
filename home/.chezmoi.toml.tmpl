@@ -69,7 +69,10 @@
 {{- $desired := includeTemplate "install/machine.toml.tmpl" . | fromToml -}}
 {{- if and $automation (eq .chezmoi.command "init") (not .chezmoi.flags.dryRun) (eq .chezmoi.destDir .chezmoi.homeDir) (stat .chezmoi.configFile) -}}
 {{- if eq .chezmoi.os "windows" -}}
-{{- $_ := output "powershell.exe" "-NoProfile" "-ExecutionPolicy" "Bypass" "-File" (joinPath .chezmoi.workingTree "scripts/windows/backup-init.ps1") .chezmoi.configFile -}}
+{{- /* A PS7 -> chezmoi -> PS5.1 process chain inherits incompatible module
+       paths. Prefer installed PS7; a pre-bootstrap preview can still use PS5.1. */ -}}
+{{- $backupShell := lookPath "pwsh" | default "powershell.exe" -}}
+{{- $_ := output $backupShell "-NoProfile" "-ExecutionPolicy" "Bypass" "-File" (joinPath .chezmoi.workingTree "scripts/windows/backup-init.ps1") .chezmoi.configFile -}}
 {{- else -}}
 {{- $_ := output "sh" (joinPath .chezmoi.workingTree "scripts/unix/backup-init.sh") .chezmoi.configFile -}}
 {{- end -}}
