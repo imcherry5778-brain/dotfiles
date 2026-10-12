@@ -242,10 +242,10 @@ function Repair-MiseCommands {
     Invoke-Checked 'mise' @('install','--yes')
 }
 function Invoke-ProtectedVendors {
-    param($Plan, [string] $Backup, $Managed)
+    param($Plan, [string] $Backup, $Managed, [string] $UserHome = $HOME)
     $saved = @()
     foreach ($relative in @('Documents/PowerShell/profile.ps1','Documents/PowerShell/Microsoft.PowerShell_profile.ps1')) {
-        $path = Join-Path $HOME $relative
+        $path = Join-Path $UserHome $relative
         if ($relative -in $Managed -and (Test-Path -LiteralPath $path -PathType Leaf)) {
             if ((Get-Item -LiteralPath $path).LinkType) { throw "Vendor loader is a symlink: $path" }
             $saved += @{path=$path;content=[IO.File]::ReadAllBytes($path);acl=(Get-Acl -LiteralPath $path)}
@@ -255,8 +255,15 @@ function Invoke-ProtectedVendors {
         foreach ($installer in $Plan.official) { Install-OfficialCli $installer $Backup }
     } finally {
         foreach ($entry in $saved) {
-            [IO.File]::WriteAllBytes($entry.path,$entry.content)
-            Set-Acl -LiteralPath $entry.path -AclObject $entry.acl
+            # Existing providers normally leave loaders untouched. Avoid rewriting
+            # their timestamps or canonicalizing an unchanged Windows ACL.
+            $exists = Test-Path -LiteralPath $entry.path -PathType Leaf
+            if (-not $exists -or [Convert]::ToBase64String([IO.File]::ReadAllBytes($entry.path)) -cne [Convert]::ToBase64String($entry.content)) {
+                [IO.File]::WriteAllBytes($entry.path,$entry.content)
+            }
+            if ((Get-Acl -LiteralPath $entry.path).Sddl -cne $entry.acl.Sddl) {
+                Set-Acl -LiteralPath $entry.path -AclObject $entry.acl
+            }
         }
     }
 }
