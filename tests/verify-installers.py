@@ -30,6 +30,17 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_ubuntu_complete_repeat_needs_no_elevated_metadata_refresh(self):
+        for status, refresh in [('installed', False), ('unpacked', True), ('', True)]:
+            with self.subTest(status=status), \
+                 patch('lib.packages.subprocess.run', return_value=subprocess.CompletedProcess([], 0, stdout=status)), \
+                 patch('lib.packages.run') as execute, \
+                 patch('lib.packages.administrative_command', return_value=['sudo', 'apt-get', 'update']) as elevate:
+                prepare_packages(Host('linux', 'x64', 'ubuntu'), desktop=True)
+                self.assertEqual(elevate.called, refresh)
+                self.assertEqual(sum(call.args[0] == ['sudo', 'apt-get', 'update'] for call in execute.call_args_list), int(refresh))
+                self.assertEqual(execute.call_args_list[-1].args[0][-3:], ['bootstrap', 'packages', 'apply'])
+
     @unittest.skipIf(os.name == 'nt', 'Unix initial config permissions; Windows records ACLs.')
     def test_initial_config_backup_is_private_and_records_original_mode(self):
         with tempfile.TemporaryDirectory(prefix='initial config with spaces ') as temporary:
@@ -228,7 +239,8 @@ class InstallerContracts(unittest.TestCase):
                 backup_targets(home, ['../outside'], '', 'macos')
 
     def test_apt_inventory_is_standalone_and_no_upgrade(self):
-        with patch('lib.packages.administrative_command', side_effect=lambda args: args), patch('lib.packages.run') as execute:
+        with patch('lib.packages.subprocess.run', return_value=subprocess.CompletedProcess([], 1, stdout='')), \
+             patch('lib.packages.administrative_command', side_effect=lambda args: args), patch('lib.packages.run') as execute:
             prepare_packages(Host('linux', 'x64', 'ubuntu'), desktop=True)
             commands = [call.args[0] for call in execute.call_args_list]
             self.assertTrue(any(command[-3:] == ['bootstrap', 'packages', 'apply'] for command in commands))

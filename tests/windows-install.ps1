@@ -44,6 +44,10 @@ $before = & chezmoi --no-tty --no-pager diff --exclude=scripts | Out-String
 if ($LASTEXITCODE -ne 0 -or $before.Trim()) { throw 'Unexpected diff after first installation.' }
 & chezmoi --no-tty --no-pager apply
 if ($LASTEXITCODE -ne 0) { throw 'Second native apply failed.' }
+# Re-init from PS7 goes through chezmoi, which must not start PS5.1 with PS7 modules.
+& pwsh -NoProfile -Command '& chezmoi --no-tty --no-pager init --apply; exit $LASTEXITCODE'
+if ($LASTEXITCODE -ne 0) { throw 'Native PowerShell 7 reinitialization failed.' }
+
 $fdBinary = (& mise which fd | Select-Object -First 1).Trim()
 Remove-Item -LiteralPath $fdBinary
 & chezmoi --no-tty --no-pager apply

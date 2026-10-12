@@ -53,5 +53,15 @@ try {
     $firstPath = $env:Path
     Install-OfficialCli $fixture $scratch
     if ($script:installCalls -ne 1 -or $env:Path -ne $firstPath) { throw 'Repeat Pi setup downloaded/reinstalled or duplicated PATH.' }
+    $loader = Join-Path $fixtureHome 'Documents/PowerShell/profile.ps1'
+    $null = New-Item -ItemType Directory -Path (Split-Path $loader) -Force
+    [IO.File]::WriteAllText($loader, '# existing loader')
+    [IO.File]::SetLastWriteTimeUtc($loader, [DateTime]::UtcNow.AddMinutes(-5))
+    $loaderAcl = (Get-Acl -LiteralPath $loader).Sddl
+    $loaderTime = (Get-Item -LiteralPath $loader).LastWriteTimeUtc.Ticks
+    Invoke-ProtectedVendors -Plan @{official=@()} -Backup $scratch -Managed @('Documents/PowerShell/profile.ps1') -UserHome $fixtureHome
+    if ((Get-Acl -LiteralPath $loader).Sddl -cne $loaderAcl -or (Get-Item -LiteralPath $loader).LastWriteTimeUtc.Ticks -ne $loaderTime -or [IO.File]::ReadAllText($loader) -cne '# existing loader') {
+        throw 'No-op provider stage changed an existing loader, timestamp or ACL.'
+    }
     Write-Output 'Publisher checksum/overwrite failure, provider preservation and Pi noninteractive PATH/repeat setup: OK'
 } finally { $env:Path = $originalProcessPath; Remove-Item -LiteralPath $scratch -Recurse -Force }
