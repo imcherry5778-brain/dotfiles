@@ -102,7 +102,7 @@
         "tool": "codex",
         "command": "codex",
         "url": "https://chatgpt.com/codex/install.ps1",
-        "sha256": "f02eb53365d2bbb91f46c4d46ab8e357d087a8cc100794b3eb0c5b4368d6dc42",
+        "sha256": "a59cb66350098c33b021ff470d586ae8fe3b7caf189ca7137b4fe3af5d4dce74",
         "arguments": [
           "-Release",
           "latest"

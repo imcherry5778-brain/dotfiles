@@ -16,6 +16,12 @@ mise 설치·검증·공식 설치기 프로세스는 실제 사용자 홈에서
 
 Pi는 bin 경로를 먼저 등록해 공식 설치기의 마지막 PATH 질문을 피한다. Kiro는 설치기가 출력하는 고정 Program Files 안내 대신 실제 LocalAppData 또는 시스템 설치 위치를 확인한다. 공급사 설치기는 별도 프로세스에서 실행하고, 원문 체크섬이 달라지거나 종료 코드가 실패하면 적용을 중단한다.
 
+## 2026-10-26 Codex 설치기 체크섬 검토
+
+Fedora 패키지 이전의 hosted CI에서 기존 Codex 설치기 체크섬 불일치가 발견됐다. [OpenAI 배포 문서](https://learn.chatgpt.com/docs/enterprise/windows-deployment)가 안내하는 `https://chatgpt.com/codex/install.ps1`을 다시 받아 이전 검토본과 비교했다. 실행 코드 변경은 junction 지원 타입 V3, daemon 선택의 USN 식별 및 선택 이력 기록이며 서명 블록도 갱신됐다. 일반 CLI 설치의 공급사·인자·경로는 유지했다.
+
+검토한 원문 SHA-256은 `a59cb66350098c33b021ff470d586ae8fe3b7caf189ca7137b4fe3af5d4dce74`다. `windows.json`의 검토값만 갱신했고 다운로드 검증과 불일치 시 중단 동작은 유지했다. 변경 파일과 이전 원문은 Fedora의 비공개 sys-update 복구 자료에 보관했다. 실제 개인 Windows에는 적용하지 않았으며 실행 검증은 GitHub의 폐기 가능한 Windows runner에서 수행한다. 공급사가 같은 URL을 다시 변경하면 다음 검토가 필요하다.
+
 ## 백업과 복구 자료
 
 개인 ACL로 제한한 `.local/state/dotfiles/backups` 아래에 관리 대상 파일, 기존 PowerShell 7/5.1 프로필, Pi/Grok 설정, 사용자 PATH, 실행 정책, diff와 설치 로그를 보관했다. 인증 파일을 저장소에 복사하지 않았다.
