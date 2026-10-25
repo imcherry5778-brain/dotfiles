@@ -113,7 +113,7 @@
         "tool": "pi",
         "command": "pi",
         "url": "https://pi.dev/install.ps1",
-        "sha256": "bc228f9c0584b86d917561690963e767aa1841233a04ab6208f62f28ee72c40f",
+        "sha256": "fd418a3bc57022b8ac1b823f8e42bf2f58b832482ee5e04739b4b4f783767228",
         "arguments": [],
         "updateOwner": "publisher"
       },
