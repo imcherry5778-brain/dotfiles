@@ -19,7 +19,7 @@ chezmoi 설치는 Fedora의 `chezmoi-2.73.0-1.fc44.x86_64` 한 패키지만 추�
 
 ## 검증
 
-- 오프라인 installer 검사 25개, 격리 Fedora 반복 적용·선택 검사, 5개 기존 플랫폼의 렌더 회귀 검사를 통과했다. 렌더 기준의 변경은 개인 Fedora mise 파일 한 항목뿐이다.
+- 원격 main의 선행 변경을 보존한 뒤 오프라인 installer 검사 26개, 격리 Fedora 반복 적용·선택 검사, 5개 기존 플랫폼의 렌더 회귀 검사를 통과했다. 렌더 기준의 변경은 개인 Fedora mise 파일 한 항목뿐이다.
 - 실제 홈에서 mise 도구 38개의 설치 경로·실행 버전을 검증했고, 이전 34개 도구의 활성 버전이 유지됨을 비교했다.
 - 새 Zsh 로그인 셸에서 chezmoi·4개 mise CLI·3개 mitmproxy entrypoint의 명령 선택 경로를 확인했다.
 - uv mitmdump를 임시 설정 디렉터리와 localhost 포트로 실행해 로컬 HTTP 요청 전달을 확인하고 종료했다. 기존 CA 파일·chezmoi config·OpenCode 소스 및 실행 설정의 해시가 유지됐다.

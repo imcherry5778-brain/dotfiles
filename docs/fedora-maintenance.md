@@ -13,7 +13,7 @@
 - DNF 이력은 upgrade 한 건만 뽑지 않고 시작 전 ID 집합과 비교해 실행 중 발생한 트랜잭션을 보고한다. 잘못된 `coredumpctl vacuum`을 제거하고 coredump 경로에 한정한 systemd-tmpfiles 보관 정책을 사용한다.
 - Android SDK·JetBrains·Conda·uv Python·venv·사용자 pip·cargo·GNOME 확장·Bottles·서비스 이미지·virtio-win·펌웨어의 조회 또는 수동 관리 안내를 추가했다. 커널 모듈·CDI 참조·가상환경 Python 연결도 점검한다.
 
-`~/scripts/tests/test_sys_update.py`는 함수 오류와 격리된 전체 실행 흐름을 검사한다. 명령 대역을 사용해 실제 패키지 업데이트 없이, 후보·조회 오류 구분, 실패 보고·최신 링크, 중단 후 root/home post 스냅샷, DNF 전체 이력, 점검 모드의 무변경·무sudo, 자동 prune 부재를 확인한다. 14개 검사와 Bash 구문·ShellCheck를 통과했다. 실제 PC의 최종 `--check`도 종료 0, 실패·판정 불가 0개를 확인했다. 전체 시스템 업데이트 자체는 이번 작업에서 실행하지 않았다.
+`~/scripts/tests/test_sys_update.py`는 함수 오류와 격리된 전체 실행 흐름을 검사한다. 명령 대역을 사용해 실제 패키지 업데이트 없이, 후보·조회 오류 구분, 실패 보고·최신 링크, 중단 후 root/home post 스냅샷, DNF 전체 이력, 점검 모드의 무변경·무sudo, 자동 prune 부재를 확인한다. 설치된 akmod의 실행 커널 모듈이 없을 때도 실패로 보고한다. 15개 검사와 Bash 구문·ShellCheck를 통과했다. 실제 PC의 `--check`도 종료 0, 실패·판정 불가 0개를 확인했고 최종 커널 점검 변경은 실제 모듈 조회로 재검증했다. 전체 시스템 업데이트 자체는 이번 작업에서 실행하지 않았다.
 
 ## NVIDIA CDI
 
