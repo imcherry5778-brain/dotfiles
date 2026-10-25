@@ -14,6 +14,8 @@ COMMANDS = {'ripgrep': 'rg', 'neovim': 'nvim', 'npm:@earendil-works/pi-coding-ag
             'opentofu': 'tofu', 'rust': 'rustc'}
 
 VERSION_ARGUMENTS = {'az': ['version'], 'go': ['version'],
+                     'argocd': ['version', '--client', '--short'],
+                     'cosign': ['version'], 'k3d': ['version'], 'oras': ['version'],
                      'helm': ['version', '--short'], 'k9s': ['version'],
                      'kubectl': ['version', '--client=true', '--output=json'],
                      'tmux': ['-V']}

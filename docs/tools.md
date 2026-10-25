@@ -2,7 +2,7 @@
 
 합의한 공통 CLI는 ripgrep, fd, bat, jq, fzf, zoxide, gh, lazygit, delta, neovim, yazi, uv, carapace 13개다. AI 범위는 agy, claude, codex, aider, opencode, pi, kiro-cli, grok이다.
 
-현재 구성은 Fedora 설치 현황에서 확인된 버전을 기준으로 한다. [inventory](fedora-inventory.json)를 참고한다. source에는 공통 13개·기존 OpenCode 1개·개인 Fedora 도구 20개를 별도 환경으로 선언했고 중복 소유권을 검사했다. 기존 aws-cli 옵션도 유지한다.
+현재 구성은 Fedora 설치 현황에서 확인된 버전을 기준으로 한다. [inventory](fedora-inventory.json)는 최초 이전 기록이다. 현재 source에는 공통 13개·기존 OpenCode 1개·개인 Fedora 도구 24개를 별도 환경으로 선언해 총 38개를 관리한다. 기존 aws-cli 옵션도 유지한다. 2026-10-26에 수동 설치 k3d·Argo CD CLI·cosign·ORAS를 같은 버전으로 mise에 편입했다. chezmoi는 DNF, mitmproxy는 uv가 소유한다. [패키지 관리 이전 기록](fedora-package-migration.md)을 참고한다.
 
 `config.toml`은 공통, `config.ai.toml`은 기존 mise-owned AI, `config.personal-fedora.toml`은 개인 추가 도구다. `miserc.toml`에서 ai/personal-fedora를 명시적으로 선택한다. 빈 OS 환경 파일은 만들지 않는다. 향후 다른 OS의 실제 패키지 차이가 생길 때 필요한 config.<environment>.toml만 추가한다.
 

@@ -442,7 +442,7 @@
     ".config/git/config": "449d1088c37a801ad3db01aebc3d952c4c516ab9a4ee786722e140eb81b19c8a",
     ".config/git/ignore": "582bd1d58a2a89a1b3ba8fcd6eadfa88462d0c2dcf43799caf566e91b8ec49ee",
     ".config/mise/config.ai.toml": "efbb27f7299f4cb3f25e25c46f4931a0a2fa634c298f39b804da2e869c3fd697",
-    ".config/mise/config.personal-fedora.toml": "c819728cd5cc8e30a1149325e94752464a9877c3cabde70dfcf5f2f6463e92ec",
+    ".config/mise/config.personal-fedora.toml": "c277f7c25fe78fbdde530c7f94719885f68a0546eebd66a16c022005ba34529d",
     ".config/mise/config.toml": "0fa891d25ad918731fbc660c73cc6a517ce8b829fa88d3734901fe29c654e0f2",
     ".config/mise/miserc.toml": "808e4dbde154bf58bef041ad502558ebe94e6553c0bcc69192a1ef3bd50ba641",
     ".config/nvim/.neoconf.json": "bf7ee9c03125432426d33bf5a64700cf00b5a4cb4bd424c788d888914d6ca6d4",

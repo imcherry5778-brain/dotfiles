@@ -188,8 +188,8 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None, gh_binary=None):
 
         configs = ["config.toml", "config.ai.toml", "config.personal-fedora.toml"]
         inventories = [tomllib.loads((destination / ".config/mise" / name).read_text())["tools"] for name in configs]
-        assert [len(x) for x in inventories] == [13, 1, 20]
-        assert len(set().union(*(set(x) for x in inventories))) == 34, "Duplicate tool ownership"
+        assert [len(x) for x in inventories] == [13, 1, 24]
+        assert len(set().union(*(set(x) for x in inventories))) == 38, "Duplicate tool ownership"
         selector = tomllib.loads((destination / ".config/mise/miserc.toml").read_text())
         assert selector["env"] == ["ai", "personal-fedora"]
         if mise:
@@ -210,7 +210,7 @@ def verify(chezmoi, mise=None, oh_my_zsh=None, neovim=None, gh_binary=None):
             selected = json.loads(result.stdout)
             expected = set().union(*(set(x) for x in inventories))
             assert set(selected) == expected, "mise did not select all three global environment configs"
-            print("Installed mise: global selector resolves exactly 34 tools without installing: OK")
+            print("Installed mise: global selector resolves exactly 38 tools without installing: OK")
         assert len(list((destination / ".config/carapace/specs").glob("*.yaml"))) == 404
         assert len(list((destination / ".local/share/shell-completion/zsh/native").iterdir())) == 26
         assert (destination / ".tmux.conf").is_symlink()
@@ -340,7 +340,7 @@ print 'OMZ runtime, single activation owners, provider registration and PATH ded
         assert len(declarations) == 57, len(declarations)
         assert all(v.get("exact") is False for v in declarations.values() if v["type"] == "archive")
         assert all("master" not in v["url"] and "latest" not in v["url"] for v in declarations.values())
-        print("Fedora draft: isolated repeat apply, preserved Git identity/AI hooks, 34 tool ownerships, shell syntax and disabled-by-default targets: OK")
+        print("Fedora draft: isolated repeat apply, preserved Git identity/AI hooks, 38 tool ownerships, shell syntax and disabled-by-default targets: OK")
 
 
 if __name__ == "__main__":

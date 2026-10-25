@@ -159,6 +159,10 @@ class InstallerContracts(unittest.TestCase):
                     self.assertEqual(call.kwargs['env']['AZURE_CORE_COLLECT_TELEMETRY'], 'false')
                 if command == 'kubectl':
                     self.assertIn('--client=true', call.args[0])
+        with patch('lib.tools.run', return_value='version') as execute:
+            self.assertEqual(version_output('mise', 'argocd'), 'version')
+            self.assertEqual(execute.call_args.args[0],
+                             ['mise', 'exec', '--', 'argocd', 'version', '--client', '--short'])
 
     def test_fedora_full_is_portable_and_not_personal(self):
         profile = installer.validate_profile(ROOT / 'tests/profiles/fedora-full.json')

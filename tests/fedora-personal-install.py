@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hosted Fedora migration: 34 real mise CLI, retained native-provider fixtures."""
+"""Hosted Fedora migration: 38 real mise CLI, retained native-provider fixtures."""
 import json
 import os
 from pathlib import Path
@@ -69,7 +69,7 @@ def main():
         assert data['automation']['enabled'] and not data['deployment']['externals']
         assert data['machine']['conda_prefix'] == str(conda)
         assert data['machine']['ssh_agent_socket'] == machine['ssh_agent_socket']
-        assert len(selected_tools()) == 34
+        assert len(selected_tools()) == 38
         before = managed_snapshot(chezmoi)
         run(chezmoi, 'apply')
         assert managed_snapshot(chezmoi) == before
@@ -78,10 +78,10 @@ def main():
         assert ansible.is_file() and fd.stat().st_mtime_ns == fd_time
         assert managed_snapshot(chezmoi) == before
         assert snapshot_providers(HOME) == providers and marker.read_text() == 'preserved\n'
-        assert len(verify_mise_tools('mise')) == 34
+        assert len(verify_mise_tools('mise')) == 38
         run(chezmoi, 'verify', '--exclude=scripts')
         assert not run(chezmoi, 'diff', '--exclude=scripts', capture=True).strip()
-    print('Fedora personal: 34 real mise CLI, legacy activation, repeat apply and deleted Ansible repair passed; native fixtures retained, GUI/authentication excluded.')
+    print('Fedora personal: 38 real mise CLI, legacy activation, repeat apply and deleted Ansible repair passed; native fixtures retained, GUI/authentication excluded.')
 
 
 if __name__ == '__main__':
