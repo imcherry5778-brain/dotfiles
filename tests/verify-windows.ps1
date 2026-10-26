@@ -73,6 +73,7 @@ try {
     if ($settings.hooks.UserPromptSubmit[0].hooks[0].command -ne 'retained-native-hook' -or $settings.statusLine.command -ne 'keep-me') { throw 'Existing Orca hooks were lost.' }
     $plan = Invoke-Chezmoi ($base + @('execute-template','--file',(Join-Path $source 'home/.chezmoitemplates/windows/plan.json.tmpl'))) | ConvertFrom-Json
     if ($plan.bootstrap.Count -ne 4 -or $plan.official.Count -ne 6) { throw 'Wrong bootstrap/native ownership.' }
+    if ($plan.native.Count -ne 1 -or $plan.native[0].id -ne 'GitHub.Copilot' -or $plan.native[0].version -ne 'v1.0.103') { throw 'Wrong Copilot CLI WinGet declaration.' }
     if ($plan.PSObject.Properties.Name -contains 'winget') { throw 'CLI inventory leaked into WinGet.' }
     $keys = @($plan.mise.PSObject.Properties.Name)
     if ($keys.Count -ne 16 -or $keys -notcontains 'pypi:aider-chat' -or $keys -notcontains 'github:anomalyco/opencode') { throw 'Wrong Windows mise inventory.' }

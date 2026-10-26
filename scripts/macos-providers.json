@@ -1,5 +1,6 @@
 {
   "casks": {
+    "copilot": "copilot-cli",
     "agy": "antigravity-cli",
     "claude": "claude-code",
     "codex": "codex",

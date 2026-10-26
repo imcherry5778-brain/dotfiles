@@ -26,7 +26,9 @@ def inspect_ghostty_configuration():
 
 
 def install_cask(cask, command=None, application=None):
-    if command and shutil.which(command):
+    from lib.copilot import copilot_command
+    existing = copilot_command() if command == 'copilot' else shutil.which(command) if command else None
+    if existing:
         print(f'{command}: existing provider preserved.', flush=True)
         return
     if application and any((directory / application).exists() for directory in [Path('/Applications'), Path.home() / 'Applications']):
@@ -35,7 +37,7 @@ def install_cask(cask, command=None, application=None):
     listed = run(['brew', 'list', '--cask'], capture=True).splitlines()
     if cask.split('/')[-1] not in listed:
         run(['brew', 'install', '--cask', cask])
-    if command and not shutil.which(command):
+    if command and not (copilot_command() if command == 'copilot' else shutil.which(command)):
         raise ValueError(f'{cask} is installed but {command} is absent; repair its existing provider separately.')
 
 

@@ -1,4 +1,19 @@
 # Windows provider adapters. Dot-source only; callers decide when to mutate.
+function Get-InstallApplication {
+    param([string] $Name)
+    foreach ($command in @(Get-Command $Name -CommandType Application -All -ErrorAction SilentlyContinue)) {
+        if ($Name -eq 'copilot') {
+            $item = Get-Item -LiteralPath $command.Source
+            $path = if ($item.LinkType) { $item.ResolveLinkTarget($true).FullName } else { $item.FullName }
+            if ($path -match '[\\/]copilot-shim[\\/]') { continue }
+            if ($item.Extension -in @('.cmd','.bat','.ps1') -and
+                ((Get-Content -LiteralPath $item.FullName -TotalCount 20) -join "`n") -match 'copilot-shim') { continue }
+        }
+        return $command
+    }
+    return $null
+}
+
 function Add-UserCommandPath {
     param([string] $Directory)
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) { throw "Missing command directory: $Directory" }

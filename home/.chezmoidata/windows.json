@@ -1,5 +1,8 @@
 {
   "windows": {
+    "native": [
+      {"id": "GitHub.Copilot", "command": "copilot", "version": "v1.0.103"}
+    ],
     "bootstrap": [
       {
         "id": "Microsoft.PowerShell",

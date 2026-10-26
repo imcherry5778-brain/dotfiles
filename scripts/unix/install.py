@@ -24,6 +24,7 @@ from lib.packages import prepare_packages
 from lib.backup import backup_targets
 from lib.macos import install_native_cli, install_apps, verify_tools, inspect_ghostty_configuration
 from lib.tools import verify_mise_tools
+from lib.copilot import install_copilot
 
 
 def validate_profile(path):
@@ -237,11 +238,14 @@ def apply_stage(stage, context):
                     install_apps()
             elif profile['features'].get('desktop', False):
                 install_desktop()
+            copilot = install_copilot(host) if profile['features'].get('ai', False) else None
         if profile['features'].get('personal_fedora'):
             from lib.fedora import snapshot_providers
             if snapshot_providers(USER_HOME) != json.loads((review / 'preserved-providers.json').read_text()):
                 raise ValueError('An existing native Fedora provider changed during installation.')
         evidence = verify_tools(mise) if host.system == 'macos' and profile['features'].get('desktop', False) else verify_mise_tools(mise)
+        if copilot is not None:
+            evidence['copilot'] = copilot
         (review / 'cli-verification.json').write_text(json.dumps(evidence, indent=2) + '\n')
         (review / 'cli-verification.json').chmod(0o600)
         reader.query('verify', '--exclude=scripts')

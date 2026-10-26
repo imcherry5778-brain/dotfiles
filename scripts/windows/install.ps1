@@ -31,7 +31,7 @@ function Get-UserPortablePackage {
 }
 function Install-WinGetPackage {
     param($Package)
-    if (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue) {
+    if (Get-InstallApplication $Package.command) {
         Write-Output "$($Package.id): existing provider preserved."
         return
     }
@@ -40,7 +40,7 @@ function Install-WinGetPackage {
     if (@(Get-UserPortablePackage $Package.id).Count -eq 0) {
         Invoke-Checked 'winget' $arguments
         Update-SessionPath
-        if (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue) { return }
+        if (Get-InstallApplication $Package.command) { return }
     }
     if (@(Get-UserPortablePackage $Package.id).Count -gt 0) {
         # WinGet 1.11 cannot create some portable aliases from a normal user shell.
@@ -55,7 +55,7 @@ function Install-WinGetPackage {
         if ($process.ExitCode -ne 0) { throw "$($Package.id) alias repair failed (exit $($process.ExitCode))." }
         Update-SessionPath
     }
-    if (-not (Get-Command $Package.command -CommandType Application -ErrorAction SilentlyContinue)) {
+    if (-not (Get-InstallApplication $Package.command)) {
         throw "$($Package.id) installed without a discoverable $($Package.command) command."
     }
 }
@@ -303,6 +303,7 @@ if ($Stage) {
         Push-Location $HOME
         try { Repair-MiseCommands $plan } finally { Pop-Location }
         foreach ($package in $plan.editor) { Install-WinGetPackage $package }
+        foreach ($package in $plan.native) { Install-WinGetPackage $package }
         Invoke-ProtectedVendors $plan $backup $managed
         if ($selection.features.desktop) { Install-NativeDesktop }
         Test-WindowsTools $review

@@ -1,2 +1,2 @@
 {{- $mise := (includeTemplate "dot_config/mise/config.windows.toml.tmpl" . | fromToml).tools -}}
-{{- dict "bootstrap" .windows.bootstrap "editor" .windows.editor "mise" $mise "official" .windows.official | toPrettyJson -}}
+{{- dict "bootstrap" .windows.bootstrap "editor" .windows.editor "native" .windows.native "mise" $mise "official" .windows.official | toPrettyJson -}}
