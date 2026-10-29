@@ -77,12 +77,18 @@ try {
     if ($plan.PSObject.Properties.Name -contains 'winget') { throw 'CLI inventory leaked into WinGet.' }
     $keys = @($plan.mise.PSObject.Properties.Name)
     if ($keys.Count -ne 16 -or $keys -notcontains 'pypi:aider-chat' -or $keys -notcontains 'github:anomalyco/opencode') { throw 'Wrong Windows mise inventory.' }
+    if ($plan.mise.'github:anomalyco/opencode'.checksum -notmatch '^sha256:[a-f0-9]{64}$') { throw 'OpenCode archive checksum is missing.' }
     if ($plan.editor.Count -ne 1 -or $plan.editor[0].command -ne 'gcc' -or $keys -contains 'zig') { throw 'Wrong Windows parser compiler ownership.' }
     foreach ($key in $keys) {
         if ($key -match 'codex|claude|grok|pi-coding-agent|kiro|antigravity') { throw "Official provider duplicated in mise: $key" }
     }
     foreach ($item in $plan.official) {
-        if ($item.url -notmatch '^https://' -or $item.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Unreviewed vendor script.' }
+        if ($item.url -notmatch '^https://') { throw 'Unreviewed vendor URL.' }
+        if ($item.tool -eq 'codex') {
+            if ($item.codeSha256 -notmatch '^[a-f0-9]{64}$' -or $item.signerName -cne 'OpenAI OpCo, LLC' -or $item.PSObject.Properties['sha256']) {
+                throw 'Codex must pin reviewed code and require its Authenticode publisher.'
+            }
+        } elseif ($item.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Unreviewed vendor script.' }
     }
     foreach ($file in @((Join-Path $destination '.config/powershell/Dotfiles.ps1'),$profileFile)) {
         $tokens=$null;$errors=$null
