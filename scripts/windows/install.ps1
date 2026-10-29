@@ -68,11 +68,22 @@ function New-PrivateDirectory {
 }
 function Receive-VerifiedFile {
     param($Asset, [string] $Destination)
-    if ($Asset.url -notmatch '^https://' -or $Asset.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Invalid publisher asset metadata.' }
+    $signedCode = $null -ne $Asset.PSObject.Properties['codeSha256']
+    if ($Asset.url -notmatch '^https://') { throw 'Invalid publisher asset metadata.' }
+    if ($signedCode) {
+        if ($Asset.codeSha256 -cnotmatch '^[a-f0-9]{64}$' -or
+            -not $Asset.PSObject.Properties['signerName'] -or -not $Asset.signerName) {
+            throw 'Invalid signed publisher asset metadata.'
+        }
+    } elseif (-not $Asset.PSObject.Properties['sha256'] -or $Asset.sha256 -cnotmatch '^[a-f0-9]{64}$') {
+        throw 'Invalid publisher asset metadata.'
+    }
     if (Test-Path -LiteralPath $Destination) { throw "Refusing to overwrite $Destination" }
     try {
         Invoke-WebRequest -Uri $Asset.url -OutFile $Destination
-        if ((Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Asset.sha256) {
+        if ($signedCode) {
+            Assert-ReviewedSignedScript $Asset $Destination
+        } elseif ((Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Asset.sha256) {
             throw "Checksum mismatch: $Destination"
         }
     } catch {

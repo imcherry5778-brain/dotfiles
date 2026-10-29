@@ -1,6 +1,6 @@
 # OpenCode CLI 2.x. The mise registry now resolves "opencode" to npm first;
-# keep the standalone binary in the installs/opencode layout. aqua downloads
-# 2.x from opencode.ai and the registry declares no publisher checksum.
+# keep the standalone binary in the installs/opencode layout. mise.ai.lock
+# records reviewed release URLs and SHA-256 checksums for this pin.
 [tool_alias]
 opencode = "aqua:anomalyco/opencode"
 

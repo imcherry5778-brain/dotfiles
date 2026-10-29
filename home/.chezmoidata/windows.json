@@ -105,7 +105,8 @@
         "tool": "codex",
         "command": "codex",
         "url": "https://chatgpt.com/codex/install.ps1",
-        "sha256": "459c61cf96b51af4f1d0ed6133dd8bb0c7e93043396cc35a022cc696f53db124",
+        "codeSha256": "6294faa85a5c4343db358fc04741f7cf86a615fbec318dacaa07dced4867985e",
+        "signerName": "OpenAI OpCo, LLC",
         "arguments": [
           "-Release",
           "latest"

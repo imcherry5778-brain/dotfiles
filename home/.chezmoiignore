@@ -19,6 +19,7 @@ README.md
 .config/gh/**
 .config/mise/config.toml
 .config/mise/config.ai.toml
+.config/mise/mise.ai.lock
 .config/mise/config.ai-managed.toml
 .config/mise/config.personal-fedora.toml
 .config/mise/config.editor-ubuntu.toml
@@ -63,6 +64,7 @@ README.md
 .codex/**
 .config/opencode/**
 .config/mise/config.ai.toml
+.config/mise/mise.ai.lock
 {{ end }}
 {{ if not .features.editor_web }}
 .config/nvim/lua/plugins/web_and_python.lua

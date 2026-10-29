@@ -97,3 +97,5 @@ are outside CI.
 ## 기존 개인 Fedora 이행
 
 Fedora personal migration job은 기존 기기 선택·OMZ/tmux와 native provider fixtures를 준비한 뒤 automation만 활성화한다. 39개 실제 mise 도구의 설치·실행, 정상 fd 유지, 반복 적용, 삭제된 Ansible 실행 파일 복구, native fixture 경로/내용과 사용자 plugin 보존을 확인한다. Native fixture는 실제 AI/Conda/GUI 설치나 인증 검증이 아니다. `verify-installers.py`는 명령 별칭과 private version-probe 상태, personal externals=false 경계를 검사한다.
+
+OpenCode checksum 계약은 `verify-installers.py`가 공통 버전과 Unix/Windows pin의 일치, 지원 플랫폼의 SHA-256, locked 설치 실패 시 우회 금지를 검사한다. Windows provider 계약은 코드 해시가 같을 때의 재서명 허용과 코드 변경·서명 실패·다른 발행자·비정상 서명 블록의 거부 및 실패 파일 삭제를 검사한다. 실제 Authenticode 체인 검증은 native Windows 설치 job에서 실행한다.

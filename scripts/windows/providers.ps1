@@ -1,4 +1,27 @@
 # Windows provider adapters. Dot-source only; callers decide when to mutate.
+function Assert-ReviewedSignedScript {
+    param($Asset, [string] $Script)
+    # Validate the original file before unblocking it. Certificate renewal may
+    # change the signature, but cannot change either the publisher or the code.
+    $signature = Get-AuthenticodeSignature -LiteralPath $Script
+    if ($signature.Status -ne 'Valid' -or -not $signature.SignerCertificate -or
+        $signature.SignerCertificate.GetNameInfo([Security.Cryptography.X509Certificates.X509NameType]::SimpleName, $false) -cne $Asset.signerName) {
+        throw "Invalid publisher signature: $Script"
+    }
+    $bytes = [IO.File]::ReadAllBytes($Script)
+    # ASCII decoding maps each byte to one character, preserving byte offsets
+    # even for a UTF-8 BOM or non-ASCII script content. Hash the original bytes.
+    $text = [Text.Encoding]::ASCII.GetString($bytes)
+    $block = [regex]::Match($text, '(?m)^# SIG # Begin signature block\r?\n(?:# [A-Za-z0-9+/=]+\r?\n)+# SIG # End signature block\r?\n?\z')
+    if (-not $block.Success -or $text.IndexOf('# SIG # Begin signature block') -ne $block.Index) {
+        throw "Invalid signature block: $Script"
+    }
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try { $digest = [Convert]::ToHexString($hash.ComputeHash($bytes, 0, $block.Index)).ToLowerInvariant() }
+    finally { $hash.Dispose() }
+    if ($digest -cne $Asset.codeSha256) { throw "Code checksum mismatch: $Script" }
+}
+
 function Get-InstallApplication {
     param([string] $Name)
     foreach ($command in @(Get-Command $Name -CommandType Application -All -ErrorAction SilentlyContinue)) {
