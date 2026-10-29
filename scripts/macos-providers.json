@@ -10,6 +10,6 @@
   },
   "official": [
     {"command": "kiro-cli", "url": "https://cli.kiro.dev/install", "sha256": "d8dd659c11c156002942f09443b6cb7904959004d4e7f1f73777fdbb2d909b54", "arguments": []},
-    {"command": "grok", "url": "https://x.ai/cli/install.sh", "sha256": "7fd6fdc75d9418b2e58356726fcbf1ae849416f773925da07d0ccc7a60d3e791", "arguments": ["1.0.50"]}
+    {"command": "grok", "url": "https://x.ai/cli/install.sh", "sha256": "dcc19d498e14f96ab93828251b2848fde94cc2ab0bd6f9cad9baffbf7a229182", "arguments": ["1.0.50"]}
   ]
 }

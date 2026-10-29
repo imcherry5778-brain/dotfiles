@@ -28,6 +28,47 @@ try {
     Receive-VerifiedFile $asset $file
     if (-not (Test-Path $file)) { throw 'Verified publisher script was not saved.' }
     try { Receive-VerifiedFile $asset $file; throw 'Overwrite accepted.' } catch { if ($_ -notmatch 'Refusing to overwrite') { throw } }
+    # Re-signing reviewed code is allowed; new code or an untrusted publisher is not.
+    $script:fixtureCode = "Write-Output 'reviewed fixture'`r`n"
+    $script:fixtureSignature = 'YWJj'
+    $script:signatureStatus = 'Valid'
+    $script:signerName = 'OpenAI OpCo, LLC'
+    $certificate = [pscustomobject]@{}
+    $certificate | Add-Member -MemberType ScriptMethod -Name GetNameInfo -Value { param($Type,$Issuer); $script:signerName }
+    function Get-AuthenticodeSignature {
+        param($LiteralPath)
+        [pscustomobject]@{Status=$script:signatureStatus;SignerCertificate=$certificate}
+    }
+    function Invoke-WebRequest {
+        param($Uri,$OutFile)
+        [IO.File]::WriteAllText($OutFile, ($script:fixtureCode + "# SIG # Begin signature block`r`n# $script:fixtureSignature`r`n# SIG # End signature block`r`n"), [Text.UTF8Encoding]::new($false))
+    }
+    $signed = [pscustomobject]@{
+        url='https://publisher.invalid/signed.ps1'; signerName=$script:signerName
+        codeSha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($script:fixtureCode))).ToLowerInvariant()
+    }
+    $signedFile = Join-Path $scratch 'signed installer.ps1'
+    Receive-VerifiedFile $signed $signedFile
+    Remove-Item $signedFile
+    $script:fixtureSignature = 'ZGVm'
+    Receive-VerifiedFile $signed $signedFile
+    Remove-Item $signedFile
+    foreach ($failure in @('code','signature','publisher','block')) {
+        $script:fixtureCode = "Write-Output 'reviewed fixture'`r`n"
+        $script:fixtureSignature = 'YWJj'
+        $script:signatureStatus = 'Valid'
+        $script:signerName = 'OpenAI OpCo, LLC'
+        switch ($failure) {
+            code { $script:fixtureCode += "Write-Output 'unreviewed code'`r`n" }
+            signature { $script:signatureStatus = 'HashMismatch' }
+            publisher { $script:signerName = 'Other Publisher' }
+            block { $script:fixtureSignature = "YWJj`r`nWrite-Output 'hidden code'" }
+        }
+        $rejected = $false
+        try { Receive-VerifiedFile $signed $signedFile } catch { $rejected = $true }
+        if (-not $rejected -or (Test-Path $signedFile)) { throw "Unsafe signed script was accepted or retained: $failure" }
+    }
+    Remove-Item Function:Get-AuthenticodeSignature
     function Invoke-VendorInstaller { throw 'An existing CLI must not invoke its installer.' }
     function Receive-VerifiedFile { throw 'An existing CLI must not download.' }
     function Add-UserCommandPath { throw 'An existing provider must not change PATH.' }

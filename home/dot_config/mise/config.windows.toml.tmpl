@@ -1,12 +1,14 @@
 {{- $core := (include "dot_config/mise/config.toml" | fromToml).tools -}}
 {{- $ai := (include "dot_config/mise/config.ai-managed.toml" | fromToml).tools -}}
 {{- $existingAi := (include "dot_config/mise/config.ai.toml" | fromToml).tools -}}
+{{- $opencode := index (include ".chezmoitemplates/tools/opencode-windows.lock" | fromToml).tools "github:anomalyco/opencode" 0 -}}
+{{- if ne $opencode.version (index $existingAi "opencode") -}}{{- fail "Refresh the Windows OpenCode checksum with the common version pin." -}}{{- end -}}
 {{- $node := (includeTemplate "tools/editor-node.toml.tmpl" . | fromToml).tools.node -}}
 # Native Windows: mise owns common CLI versions; vendor installers own other AI CLI.
 [tools]
 {{ range $name := keys .windows.mise | sortAlpha -}}
 {{ (index $.windows.mise $name).backend | quote }} = {{ index $core $name | quote }}
 {{ end -}}
-"github:anomalyco/opencode" = {{ index $existingAi "opencode" | quote }}
+"github:anomalyco/opencode" = { version = {{ index $existingAi "opencode" | quote }}, checksum = {{ (index $opencode "platforms.windows-x64").checksum | quote }} }
 "pypi:aider-chat" = { version = {{ (index $ai "pipx:aider-chat").version | quote }}, uvx = true, uvx_args = "--python 3.12 --with pip" }
 node = {{ $node | quote }}

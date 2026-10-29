@@ -8,10 +8,10 @@ Windows 11 x64 / PowerShell 7을 사용한다. 설치 도구는 제품별로 선
 |---|---|---|
 | PowerShell 7, Git for Windows, mise, chezmoi | WinGet bootstrap | Windows catalog에 bootstrap 버전 기록. 기존 실행 파일이 있으면 보존 |
 | rg, fd, bat, jq, fzf, zoxide, gh, lazygit, delta, Neovim, Yazi, uv, Carapace | mise aqua | 공통 CLI 버전을 읽고 Windows backend를 명시 |
-| OpenCode | mise GitHub release | 기존 공통 AI 버전 유지, major 변경 없음 |
+| OpenCode | mise GitHub release | `config.ai.toml`의 공통 버전과 검토한 Windows archive SHA-256 |
 | Aider | mise pypi → uv | 공통 Aider 버전과 Python 3.12 격리 환경. pip도 공식 설치 옵션에 맞춰 추가 |
 | Node | mise | 편집기와 Pi에 필요한 runtime |
-| agy, Claude, Codex, Pi, Kiro, Grok | 공식 Windows 설치기 | 검토한 설치기 원문 SHA-256 고정. 설치 payload·업데이트는 공급사 정책 |
+| agy, Claude, Codex, Pi, Kiro, Grok | 공식 Windows 설치기 | 검토한 설치기 SHA-256 고정(Codex는 코드 해시와 서명). 설치 payload·업데이트는 공급사 정책 |
 | Orca | 공식 EXE | 기존 release metadata의 SHA-256 검증. 실제 GUI와 bundled CLI 별도 검증 |
 | Windows C compiler (WinLibs GCC) | WinGet | Neovim Tree-sitter의 네이티브 파서 빌드 의존성. 기존 GCC는 보존 |
 | Ghostty | Windows 제외 | 공식 Windows release가 없음. 기존 Windows Terminal 유지 |
@@ -20,7 +20,7 @@ WinGet 설치기도 공식 MSI/EXE를 실행할 수 있고 mise도 공식 releas
 
 `home/.chezmoidata/windows.json`은 bootstrap ID, Windows backend 매핑, 공식 설치기 URL·SHA·인수·업데이트 소유자를 기록한다. CLI 버전은 공통 mise 원본에서 읽는다. `config.windows.toml.tmpl`은 Windows 전용 mise 환경만 생성한다. Linux의 `pipx:aider-chat`는 그대로 보존하며 Windows에서만 `pypi:aider-chat`를 사용한다.
 
-공식 설치기는 다운로드한 로컬 파일을 해시 검증한 뒤 별도 프로세스로 실행한다. 스크립트 내용이 변경되면 실패하며 검토 후 해시를 갱신해야 한다. 이 해시는 검토한 파일과의 동일성 검사이며 공급사 서명 검증이라고 표현하지 않는다. 공급사 payload의 검증 방식은 각각 설치기에 따른다. 설치기의 pin과 설치되는 제품 버전의 pin도 구분한다.
+공식 설치기는 다운로드한 로컬 파일을 검증한 뒤 별도 프로세스로 실행한다. Codex는 원본 파일의 Authenticode 상태가 Valid이고 서명 인증서의 이름이 OpenAI OpCo, LLC인지 확인한 다음, 파일 끝의 정상적인 서명 블록을 제외한 원본 바이트의 SHA-256을 고정한다. 인증서 갱신으로 서명만 바뀌면 허용하지만 코드 변경·잘못된 서명·다른 발행자는 거부하고 받은 파일을 삭제한다. 다른 공급사 스크립트는 파일 전체 SHA-256을 유지한다. 코드가 바뀌면 검토 후 해시를 갱신해야 하며, 공급사 payload의 검증 방식은 각각 설치기에 따른다. 설치기의 pin과 설치되는 제품 버전의 pin도 구분한다.
 
 Claude는 stable 인수를 사용한다. Codex는 공식 latest release 선택과 비대화형 옵션을 사용한다. Pi는 공식 managed install로 의존성을 고정하고, 먼저 mise Node와 Git을 준비해 추가 runtime 설치를 피한다. Grok은 보조 payload까지 공급사 설치기가 처리한다. Kiro는 공식 스크립트의 Windows MSI 설치를 사용하며 실제 사용자별 `LocalAppData/Kiro-Cli` 또는 시스템 `Program Files/Kiro-Cli` 위치를 확인한다.
 
@@ -77,7 +77,7 @@ Orca 설치 UI는 공식 설치기의 표시를 따른다. Windows Terminal의 �
 
 편집기 플러그인·GUI·클립보드 검증과 AI 인증 성공 여부는 기기 기록에서 따로 보고한다. 격리 CI 성공을 실제 제품 설치 성공으로 표현하지 않는다.
 
-공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
+공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/v2/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
 
 Windows WinGet에서 제공되는 mise 2026.9.18로 실제 설치를 검증한다. 저장소 작업의 최소 버전도 이에 맞추며 Linux에 설치된 mise 버전이나 기존 설정은 변경하지 않는다.
 

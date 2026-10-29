@@ -30,6 +30,49 @@ spec.loader.exec_module(installer)
 
 
 class InstallerContracts(unittest.TestCase):
+    def test_opencode_locks_cover_supported_platforms_at_the_common_pin(self):
+        version = tomllib.loads((ROOT / 'home/dot_config/mise/config.ai.toml').read_text())['tools']['opencode']
+        for path, tool, backend, platforms in [
+            ('home/dot_config/mise/mise.ai.lock', 'opencode', 'aqua:anomalyco/opencode',
+             {'linux-x64', 'linux-arm64', 'macos-x64', 'macos-arm64'}),
+            ('home/.chezmoitemplates/tools/opencode-windows.lock', 'github:anomalyco/opencode',
+             'github:anomalyco/opencode', {'windows-x64'}),
+        ]:
+            lock = tomllib.loads((ROOT / path).read_text())
+            self.assertEqual(set(lock['tools']), {tool}, 'Unrelated tools must not be locked.')
+            entry, = lock['tools'][tool]
+            self.assertEqual(entry['version'], version, 'Refresh checksums with the OpenCode pin.')
+            self.assertEqual(entry['backend'], backend)
+            self.assertEqual({key.removeprefix('platforms.') for key in entry if key.startswith('platforms.')}, platforms)
+            for platform in platforms:
+                asset = entry[f'platforms.{platform}']
+                self.assertRegex(asset['checksum'], r'^sha256:[a-f0-9]{64}$')
+                self.assertTrue(asset['url'].startswith(f'https://github.com/anomalyco/opencode/releases/download/v{version}/'))
+
+    def test_opencode_lock_failure_never_falls_back_to_unlocked_install(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary); config = home / '.config/mise'; config.mkdir(parents=True)
+            (config / 'miserc.toml').write_text('env = ["ai"]\n')
+            (config / 'config.toml').write_text('[tools]\nfd = "10.5.0"\n')
+            (config / 'config.ai.toml').write_text('[tools]\nopencode = "2.2.1"\n')
+            for fail in [False, True]:
+                def execute(arguments, **options):
+                    if arguments[1] == 'ls':
+                        return '{}'
+                    if '--locked' in arguments and fail:
+                        raise subprocess.CalledProcessError(1, arguments)
+                    return ''
+                with self.subTest(fail=fail), patch('lib.tools.Path.home', return_value=home), \
+                     patch('lib.tools.run', side_effect=execute) as command:
+                    if fail:
+                        with self.assertRaises(subprocess.CalledProcessError):
+                            reconcile_mise_tools('mise')
+                    else:
+                        reconcile_mise_tools('mise')
+                    installs = [call.args[0] for call in command.call_args_list if call.args[0][1] == 'install']
+                    self.assertEqual(installs[0], ['mise', 'install', '--yes', '--locked', 'opencode@2.2.1'])
+                    self.assertEqual(len(installs), 1 if fail else 2)
+
     def test_ubuntu_complete_repeat_needs_no_elevated_metadata_refresh(self):
         for status, refresh in [('installed', False), ('unpacked', True), ('', True)]:
             with self.subTest(status=status), \

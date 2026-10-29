@@ -72,6 +72,12 @@ def reconcile_mise_tools(mise):
         # Only the selected mise-owned version is repaired, never native providers.
         print(f'Repairing missing {command}: {tool}@{version}', flush=True)
         run([mise, 'uninstall', '--yes', f'{tool}@{version}'])
+    if 'opencode' in tools:
+        # Scope strict locking to OpenCode; other tools retain their existing
+        # backends and update policy. Missing/stale locks must fail closed.
+        specification = tools['opencode']
+        version = specification['version'] if isinstance(specification, dict) else specification
+        run([mise, 'install', '--yes', '--locked', f'opencode@{version}'])
     run([mise, 'install', '--yes'])
 
 
