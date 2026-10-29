@@ -29,7 +29,7 @@ jobs:
             name: Fedora 44 / full AI and native desktop apps
             full: "1"
           - platform: fedora
-            name: Fedora 44 / personal migration and 38 mise CLI
+            name: Fedora 44 / personal migration and 39 mise CLI
             full: "0"
             personal: "1"
           - platform: ubuntu
