@@ -2,7 +2,7 @@
 
 `imcherry5778-brain/dotfiles`는 Linux·Windows·macOS의 개인 CLI와 설정을 재현하기 위한 저장소다. chezmoi는 설정과 기기 차이를 관리한다. 공통 CLI는 mise로 관리하고, Windows의 PowerShell·Git·mise·chezmoi는 WinGet으로 준비한다. AI CLI는 도구별 공식 설치 경로를 사용한다.
 
-**현재 단계: chezmoi 중심 설치 흐름과 hosted CI 검증 완료, 개인 Fedora 자동화 활성화.** 기존 OS 적용 결과는 다음과 같다. Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치했다. [Fedora 적용 결과](docs/fedora-application.md), [Ubuntu 적용 결과·복구](docs/ubuntu-application.md), [Arch 적용 결과·복구](docs/arch-application.md), [Fedora 유지·변경 판단](docs/fedora-review.md)을 확인한다. Windows 실제 결과는 별도 문서에 기록되어 있다. Mac의 24개 CLI·Ghostty·Orca·셸·편집기·클립보드·재실행 결과와 개인 백업은 [Mac 적용 기록](docs/macos-application.md)에 기록했다.
+**현재 상태:** 개인 Fedora·Ubuntu·Arch·openSUSE·Windows·Mac이 각자의 checkout에서 chezmoi 자동화를 사용한다. Fedora는 공통 CLI 13개와 기존 개인 도구를, Ubuntu·Arch·openSUSE는 공통 13개·AI CLI 8개·Node, 총 22개를 mise로 관리하고 Ghostty·Orca를 각 OS의 공식 패키지 또는 AppImage로 설치한다. OpenCode CLI는 모든 OS에서 `config.ai.toml`의 2.x 버전을 사용한다. 플랫폼별 검증 범위는 [플랫폼](docs/platforms.md)에 있다.
 
 ## 위치와 구조
 
@@ -44,7 +44,7 @@ PowerShell 5.1 또는 7:
 
 mise를 이미 사용하는 기기에서는 저장소 루트에서 `mise run plan` / `mise run check`로 같은 동작을 호출할 수 있다. 기본 plan/check는 도구를 설치하지 않는다.
 
-기본 plan/check는 설치하지 않는다. 지원 OS에서 명시적 적용 명령 하나가 필수 패키지·mise Python·diff·개인 백업·CLI/앱·설정·검증을 이어 실행한다. 프로필별 명령과 관리자/인증 전제는 [설치 계약](docs/install.md)을 따른다. Fedora common과 portable full을 별도로 검사하며, full은 AI 8개·Node·Ghostty·Orca를 포함한다. 기존 개인 Fedora의 34개 도구 선택과 설치 출처를 대체하지 않는다.
+기본 plan/check는 설치하지 않는다. 지원 OS에서 명시적 적용 명령 하나가 필수 패키지·mise Python·diff·개인 백업·CLI/앱·설정·검증을 이어 실행한다. 프로필별 명령과 관리자/인증 전제는 [설치 계약](docs/install.md)을 따른다. Fedora common과 portable full을 별도로 검사하며, full은 AI 8개·Node·Ghostty·Orca를 포함한다. 기존 개인 Fedora의 도구 선택과 설치 출처를 대체하지 않는다.
 
 Self-hosted runner는 사용하지 않는다. CI는 임시 GitHub-hosted 환경에 설치하며 사용자 PC로 설정을 배포하지 않는다. 서비스 로그인·GUI 권한·실제 데스크톱 검증은 별도다.
 
@@ -58,20 +58,11 @@ chezmoi apply
 chezmoi diff --exclude=scripts
 ```
 
-개편의 실행 순서·백업·충돌 방지·검증 범위는 [설치 계약](docs/install.md)을 따른다. 이번 개편은 실제 개인 OS에 적용하지 않고 hosted CI에서 검증한다.
+실행 순서·백업·충돌 방지·검증 범위는 [설치 계약](docs/install.md)을 따른다.
 
 ## 상세 문서
 
-- [Mac 적용·검증·복구](docs/macos-application.md)
-- [Windows 실제 적용 결과·복구](docs/windows-application.md)
 - [Native Windows 설치·설정 계약](docs/windows.md)
-- [openSUSE 실제 적용 결과·복구](docs/opensuse-application.md)
-- [Arch 실제 적용 결과·복구](docs/arch-application.md)
-- [Ubuntu 실제 적용 결과·복구](docs/ubuntu-application.md)
-- [Ubuntu 구성·적용 전 검토](docs/ubuntu-review.md)
-- [기존 개인 Fedora 자동화 이행](docs/fedora-automation.md)
-- [Fedora 실제 적용 결과](docs/fedora-application.md)
-- [Fedora 유지·변경·제외 판단](docs/fedora-review.md)
 - [설계와 폴더 규칙](docs/architecture.md)
 - [최초 설치와 현재 진입점](docs/install.md)
 - [설정과 기기 데이터](docs/configuration.md)

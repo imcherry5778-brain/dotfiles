@@ -31,9 +31,9 @@ Python 3.11+, Zsh, Bash, Git과 지정한 chezmoi를 사용한다.
 python3 tests/verify-fedora.py --chezmoi /path/to/chezmoi --gh /path/to/gh
 ```
 
-임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias·빈 scalar·주석 보존, AI hooks·MCP·미관리 키·no-op 원문 보존, 파일/디렉터리 권한의 재적용 안정성, 34개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. Fedora/Ubuntu/Arch/openSUSE 외 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
+임시 홈에 Fedora draft를 두 번 적용해 idempotence, 공백 경로, 미관리 파일 보존, Git identity·서명 정책 보존, gh alias·빈 scalar·주석 보존, AI hooks·MCP·미관리 키·no-op 원문 보존, 파일/디렉터리 권한의 재적용 안정성, 39개 도구의 단일 소유권, 셸 문법을 검사한다. 외부 선언은 텍스트로만 렌더링하고 다운로드하지 않는다. Fedora/Ubuntu/Arch/openSUSE 외 OS에서는 preview를 켜도 대상이 생기지 않는 경계도 검사한다.
 
-기존 mise가 있으면 `--mise /path/to/mise`로 격리한 config 디렉터리에서 global environment 3개와 34개 도구 선택을 실제 mise로 확인할 수 있다. 설치 명령은 실행하지 않는다.
+기존 mise가 있으면 `--mise /path/to/mise`로 격리한 config 디렉터리에서 global environment 3개와 39개 도구 선택을 실제 mise로 확인할 수 있다. 설치 명령은 실행하지 않는다.
 
 `--neovim /path/to/nvim`은 사용자 init와 플러그인을 로드하지 않고 렌더링한 Lua 파일의 구문만 컴파일한다. config/data/state/cache는 임시 경로를 사용한다.
 
@@ -59,7 +59,7 @@ CI는 세 OS의 기본 검증과 Linux 러너의 Fedora source 검증을 실행�
 - Neovim 실행 파일과 적용된 Lua 구문 확인. Neovim 플러그인 설치/GUI 검증으로 해석하지 않음.
 - Git identity·서명 정책·미관리 gh 설정 보존, 두 번째 설치 후 모든 managed 내용·링크·권한 동일, diff 비어 있음.
 
-기본 profile은 `tests/profiles/fedora-common.json`·`ubuntu-desktop.json`, 전체 profile은 Fedora·Ubuntu·Arch·openSUSE의 `*-full.json`이다. template fixture 디렉터리와 분리한다. 개인 Fedora 38개 도구, 인증·GUI와 Windows/macOS의 실제 설치는 별도 hosted job에서 검사한다. full profile은 AI CLI 8개를 포함한 22개 CLI와 Ghostty·Orca 설치도 검사한다. Actions job의 read-only GITHUB_TOKEN은 다운로드에만 쓰고 앱 runtime 검사 환경에서는 제거한다.
+기본 profile은 `tests/profiles/fedora-common.json`·`ubuntu-desktop.json`, 전체 profile은 Fedora·Ubuntu·Arch·openSUSE의 `*-full.json`이다. template fixture 디렉터리와 분리한다. 개인 Fedora 39개 도구, 인증·GUI와 Windows/macOS의 실제 설치는 별도 hosted job에서 검사한다. full profile은 AI CLI 8개를 포함한 22개 CLI와 Ghostty·Orca 설치도 검사한다. Actions job의 read-only GITHUB_TOKEN은 다운로드에만 쓰고 앱 runtime 검사 환경에서는 제거한다.
 
 Ubuntu source 검사: python3 tests/verify-desktop.py --chezmoi /path/to/chezmoi. 실제 홈 대신 공백 경로의 임시 대상으로 초기화 config를 영속화하고, 원본 Bash·profile/logout 보존·단일 추가 라인·권한·반복 적용·15개 도구 단일 소유권·Fedora 기능 거부를 검사한다. 외부 10개 archive 선언은 렌더링만 한다. 설치 CI는 실제 archive를 내려받고 Ubuntu native completion·history·alias 및 사용자 정의가 보존되는지, .config/.local/.local/share 700과 로그인 셸이 유지되는지도 확인한다.
 
@@ -67,7 +67,7 @@ AI/native 앱 확장은 `python3 tests/verify-installers.py`로 오프라인 계
 
 Arch: `verify-desktop.py --chezmoi /path/to/chezmoi --platform arch`로 Ubuntu와 동일한 보존 검증을 재사용한다. Arch full 프로필은 hosted runner의 새 Arch 컨테이너에서 22개 도구, 공식 Ghostty 패키지와 Orca AppImage/번들 CLI를 설치하고 재실행한다. GUI 검증은 실제 Arch 세션에서 별도 수행한다.
 
-openSUSE: `verify-desktop.py --chezmoi /path/to/chezmoi --platform opensuse-tumbleweed`로 원본 SUSE Bash/profile 보존과 같은 공통 source 계약을 검사한다. 별도 full 설치 job은 Tumbleweed 최소 컨테이너의 GTK3/CUPS 라이브러리와 tmux의 Perl/awk를 명시적으로 준비하고 22개 CLI·Ghostty·Orca 실행·native Bash·Zsh/tmux·반복 설치를 검증한다. Zypper solver의 추가 허용과 제거/upgrade/downgrade/vendor 변경 거부는 `verify-installers.py`에서 검사한다. 코드 `c84169a`의 [설치 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063232)는 다섯 job을 통과했고 [기반 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063296)도 통과했다. 실제 KDE·클립보드·편집기 플러그인 검증은 [개인 기기 기록](../docs/opensuse-application.md)에서 구분한다.
+openSUSE: `verify-desktop.py --chezmoi /path/to/chezmoi --platform opensuse-tumbleweed`로 원본 SUSE Bash/profile 보존과 같은 공통 source 계약을 검사한다. 별도 full 설치 job은 Tumbleweed 최소 컨테이너의 GTK3/CUPS 라이브러리와 tmux의 Perl/awk를 명시적으로 준비하고 22개 CLI·Ghostty·Orca 실행·native Bash·Zsh/tmux·반복 설치를 검증한다. Zypper solver의 추가 허용과 제거/upgrade/downgrade/vendor 변경 거부는 `verify-installers.py`에서 검사한다. 코드 `c84169a`의 [설치 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063232)는 다섯 job을 통과했고 [기반 CI](https://github.com/imcherry5778-brain/dotfiles/actions/runs/38154063296)도 통과했다. 실제 KDE·클립보드·편집기 플러그인 검증은 CI 범위 밖이다.
 
 ## Native Windows 설정 검증
 
@@ -88,7 +88,7 @@ profile. Orca's interactive GUI and authentication remain outside this CI profil
 `macos-install.sh` runs ARM64 full installation and repeat/login-shell checks in the
 actual hosted Mac home. Both scripts refuse non-hosted environments. Neither is a
 remote deployment workflow or a self-hosted runner. Personal Mac GUI/clipboard checks
-are recorded separately in docs/macos-application.md.
+are outside CI.
 
 ## chezmoi 중심 개편 검증
 
@@ -96,4 +96,4 @@ are recorded separately in docs/macos-application.md.
 
 ## 기존 개인 Fedora 이행
 
-Fedora personal migration job은 기존 기기 선택·OMZ/tmux와 native provider fixtures를 준비한 뒤 automation만 활성화한다. 38개 실제 mise 도구의 설치·실행, 정상 fd 유지, 반복 적용, 삭제된 Ansible 실행 파일 복구, native fixture 경로/내용과 사용자 plugin 보존을 확인한다. Native fixture는 실제 AI/Conda/GUI 설치나 인증 검증이 아니다. `verify-installers.py`는 명령 별칭과 private version-probe 상태, personal externals=false 경계를 검사한다.
+Fedora personal migration job은 기존 기기 선택·OMZ/tmux와 native provider fixtures를 준비한 뒤 automation만 활성화한다. 39개 실제 mise 도구의 설치·실행, 정상 fd 유지, 반복 적용, 삭제된 Ansible 실행 파일 복구, native fixture 경로/내용과 사용자 plugin 보존을 확인한다. Native fixture는 실제 AI/Conda/GUI 설치나 인증 검증이 아니다. `verify-installers.py`는 명령 별칭과 private version-probe 상태, personal externals=false 경계를 검사한다.

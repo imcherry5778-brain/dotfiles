@@ -10,7 +10,7 @@
 - `scripts/desktop-release.json`: Orca 공식 릴리스 자산과 검증할 SHA-256의 단일 소유자다. Ubuntu/Fedora 패키지와 Arch/openSUSE 공용 AppImage는 1.4.224로 고정한다. macOS는 공식 Homebrew cask, Windows는 공식 설치 프로그램을 사용한다.
 - `home/dot_config/mise/config.ai-managed.toml`: 추가 AI CLI 7개의 버전·공급자 단일 소유자다. 기존 shared OpenCode는 `config.ai.toml`에 그대로 둔다. CLI 버전을 별도 설치 목록에 중복 선언하지 않는다.
 
-새 `managed_ai`·`desktop` 선택은 기본 false다. Linux portable full profile에서 켠다. Fedora full은 기존 개인 Fedora와 별도 선택이다. Fedora 기존 34개 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 이 표의 AI mise archive는 Linux용이다. Windows는 native provider 계약과 실제 적용 기록을, Mac은 Mac 전용 mise/Homebrew/공식 설치기 계약을 따른다. 서로의 provider를 일괄 배포하지 않는다. [최초 설치 계약](install.md), [Windows](windows-application.md), [Mac](macos-application.md)을 확인한다.
+새 `managed_ai`·`desktop` 선택은 기본 false다. Linux portable full profile에서 켠다. Fedora full은 기존 개인 Fedora와 별도 선택이다. Fedora 기존 도구 선택·vendor/uv 설치·셸·AI config·Ghostty/Orca를 이번 작업으로 이전하거나 업그레이드하지 않는다. 이 표의 AI mise archive는 Linux용이다. Windows는 native provider 계약을, Mac은 Mac 전용 mise/Homebrew/공식 설치기 계약을 따른다. 서로의 provider를 일괄 배포하지 않는다. [최초 설치 계약](install.md)과 [Windows](windows.md)를 확인한다.
 
 ## 공식 공급자 판단
 

@@ -25,7 +25,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./install.ps1 -Mode Appl
 
 Unix bootstrap은 기존 모듈로 mise·고정 설치기 Python·chezmoi를 준비한다. Mac은 Homebrew를 유지한다. Windows 진입점은 PowerShell 5.1에서 7을 준비하고 WinGet bootstrap을 재사용한다. 기존 설치 출처를 자동 이전하거나 전체 업그레이드하지 않는다.
 
-`init`만 실행하면 비활성 검토 설정을 만든다. fresh `init --apply`는 해당 OS `tests/profiles/*-full.json`의 portable full 선택을 저장하고 `automation.enabled=true`로 기록한다. 이미 배포가 활성화된 기기는 프로필과 자동화 선택을 보존한다. `init`으로 만든 비활성 검토 설정은 이후 명시적인 `init --apply`에서 full 설치로 전환할 수 있다. 기존 개인 Fedora를 새 full 프로필로 바꾸려 하면 실패한다. 이미 설치된 개인 Fedora는 externals=false와 기존 기능을 유지한 이행 경로를 지원한다. [Fedora 자동화 이행](fedora-automation.md)을 참고한다. 명시적 CLI-only/공통 프로필을 사용하려면 호환 진입점의 `--profile FILE` / `-ProfilePath FILE`을 사용한다. OS 자동 감지와 source-root 계산은 chezmoi 초기화가 담당한다.
+`init`만 실행하면 비활성 검토 설정을 만든다. fresh `init --apply`는 해당 OS `tests/profiles/*-full.json`의 portable full 선택을 저장하고 `automation.enabled=true`로 기록한다. 이미 배포가 활성화된 기기는 프로필과 자동화 선택을 보존한다. `init`으로 만든 비활성 검토 설정은 이후 명시적인 `init --apply`에서 full 설치로 전환할 수 있다. 기존 개인 Fedora를 새 full 프로필로 바꾸려 하면 실패한다. 이미 설치된 개인 Fedora는 externals=false와 기존 기능을 유지한 이행 경로를 지원한다. 명시적 CLI-only/공통 프로필을 사용하려면 호환 진입점의 `--profile FILE` / `-ProfilePath FILE`을 사용한다. OS 자동 감지와 source-root 계산은 chezmoi 초기화가 담당한다.
 
 ## 적용 순서
 
@@ -63,4 +63,4 @@ chezmoi diff --exclude=scripts
 
 ## CI
 
-GitHub-hosted만 사용한다. Foundation은 세 OS의 문법·격리 렌더링·기존 프로필 회귀·다운로드/출처 충돌·백업·loader 실패 복원·실제 chezmoi orchestration/dry-run을 검사한다. Installation은 Fedora common/full/personal migration, Ubuntu baseline/full, Arch full, openSUSE full, Windows native CLI, Mac ARM64 full을 실제 일회성 환경에 설치한다. 개인 Fedora job은 34개 실제 CLI와 Ansible 실행 파일 삭제 후 복구를 검증하며, native 보존 fixture를 실제 GUI 실행으로 해석하지 않는다. 반복 `chezmoi apply`와 선택된 fd 바이너리 삭제 후 복구를 검사한다. 기존 개인 OS에는 적용하지 않는다. Windows Orca는 대화형 공식 설치기이므로 CLI-only hosted 검사에서 제외하고 GUI/auth 결과를 과장하지 않는다.
+GitHub-hosted만 사용한다. Foundation은 세 OS의 문법·격리 렌더링·기존 프로필 회귀·다운로드/출처 충돌·백업·loader 실패 복원·실제 chezmoi orchestration/dry-run을 검사한다. Installation은 Fedora common/full/personal migration, Ubuntu baseline/full, Arch full, openSUSE full, Windows native CLI, Mac ARM64 full을 실제 일회성 환경에 설치한다. 개인 Fedora job은 39개 실제 CLI와 Ansible 실행 파일 삭제 후 복구를 검증하며, native 보존 fixture를 실제 GUI 실행으로 해석하지 않는다. 반복 `chezmoi apply`와 선택된 fd 바이너리 삭제 후 복구를 검사한다. 기존 개인 OS에는 적용하지 않는다. Windows Orca는 대화형 공식 설치기이므로 CLI-only hosted 검사에서 제외하고 GUI/auth 결과를 과장하지 않는다.
