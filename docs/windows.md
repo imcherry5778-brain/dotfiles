@@ -8,7 +8,7 @@ Windows 11 x64 / PowerShell 7을 사용한다. 설치 도구는 제품별로 선
 |---|---|---|
 | PowerShell 7, Git for Windows, mise, chezmoi | WinGet bootstrap | Windows catalog에 bootstrap 버전 기록. 기존 실행 파일이 있으면 보존 |
 | rg, fd, bat, jq, fzf, zoxide, gh, lazygit, delta, Neovim, Yazi, uv, Carapace | mise aqua | 공통 CLI 버전을 읽고 Windows backend를 명시 |
-| OpenCode | mise GitHub release | 기존 공통 AI 버전 유지, major 변경 없음 |
+| OpenCode | mise GitHub release | `config.ai.toml`의 공통 OpenCode 2.x 버전 |
 | Aider | mise pypi → uv | 공통 Aider 버전과 Python 3.12 격리 환경. pip도 공식 설치 옵션에 맞춰 추가 |
 | Node | mise | 편집기와 Pi에 필요한 runtime |
 | agy, Claude, Codex, Pi, Kiro, Grok | 공식 Windows 설치기 | 검토한 설치기 원문 SHA-256 고정. 설치 payload·업데이트는 공급사 정책 |
@@ -77,7 +77,7 @@ Orca 설치 UI는 공식 설치기의 표시를 따른다. Windows Terminal의 �
 
 편집기 플러그인·GUI·클립보드 검증과 AI 인증 성공 여부는 기기 기록에서 따로 보고한다. 격리 CI 성공을 실제 제품 설치 성공으로 표현하지 않는다.
 
-공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
+공식 근거: [PowerShell](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows), [mise](https://mise.jdx.dev/installing-mise.html), [aqua](https://mise.jdx.dev/dev-tools/backends/aqua.html), [Aider](https://aider.chat/docs/install.html), [OpenCode](https://opencode.ai/v2/docs/), [Antigravity](https://www.antigravity.google/docs/cli/install), [Claude](https://code.claude.com/docs/en/setup), [Codex](https://learn.chatgpt.com/docs/codex/cli), [Pi](https://github.com/earendil-works/pi), [Kiro](https://cli.kiro.dev/install.ps1), [Grok](https://x.ai/cli/install.ps1), [Yazi](https://yazi-rs.github.io/docs/installation/), [Orca](https://www.onorca.dev/docs/install), [Ghostty](https://ghostty.org/docs/install/binary).
 
 Windows WinGet에서 제공되는 mise 2026.9.18로 실제 설치를 검증한다. 저장소 작업의 최소 버전도 이에 맞추며 Linux에 설치된 mise 버전이나 기존 설정은 변경하지 않는다.
 

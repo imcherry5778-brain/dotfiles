@@ -44,7 +44,7 @@ def snapshot(source, chezmoi):
                 text = path.read_text().replace(str(home), '<HOME>').replace(str(source), '<SOURCE>')
                 # Ignore formatting-only blank lines introduced by conditional platform branches.
                 text = '\n'.join(line for line in text.splitlines() if line.strip())
-                # The user's separate, uncommitted OpenCode bump is explicitly preserved.
+                # Fedora ai-cli/sys-update move the OpenCode pin; keep this baseline version-independent.
                 text = re.sub(r'(?m)^(opencode|"github:anomalyco/opencode") = "[^"]+"$', r'\1 = "<reviewed-opencode>"', text)
                 rendered[str(path.relative_to(home))] = hashlib.sha256(text.encode()).hexdigest()
             result[target] = rendered

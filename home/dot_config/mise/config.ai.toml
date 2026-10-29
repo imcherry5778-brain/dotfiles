@@ -1,3 +1,8 @@
-# Only the existing mise-owned AI tool is declared in this phase.
+# OpenCode CLI 2.x. The mise registry now resolves "opencode" to npm first;
+# keep the standalone binary in the installs/opencode layout. aqua downloads
+# 2.x from opencode.ai and the registry declares no publisher checksum.
+[tool_alias]
+opencode = "aqua:anomalyco/opencode"
+
 [tools]
-opencode = "1.19.4"
+opencode = "2.2.1"

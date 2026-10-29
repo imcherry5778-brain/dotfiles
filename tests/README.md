@@ -79,7 +79,7 @@ Windows에서 `./tests/verify-windows.ps1`을 실행한다. WinGet 설치 자체
 Minimal Dockerfiles provide clone/network/admin essentials; installer-owned prerequisites
 are installed by the installer. `verify-regression.py` checks the five existing profile
 renders against `profile-regression.json`, recorded from the pre-Mac source. Blank-only
-format changes and the explicitly preserved, separate OpenCode bump are normalized.
+format changes and the OpenCode pin, which Fedora ai-cli/sys-update update, are normalized.
 Changes to target lists, other configuration content and provider declarations fail.
 
 `windows-install.ps1` starts from native PowerShell 5.1 in the actual hosted user home,
