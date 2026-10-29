@@ -70,6 +70,8 @@ def main():
         assert data['machine']['conda_prefix'] == str(conda)
         assert data['machine']['ssh_agent_socket'] == machine['ssh_agent_socket']
         assert len(selected_tools()) == 39
+        ansible_version = run('mise', 'exec', '--', 'ansible', '--version', capture=True)
+        assert 'python version = 3.14.' in ansible_version, 'Ansible must stay isolated from the selected Python 3.15.'
         before = managed_snapshot(chezmoi)
         run(chezmoi, 'apply')
         assert managed_snapshot(chezmoi) == before

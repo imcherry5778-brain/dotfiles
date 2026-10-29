@@ -1,7 +1,9 @@
 # Personal Fedora tools, including reviewed standalone-to-mise migrations.
 [tools]
 # Ansible 2.21 uses dataclasses internals removed in Python 3.15.
-ansible-core = { version = "2.21.5", python = "3.14" }
+# Pass the interpreter to uv explicitly: the pinned mise ignores the newer
+# per-tool `python` option when the global Python 3.15 is also selected.
+ansible-core = { version = "2.21.5", uvx = true, uvx_args = "--python 3.14" }
 argocd = "3.5.6"
 aws-cli = { version = "2.38.5", symlink_bins = "true" }
 azure = "2.91.0"

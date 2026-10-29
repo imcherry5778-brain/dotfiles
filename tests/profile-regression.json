@@ -443,7 +443,7 @@
     ".config/git/config": "449d1088c37a801ad3db01aebc3d952c4c516ab9a4ee786722e140eb81b19c8a",
     ".config/git/ignore": "582bd1d58a2a89a1b3ba8fcd6eadfa88462d0c2dcf43799caf566e91b8ec49ee",
     ".config/mise/config.ai.toml": "0d3b2c2ae1a4f131cc008dc2192552d658d191c1123d559bb150be2c260382dd",
-    ".config/mise/config.personal-fedora.toml": "82d20cbc400612c4c65a4ff53408731abdd674393fb3a0d7547fd71cf606c691",
+    ".config/mise/config.personal-fedora.toml": "5731c2cd109eafeb25ee921bfe692b3ca56ee9b403ec03bac39f4eb87ab2d691",
     ".config/mise/config.toml": "e8cd2c68f259689eed58de8468bf77cb68dd6e82706b10f774f7a28fdf3a05fe",
     ".config/mise/mise.ai.lock": "0c4c510ceb70bf8b09680631977fddbd9d2d1f6186b1324a463ef1aaa1be0298",
     ".config/mise/miserc.toml": "808e4dbde154bf58bef041ad502558ebe94e6553c0bcc69192a1ef3bd50ba641",

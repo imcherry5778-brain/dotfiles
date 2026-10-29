@@ -6,7 +6,7 @@
 
 `config.toml`은 공통, `config.ai.toml`은 모든 OS가 공유하는 OpenCode 2.x(aqua 바이너리 별칭 포함), `config.personal-fedora.toml`은 개인 추가 도구다. `miserc.toml`에서 ai/personal-fedora를 명시적으로 선택한다. 빈 OS 환경 파일은 만들지 않는다. 향후 다른 OS의 실제 패키지 차이가 생길 때 필요한 config.<environment>.toml만 추가한다.
 
-개인 Fedora의 RPM rg/fd/bat/jq는 fallback으로 남긴다. ~/.local/bin/carapace는 mise shim 링크다. delta CLI는 설치하지만 features.delta=false라 Git pager는 유지한다. OpenCode는 `mise.ai.lock`에 Linux x64/ARM64와 macOS x64/ARM64의 release URL·SHA-256을 기록하고 설치 시 해당 도구만 `--locked`로 검사한다. Windows는 별도로 검토한 release checksum을 같은 버전의 GitHub backend 옵션으로 렌더링한다. 다른 도구의 갱신 정책은 유지한다. 개인 Fedora의 Ansible 2.21.5는 Python 3.15와 호환되지 않아 Python 3.14 격리 환경을 명시한다.
+개인 Fedora의 RPM rg/fd/bat/jq는 fallback으로 남긴다. ~/.local/bin/carapace는 mise shim 링크다. delta CLI는 설치하지만 features.delta=false라 Git pager는 유지한다. OpenCode는 `mise.ai.lock`에 Linux x64/ARM64와 macOS x64/ARM64의 release URL·SHA-256을 기록하고 설치 시 해당 도구만 `--locked`로 검사한다. Windows는 별도로 검토한 release checksum을 같은 버전의 GitHub backend 옵션으로 렌더링한다. 다른 도구의 갱신 정책은 유지한다. 개인 Fedora의 Ansible 2.21.5는 Python 3.15와 호환되지 않아 uv 설치 인수 `--python 3.14`로 격리 환경을 명시한다. 고정한 mise 버전은 새 도구별 `python` 옵션을 반영하지 않으므로 이 인수를 직접 전달한다.
 
 SDK·클라우드·Conda는 다른 OS의 기본 설치로 확대하지 않는다. Fedora 개인 기능 선택도 명시적이며 새 Fedora에 자동 활성화하지 않는다. Git·mise·chezmoi·셸·tmux 등 기반 패키지는 OS 공급자의 책임이다. root mise.toml은 plan/check 작업만 가지며 global tool inventory를 중복하지 않는다.
 
