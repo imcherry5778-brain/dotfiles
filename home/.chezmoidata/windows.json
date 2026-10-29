@@ -105,7 +105,7 @@
         "tool": "codex",
         "command": "codex",
         "url": "https://chatgpt.com/codex/install.ps1",
-        "sha256": "a59cb66350098c33b021ff470d586ae8fe3b7caf189ca7137b4fe3af5d4dce74",
+        "sha256": "459c61cf96b51af4f1d0ed6133dd8bb0c7e93043396cc35a022cc696f53db124",
         "arguments": [
           "-Release",
           "latest"
@@ -132,7 +132,7 @@
         "tool": "grok",
         "command": "grok",
         "url": "https://x.ai/cli/install.ps1",
-        "sha256": "c83dac29885215c79137e48cbc034d3d7c8c11afba3082ff1df0e0769aa902a4",
+        "sha256": "8044048fd60eb9f39fe694f290e6456cd77ec77075a111610d5104a7670afe4f",
         "arguments": [],
         "updateOwner": "publisher"
       }
